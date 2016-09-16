@@ -33,43 +33,19 @@
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-
-    <script language="javascript">
-        $(document).ready(function() {
-
-        window.GO = function() {
-
-          this.frequency = 50000; // .5 seconds
-
-          this.init = function() {
-            window.setInterval(this.update_distance, 500);
-          }
-
-          this.update_distance = function() {
-            $.get('/temp', function(response) {
-              var d = response.temp;
-              var s = response.status;
-              document.getElementById("temp").innerHTML = d
-              document.getElementById("status").innerHTML = s
-            }, 'json')
-          }
-        }
-
-        go = new GO();
-        go.init();
-      });
-    </script>
-
-    <script>
-function setTempFunction() {
-    var temp = prompt("Please enter the room temperature", "60");
-    if (temp != null) {
-        document.getElementById("settemp").href =
-        "/set_temp?temp=" + temp;
-    }
-}
-</script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+
+    <script>
+      var socket = io();
+    </script>
+    <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+    <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+    <script>
+      var socket = io();
+      socket.on('temp_event', function(msg){
+        $('#temp').text(msg));
+      });
+    </script>
   </body>
 </html>

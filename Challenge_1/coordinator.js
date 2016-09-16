@@ -36,7 +36,7 @@ var availKey = new Array(maxDevices);
 
 //Every nth iteration, check if the keys received are all in the regKeys, else remove the ones not there and add it to availKeys
 var n = 10;
-
+var temp_dict = {};
 sp.on("open", function () {
   console.log('open');
   sp.on('data', function(data) {
@@ -56,13 +56,31 @@ sp.on("open", function () {
   	}
 
   	else{
-	    console.log('data received: ' + data);
-	    io.emit('chat message', data);
+
+       //console.log('data received: ' + data);
+      //io.emit('chat message', data);
       var parsedData = JSON.parse(data);
       var myID = parsedData.id;
       var temperature = parsedData.temp;
       console.log('ID: ' + myID );
       console.log('Temp: ' + temperature );
+
+			//DATA EVENT
+			temp_dict[myID] = temperature; 			//From the json event
+			var totalTemp;
+			var counter;
+			//ADD TIME FUNCTION
+			var secondsDelay = setInterval(myTimer, 2000);
+			function myTimer() {
+				for (var key in temp_dict){
+					temp_dict[key] -> totalTemp;
+					counter++;
+				}
+				var average;
+				average = totalTemp/counter;
+			}
+			//Sent to HTML Client
+	    io.emit('temp_event', average);
 	}
   });
 });
