@@ -38,13 +38,6 @@ sp.on("open", function () {
   console.log('Serialport Has Started');
   //-------Check for Empty Dictionary-------// In case the coordinator reset
 
-  
-  //Poll every two seconds (Send a unique get string)
-  setInterval(function(){
-    sp.write("s");
-    console.log("Sending Get: s");
-  },2000);
-
   sp.on('data', function(data) {
 
   	//Listen for Joins
