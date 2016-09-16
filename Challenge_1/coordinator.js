@@ -67,20 +67,19 @@ sp.on("open", function () {
 
 			//DATA EVENT
 			temp_dict[myID] = temperature; 			//From the json event
-			var totalTemp;
-			var counter;
+			var totalTemp = 0;
+			var counter = 0;
 			//ADD TIME FUNCTION
 			var secondsDelay = setInterval(myTimer, 2000);
 			function myTimer() {
 				for (var key in temp_dict){
-					temp_dict[key] -> totalTemp;
+					totalTemp += temp_dict[key];
 					counter++;
 				}
-				var average;
-				average = totalTemp/counter;
-			}
-			//Sent to HTML Client
-	    io.emit('temp_event', average);
+				var average = totalTemp/counter;
+			   //Sent to HTML Client
+        io.emit('temp_event', average);
+      }
 	}
   });
 });

@@ -44,7 +44,9 @@
     <script>
       var socket = io();
       socket.on('temp_event', function(msg){
-        $('#temp').text(msg));
+        //$('#temp').text(msg));
+        document.getElementById("temp").innerHTML = msg;
+        console.log(msg);
       });
     </script>
   </body>
