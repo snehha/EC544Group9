@@ -30,29 +30,26 @@ http.listen(3000, function(){
   console.log('listening on *:3000');
 });
 
-var maxDevices = 4;
-var regKeys = new Array();
-var availKey = new Array(maxDevices);
-
-//Every nth iteration, check if the keys received are all in the regKeys, else remove the ones not there and add it to availKeys
-var n = 10;
+var key = 0;
 
 sp.on("open", function () {
-  console.log('open');
+
+  console.log('Serialport Has Started');
+  //-------Check for Empty Dictionary-------//
+  
+  //Poll every two seconds (Send a unique get string)
+  setInterval(function(){
+    sp.write("s");
+    console.log("Sending Get: s");
+  },2000);
+
   sp.on('data', function(data) {
 
-
-  	if(n == 10){
-  		//regKeys.forEach(availKeys.has())
-  		n = -1;
-  	}
-  	n += 1;
-
-  	//New Devices send this string
-  	if(data == "Permission to Join"){
-  		var key = availKeys.shift();
-  		regKeys.push(key);
-  		sp.write("Id is " + key)
+  	//Listen for Joins
+  	if(data == "j"){
+  		key++;
+  		console.log("Sending key "+key)
+  		sp.write("i" + key.toString())
   	}
 
   	else{
