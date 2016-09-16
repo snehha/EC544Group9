@@ -13,20 +13,10 @@ void setup() {
 }
 
 void loop() {
-  while(!join){
-    XBee.write("Permission to Join");
+  while(XBee.available() > 0){
+    strBuff = XBee.read();
+    Serial.write(strBuff);
   }
-  else{
-    XBee.write("ID:%d,%f",id,temp);
-  }
-    while(XBee.available() > 0){
-      strBuff = XBee.read();
-      Serial.write(strBuff);
-    }
-    XBee.write("An Xbee 4 Says Hi\n");
-    delay(2000);
-  }
-  else{
-    
-  }
+  XBee.write("An Xbee 4 Says Hi\n");
+  delay(2000);
 }
