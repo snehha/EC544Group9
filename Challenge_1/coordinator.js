@@ -35,7 +35,8 @@ var key = 0;
 sp.on("open", function () {
 
   console.log('Serialport Has Started');
-  //-------Check for Empty Dictionary-------//
+  //-------Check for Empty Dictionary-------// In case the coordinator reset
+
   
   //Poll every two seconds (Send a unique get string)
   setInterval(function(){
@@ -52,6 +53,7 @@ sp.on("open", function () {
   		sp.write("i" + key.toString())
   	}
 
+    //Get Temperature
   	else{
 	    console.log('data received: ' + data);
 	    io.emit('chat message', data);
