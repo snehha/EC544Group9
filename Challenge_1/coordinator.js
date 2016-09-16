@@ -58,6 +58,11 @@ sp.on("open", function () {
   	else{
 	    console.log('data received: ' + data);
 	    io.emit('chat message', data);
+      var parsedData = JSON.parse(data);
+      var myID = parsedData.id;
+      var temperature = parsedData.temp;
+      console.log('ID: ' + myID );
+      console.log('Temp: ' + temperature );
 	}
   });
 });
