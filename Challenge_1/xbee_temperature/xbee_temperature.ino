@@ -21,7 +21,7 @@ int count;
 int randNum;
 
 int samples[NUMSAMPLES];
-bool join = false;
+bool join = true;
 
 void clearArr(char *arr,int n){
   for(int i = 0; i < n; i++)
@@ -119,6 +119,7 @@ void getTemp(){
   average = SERIESRESISTOR / average;
   
   float f_temp = 0;
+  // Calculating the temperature
   float steinhart;
   steinhart = log (average / THERMISTORNOMINAL);     // ln (R/Ro)
   steinhart = steinhart/BCOEFFICIENT;               // ln(R/Ro)/B
