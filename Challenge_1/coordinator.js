@@ -50,7 +50,7 @@ sp.on("open", function () {
   //-------Check for Empty Dictionary-------// In case the coordinator reset
   sp.write('r');
 
-  setInterval(myTimer, 5000);
+  setInterval(myTimer, 4000);
 
   sp.on('data', function(data) {
     console.log('data received: ' + data);
@@ -70,8 +70,8 @@ sp.on("open", function () {
         var parsedData = JSON.parse(data);
         var myID = parsedData.id;
         var temperature = parsedData.temp;
-        console.log('ID: ' + myID );
-        console.log('Temp: ' + temperature );
+        console.log('ID: ' + myID);
+        console.log('Temp: ' + temperature);
 
   			//DATA EVENT
   			temp_dict[myID] = temperature; 			//From the json event

@@ -130,6 +130,9 @@ void getTemp(){
 }
 
 void loop(void) {
+  if(join){
+    Serial.write("JOIN IS TRUUUUUEEUEUEUUEEUUE");
+  }
   //Ask to join and get unique id
   while(!join) {
     initial_join();
