@@ -9,7 +9,7 @@
 #define TEMPERATURENOMINAL 25
 SoftwareSerial XBee(2, 3); // RX, TX
 //Only 4 precision
-char temp[4];
+char temp[10] = "";
 //Reading one char at a time
 char chr;
 //Support for 1,000 devices at most
@@ -32,7 +32,7 @@ void setup(void) {
   // put your setup code here, to run once:
   XBee.begin(9600);
   Serial.begin(9600);
-  randomSeed(analogRead(0));
+  randomSeed(analogRead(1));
 }
 
 void initial_join() {
@@ -53,7 +53,7 @@ void initial_join() {
   while(true){
     if(XBee.available() > 0){
       chr = XBee.read();
-      //Serial.write(chr);
+      Serial.write(chr);
       
       if(!readId){
         if(chr == 'i'){
@@ -98,7 +98,7 @@ void initial_join() {
   }
 }
 
-void getTemp(char *Arr){
+void getTemp(){
   uint8_t i;
   float average;
   
@@ -133,7 +133,6 @@ void loop(void) {
   //Ask to join and get unique id
   while(!join) {
     initial_join();
-    join = true;
   }
   
   //Read if data is available
@@ -150,8 +149,13 @@ void loop(void) {
     }
     
     if(chr == 's'){
-      getTemp(temp);
-      Serial.write("Temp: ");
+      Serial.write("Temp before: ");
+      Serial.write(temp);
+      Serial.write('\n');
+      
+      getTemp();
+      
+      Serial.write("Temp after: ");
       Serial.write(temp);
       Serial.write('\n');
 
