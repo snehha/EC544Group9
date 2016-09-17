@@ -42,20 +42,37 @@ var n = 10;
 sp.on("open", function () {
   console.log('open');
   sp.on('data', function(data) {
+var key = 0;
 
 
-  	if(n == 10){
-  		//regKeys.forEach(availKeys.has())
-  		n = -1;
-  	}
-  	n += 1;
+//function myTimer() {
+  /*for (var key in temp_dict){
+    totalTemp += temp_dict[key];
+    counter++;
+  }*/
+  /*sp.write('s');
+  console.log("SENDING POLL NOW")
+  //var average = totalTemp/counter;
+   //Sent to HTML Client
+  //io.emit('temp_event', average);
+}*/
 
-  	//New Devices send this string
-  	if(data[0] == "j"){
-  		var key = availKeys.shift();
-  		regKeys.push(key);
-  		sp.write("Id is " + key)
-  	}
+sp.on("open", function () {
+  console.log('Serialport Has Started');
+  //-------Check for Empty Dictionary-------// In case the coordinator reset
+  sp.write('r');
+
+  setInterval(myTimer, 2000);
+
+  sp.on('data', function(data) {
+    console.log('data received: ' + data);
+    //Listen for Joins
+    if(data[0] == "j"){
+      key++;
+      //console.log("Sending key: " + "i" + data.slice(-(data.length-1)) + "," + key.toString()+"\n")
+      var str = "i" + data.slice(-(data.length-1)) + "," + key.toString()+"\n";
+      sp.write(str);
+    }
 
   	if(data[0] == '{'){
 
@@ -71,9 +88,10 @@ sp.on("open", function () {
 				var totalTemp = 0;
 				var counter = 0;
 				//ADD TIME FUNCTION
-				var secondsDelay = setInterval(myTimer, 2000);
+
 				function myTimer() {
 					// SEND DICTIONARY TO Client
+          sp.write('s');
 					io.emit('temp_event', temp_dict);
 				}
 

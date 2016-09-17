@@ -8,7 +8,6 @@
 #define THERMISTORNOMINAL 4720      
 #define TEMPERATURENOMINAL 25 
 
-
 int samples[NUMSAMPLES];
 
 void setup(void) {
@@ -41,17 +40,13 @@ void loop(void) {
   Serial.println(average);
 
   float f_temp = 0;
-  
-//  float c_temp = 0;
-//  c_temp = map(average, 200, 470, 56, 1.37);
-//  f_temp = (c_temp * 9.0)/ 5.0 + 32.0; 
   float steinhart;
   steinhart = log (average / THERMISTORNOMINAL);     // ln (R/Ro)
   steinhart = steinhart/BCOEFFICIENT;               // ln(R/Ro)/B
   steinhart += (1.0 / (TEMPERATURENOMINAL + 273.15)); // + (1/To)
   steinhart = 1.0 / steinhart;                 // Invert
-  steinhart =  steinhart - 273.15;                         // convert to C
-  f_temp = (steinhart * 9.0)/ 5.0 + 32.0;
+  steinhart =  steinhart - 273.15;              // convert to C
+  f_temp = (steinhart * 9.0)/ 5.0 + 32.0;       // Convert to F
   Serial.print("Temperature "); 
   Serial.print(f_temp);
   Serial.println(" Degrees F");
