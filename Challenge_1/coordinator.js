@@ -68,7 +68,7 @@ sp.on("open", function () {
       //io.emit('chat message', data);
       try{
         var parsedData = JSON.parse(data);
-        var myID = parsedData.id;
+        var myID = parsedData.Id;
         var temperature = parsedData.temp;
         console.log('ID: ' + myID);
         console.log('Temp: ' + temperature);

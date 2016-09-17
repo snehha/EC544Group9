@@ -141,29 +141,17 @@ void loop(void) {
   //Read if data is available
   if(XBee.available() > 0){
     chr = XBee.read();
-    Serial.write("Data Received: ");
-    Serial.write(chr);
-    Serial.write('\n');
 
     //Coordinator sends out r when it's restarted so no one is registered
     if(chr == 'r'){
       join = false;
-      Serial.write("WTFFFFF");
     }
     
     if(chr == 's'){
-      Serial.write("Temp before: ");
-      Serial.write(temp);
-      Serial.write('\n');
-      
       getTemp();
-      
-      Serial.write("Temp after: ");
-      Serial.write(temp);
-      Serial.write('\n');
 
       //Send one long string terminated by null
-      String data = "{ \"id\": " + String(id) + ", \"temp\": " + String(temp) + " }\n";
+      String data = "{ \"Id\": " + String(id) + ", \"temp\": " + String(temp) + " }\n";
       data.toCharArray(dataSend,30);
       XBee.write(dataSend);
       /*XBee.write("{ \"id\": ");
