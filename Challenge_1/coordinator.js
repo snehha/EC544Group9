@@ -39,9 +39,6 @@ var availKey = new Array(maxDevices);
 
 //Every nth iteration, check if the keys received are all in the regKeys, else remove the ones not there and add it to availKeys
 var n = 10;
-sp.on("open", function () {
-  console.log('open');
-  sp.on('data', function(data) {
 var key = 0;
 
 
@@ -56,6 +53,12 @@ var key = 0;
    //Sent to HTML Client
   //io.emit('temp_event', average);
 }*/
+
+function myTimer() {
+  // SEND DICTIONARY TO Client
+  sp.write('s');
+  io.emit('temp_event', temp_dict);
+}
 
 sp.on("open", function () {
   console.log('Serialport Has Started');
@@ -78,9 +81,9 @@ sp.on("open", function () {
 
 			try {
       	var parsedData = JSON.parse(data);
-	      var myID = parsedData.ID;
+	      var myID = parsedData.Id;
 	      var temperature = parsedData.temp;
-	      console.log('ID: ' + myID );
+	      console.log('Id: ' + myID );
 	      console.log('Temp: ' + temperature );
 
 				//DATA EVENT
@@ -88,12 +91,6 @@ sp.on("open", function () {
 				var totalTemp = 0;
 				var counter = 0;
 				//ADD TIME FUNCTION
-
-				function myTimer() {
-					// SEND DICTIONARY TO Client
-          sp.write('s');
-					io.emit('temp_event', temp_dict);
-				}
 
 			} catch (e) {
 				console.log('Something went wrong: ' + e);
