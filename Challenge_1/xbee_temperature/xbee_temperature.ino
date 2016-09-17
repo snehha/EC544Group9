@@ -38,15 +38,18 @@ void setup(void) {
 void initial_join() {
   Serial.write("Init\n");
   clearArr(id,3);
+  
   //Generate Random Number
   randNum = random(1000);
+
+  //Ask to Join
   String data = "j" + String(randNum) + "\n";
   data.toCharArray(dataSend,6);
   XBee.write(dataSend);
 
+  //Keep reading until you get an id
   bool readId = false;
   bool readComma = false;
-  //Keep reading until your id is received
   while(true){
     if(XBee.available() > 0){
       chr = XBee.read();
@@ -55,8 +58,8 @@ void initial_join() {
       if(!readId){
         if(chr == 'i'){
           readId = true;
-          continue;
         }
+        continue;
       }
   
       //Get returned RandNum
@@ -69,6 +72,7 @@ void initial_join() {
         }
         randBuff[count] = chr;
         count++;
+        continue;
       }
       
       //Check if id is meant for me
@@ -129,7 +133,7 @@ void loop(void) {
   //Ask to join and get unique id
   while(!join) {
     initial_join();
-    break;
+    join = true;
   }
   
   //Read if data is available
