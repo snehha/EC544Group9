@@ -1,54 +1,100 @@
 #include <SoftwareSerial.h>
+#include <Math.h>
 // which analog pin to connect
 #define THERMISTORPIN A0         
 #define NUMSAMPLES 5
 #define SERIESRESISTOR 9100    
 #define BCOEFFICIENT 3400
 #define THERMISTORNOMINAL 4720      
-#define TEMPERATURENOMINAL 25 
+#define TEMPERATURENOMINAL 25
 SoftwareSerial XBee(2, 3); // RX, TX
-double floatVal = 1.2;
-char charVal[10];
-char access;
-char key;
+//Only 4 precision
+char temp[4];
+//Reading one char at a time
+char chr;
+//Support for 1,000 devices at most
+char id[3] = "";
+char randBuff[4] = "";
+char dataSend[30];
+int count;
+
+int randNum;
 
 int samples[NUMSAMPLES];
 bool join = false;
 
-void initial_join() {
-  XBee.write("{\"id\": 1, \"temp\": 75} \n");
-  //XBee.write("Join1\n");
-  //id "key_string"
-  access = XBee.read();
-  Serial.write(access);
-  if(access == 'i') {
-    while(XBee.available() > 0) {
-      key = XBee.read();
-      //Serial.write(key);
-    }
-    Serial.write(key);
-    join = true;
-  }
+void clearArr(char *arr,int n){
+  for(int i = 0; i < n; i++)
+    arr[i] = '\0';
 }
 
 void setup(void) {
   // put your setup code here, to run once:
   XBee.begin(9600);
   Serial.begin(9600);
+  randomSeed(analogRead(0));
 }
 
-void loop(void) {
-  //Ask if join
-  while(!join) {
-    initial_join();
-    delay(5000);
-  }
-  if(XBee.available() > 0){
-    if((XBee.read()) == 'r'){
-      join = false;
+void initial_join() {
+  Serial.write("Init\n");
+  clearArr(id,3);
+  //Generate Random Number
+  randNum = random(1000);
+  String data = "j" + String(randNum) + "\n";
+  data.toCharArray(dataSend,6);
+  XBee.write(dataSend);
+
+  bool readId = false;
+  bool readComma = false;
+  //Keep reading until your id is received
+  while(true){
+    if(XBee.available() > 0){
+      chr = XBee.read();
+      //Serial.write(chr);
+      
+      if(!readId){
+        if(chr == 'i'){
+          readId = true;
+          continue;
+        }
+      }
+  
+      //Get returned RandNum
+      if(!readComma){
+        if(chr == ','){
+          randBuff[count] = '\0';
+          readComma = true;
+          count = 0;
+          continue;
+        }
+        randBuff[count] = chr;
+        count++;
+      }
+      
+      //Check if id is meant for me
+      if(atoi(randBuff) == randNum){
+        //Get your id
+        if(chr == '\n'){
+          id[count] = '\0';
+          join = true;
+          Serial.write(id);
+          Serial.write('\n');
+          Serial.write("Joined");
+          Serial.write('\n');
+          break;
+        }
+        id[count] = chr;
+        count++;
+      }
+      else{
+        readId = false;
+        readComma = false;
+      }
     }
   }
-  
+}
+
+void getTemp(char *Arr){
   uint8_t i;
   float average;
   
@@ -57,17 +103,17 @@ void loop(void) {
    samples[i] = analogRead(THERMISTORPIN);
    delay(10);
   }
- 
+  
   // average all the samples out
   average = 0;
   for (i=0; i< NUMSAMPLES; i++) {
      average += samples[i];
   }
   average /= NUMSAMPLES;
-
+  
   average = 1023 / average - 1;
   average = SERIESRESISTOR / average;
-
+  
   float f_temp = 0;
   float steinhart;
   steinhart = log (average / THERMISTORNOMINAL);     // ln (R/Ro)
@@ -76,9 +122,49 @@ void loop(void) {
   steinhart = 1.0 / steinhart;                 // Invert
   steinhart =  steinhart - 273.15;                         // convert to C
   f_temp = (steinhart * 9.0)/ 5.0 + 32.0;
-  dtostrf(f_temp, 4, 2, charVal);
- // XBee.write("{ \"id\": %d, \"temp\": }")
-  XBee.write(charVal);
-  XBee.write("\n");
-  delay(1000);
+  dtostrf(f_temp, 4, 2, temp);
+}
+
+void loop(void) {
+  //Ask to join and get unique id
+  while(!join) {
+    initial_join();
+    break;
+  }
+  
+  //Read if data is available
+  if(XBee.available() > 0){
+    chr = XBee.read();
+    Serial.write("Data Received: ");
+    Serial.write(chr);
+    Serial.write('\n');
+
+    //Coordinator sends out r when it's restarted so no one is registered
+    if(chr == 'r'){
+      join = false;
+      Serial.write("WTFFFFF");
+    }
+    
+    if(chr == 's'){
+      getTemp(temp);
+      Serial.write("Temp: ");
+      Serial.write(temp);
+      Serial.write('\n');
+
+      //Send one long string terminated by null
+      String data = "{ \"id\": " + String(id) + ", \"temp\": " + String(temp) + " }\n";
+      data.toCharArray(dataSend,30);
+      XBee.write(dataSend);
+      /*XBee.write("{ \"id\": ");
+      XBee.write(id);
+      XBee.write(", \"temp\": ");
+      XBee.write(temp);
+      XBee.write(" }\n");*/
+      /*String data = String(id) + "\n";
+      data.toCharArray(dataSend,2);
+      XBee.write(dataSend);*/
+      //Might need to delay to prevent buffer overflow
+      //delay(randNum(1000));
+    }
+  }
 }

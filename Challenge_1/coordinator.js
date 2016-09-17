@@ -33,46 +33,55 @@ http.listen(3000, function(){
 var temp_dict = {};
 var key = 0;
 
-sp.on("open", function () {
+function myTimer() {
+  /*for (var key in temp_dict){
+    totalTemp += temp_dict[key];
+    counter++;
+  }*/
+  sp.write('s');
+  console.log("SENDING POLL NOW")
+  //var average = totalTemp/counter;
+   //Sent to HTML Client
+  //io.emit('temp_event', average);
+}
 
+sp.on("open", function () {
   console.log('Serialport Has Started');
   //-------Check for Empty Dictionary-------// In case the coordinator reset
+  sp.write('r');
+
+  setInterval(myTimer, 5000);
 
   sp.on('data', function(data) {
-
+    console.log('data received: ' + data);
   	//Listen for Joins
-  	if(data == "j"){
-  		key++;
-  		console.log("Sending key "+key)
-  		sp.write("i" + key.toString())
+  	if(data[0] == "j"){
+      key++;
+  		console.log("Sending key: " + "i" + data.slice(-(data.length-1)) + "," + key.toString()+"\n")
+      var str = "i" + data.slice(-(data.length-1)) + "," + key.toString()+"\n";
+  		sp.write(str);
   	}
 
     //Get Temperature
   	else{
-
-       //console.log('data received: ' + data);
+      //console.log('data received: ' + data);
       //io.emit('chat message', data);
-      var parsedData = JSON.parse(data);
-      var myID = parsedData.id;
-      var temperature = parsedData.temp;
-      console.log('ID: ' + myID );
-      console.log('Temp: ' + temperature );
+      try{
+        var parsedData = JSON.parse(data);
+        var myID = parsedData.id;
+        var temperature = parsedData.temp;
+        console.log('ID: ' + myID );
+        console.log('Temp: ' + temperature );
 
-			//DATA EVENT
-			temp_dict[myID] = temperature; 			//From the json event
-			var totalTemp = 0;
-			var counter = 0;
-			//ADD TIME FUNCTION
-			var secondsDelay = setInterval(myTimer, 2000);
-			function myTimer() {
-				for (var key in temp_dict){
-					totalTemp += temp_dict[key];
-					counter++;
-				}
-				var average = totalTemp/counter;
-			   //Sent to HTML Client
-        io.emit('temp_event', average);
+  			//DATA EVENT
+  			temp_dict[myID] = temperature; 			//From the json event
+  			var totalTemp = 0;
+  			var counter = 0;
+  			//ADD TIME FUNCTION
       }
-	}
+      catch(err){
+        console.log("Format Incorrect");
+      }
+	  }
   });
 });
