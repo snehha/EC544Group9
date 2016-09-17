@@ -8,6 +8,8 @@ portConfig = {
 	baudRate: 9600,
 	parser: SerialPort.parsers.readline("\n")
 };
+// Temperature Dictionary for Sensor Data
+var temp_dict = {};
 
 var sp = new SerialPort(portName, portConfig);
 
@@ -19,6 +21,7 @@ io.on('connection', function(socket){
   console.log('a user connected');
   socket.on('disconnect', function(){
   	console.log('a user has disconnected')
+		// DELETE FROM temp_dict once disconnected
   });
   socket.on('chat message', function(msg){
     io.emit('chat message', msg);
@@ -36,7 +39,6 @@ var availKey = new Array(maxDevices);
 
 //Every nth iteration, check if the keys received are all in the regKeys, else remove the ones not there and add it to availKeys
 var n = 10;
-var temp_dict = {};
 sp.on("open", function () {
   console.log('open');
   sp.on('data', function(data) {
@@ -49,37 +51,38 @@ sp.on("open", function () {
   	n += 1;
 
   	//New Devices send this string
-  	if(data == "Permission to Join"){
+  	if(data[0] == "j"){
   		var key = availKeys.shift();
   		regKeys.push(key);
   		sp.write("Id is " + key)
   	}
 
-  	else{
+  	if(data[0] == '{'){
 
        //console.log('data received: ' + data);
       //io.emit('chat message', data);
-      var parsedData = JSON.parse(data);
-      var myID = parsedData.id;
-      var temperature = parsedData.temp;
-      console.log('ID: ' + myID );
-      console.log('Temp: ' + temperature );
+			try {
+      	var parsedData = JSON.parse(data);
+	      var myID = parsedData.id;
+	      var temperature = parsedData.temp;
+	      console.log('ID: ' + myID );
+	      console.log('Temp: ' + temperature );
 
-			//DATA EVENT
-			temp_dict[myID] = temperature; 			//From the json event
-			var totalTemp = 0;
-			var counter = 0;
-			//ADD TIME FUNCTION
-			var secondsDelay = setInterval(myTimer, 2000);
-			function myTimer() {
-				for (var key in temp_dict){
-					totalTemp += temp_dict[key];
-					counter++;
+				//DATA EVENT
+				temp_dict[myID] = temperature; 			//From the json event
+				var totalTemp = 0;
+				var counter = 0;
+				//ADD TIME FUNCTION
+				var secondsDelay = setInterval(myTimer, 2000);
+				function myTimer() {
+					// SEND DICTIONARY TO Client
+					io.emit('temp_event', temp_dict);
 				}
-				var average = totalTemp/counter;
-			   //Sent to HTML Client
-        io.emit('temp_event', average);
-      }
-	}
+
+			} catch (e) {
+				console.log('Something went wrong ' + e);
+
+			}
+		}
   });
 });

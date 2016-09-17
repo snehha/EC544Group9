@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-    <title>Bootstrap 101 Template</title>
+    <title>Group 9 - Nest Challenge 1 </title>
 
     <!-- Bootstrap -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
@@ -21,12 +21,11 @@
     <h1 style="text-align: center;">Nest Home Reader</h1>
 	  <br /><br />
 	<div style="border-radius: 25px; background: #2c3e50; padding: 20px; width: 500px; margin-left: auto; margin-right: auto;">
-		<h3 style="text-align: center;">Temperature: <b id="temp"> - </b>&deg; F </h3>
-		<h3 style="text-align: center;">Status: <b id="status"> Loading </b> </h3>
+		<h3 style="text-align: center;">Temperature: <b id="temp"> - </b> &deg;F </h3>
         <br /><br /><br />
-        <div id="temp-lists" class="center" style="text-align: center;">
-              <h4 style="text-align: center;">Sensor X: <b id="temp"> - </b>&deg; F </h4>
-        </div>
+        <ul id="temp-lists" class="center" style="text-align: center; list-style: none;">
+              <!-- <h4 style="text-align: center;">Sensor X: <b id="temp"> - </b>&deg; F </h4> -->
+        </ul>
       <br class="clear"/>
 	</div>
 
@@ -44,8 +43,18 @@
     <script>
       var socket = io();
       socket.on('temp_event', function(msg){
+        $('#temp-lists').empty();
         //$('#temp').text(msg));
-        document.getElementById("temp").innerHTML = msg;
+        // Recieve dictionary and process logic here
+        var totalTemp = 0;
+        var counter = 0;
+        for (var key in msg){
+					totalTemp += msg[key];
+					counter++;
+          $('#temp-lists').append($('<li>').text('Sensor ' + key + ': ' + msg[key] + ' ℉'));
+				}
+				var average = totalTemp/counter;
+        document.getElementById("temp").innerHTML = average;
         console.log(msg);
       });
     </script>
