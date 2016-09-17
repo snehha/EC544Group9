@@ -59,11 +59,9 @@ sp.on("open", function () {
 
   	if(data[0] == '{'){
 
-       //console.log('data received: ' + data);
-      //io.emit('chat message', data);
 			try {
       	var parsedData = JSON.parse(data);
-	      var myID = parsedData.id;
+	      var myID = parsedData.ID;
 	      var temperature = parsedData.temp;
 	      console.log('ID: ' + myID );
 	      console.log('Temp: ' + temperature );
@@ -80,7 +78,7 @@ sp.on("open", function () {
 				}
 
 			} catch (e) {
-				console.log('Something went wrong ' + e);
+				console.log('Something went wrong: ' + e);
 
 			}
 		}
