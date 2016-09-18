@@ -37,7 +37,10 @@ void setup(void) {
 
 void initial_join() {
   Serial.write("Init\n");
+
   clearArr(id,3);
+  clearArr(randBuff,4);
+  count = 0;
   
   //Generate Random Number
   randNum = random(1000);
@@ -46,14 +49,21 @@ void initial_join() {
   String data = "j" + String(randNum) + "\n";
   data.toCharArray(dataSend,6);
   XBee.write(dataSend);
+  Serial.write(dataSend);
+  delay(1000);
+  
+  bool serverRunning = false;
+  if(XBee.available() > 0)
+    serverRunning = true;
 
   //Keep reading until you get an id
   bool readId = false;
   bool readComma = false;
-  while(true){
+  
+  while(serverRunning){
     if(XBee.available() > 0){
       chr = XBee.read();
-      Serial.write(chr);
+      //Serial.write(chr);
       
       if(!readId){
         if(chr == 'i'){
@@ -130,17 +140,16 @@ void getTemp(){
 }
 
 void loop(void) {
-  /*if(join){
-    Serial.write("JOIN IS TRUUUUUEEUEUEUUEEUUE");
-  }*/
   //Ask to join and get unique id
   while(!join) {
     initial_join();
+    delay(2000);
   }
   
   //Read if data is available
   if(XBee.available() > 0){
     chr = XBee.read();
+    Serial.write(chr);
 
     //Coordinator sends out r when it's restarted so no one is registered
     if(chr == 'r'){
@@ -151,7 +160,7 @@ void loop(void) {
       getTemp();
 
       //Send one long string terminated by null
-      String data = "{ \"Id\": " + String(id) + ", \"temp\": " + String(temp) + " }\n";
+      String data = "{ \"id\": " + String(id) + ", \"temp\": " + String(temp) + " }\n";
       data.toCharArray(dataSend,30);
       XBee.write(dataSend);
       /*XBee.write("{ \"id\": ");

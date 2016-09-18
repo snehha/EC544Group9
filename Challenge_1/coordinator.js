@@ -33,47 +33,76 @@ http.listen(3000, function(){
   console.log('listening on *:3000');
 });
 
-var maxDevices = 4;
+var maxDevices = 10;
 var regKeys = new Array();
-var availKey = new Array(maxDevices);
+var availKeys = [...Array(maxDevices).keys()]
+
+var current = []
 
 //Every nth iteration, check if the keys received are all in the regKeys, else remove the ones not there and add it to availKeys
-var n = 10;
-var key = 0;
+var n = 3;
+var count = 0;
 
+function cleanKeys(){
+  /*console.log("Registered Keys: ",regKeys);
+  console.log("Available Keys: ",availKeys);
+  console.log("Current is: ",current);*/
 
-//function myTimer() {
-  /*for (var key in temp_dict){
-    totalTemp += temp_dict[key];
-    counter++;
+  regKeys = regKeys.filter(function(element,index,array){
+    if(!(current.includes(element))){
+      availKeys.unshift(element);
+      return false;
+    }
+    else
+      return true;
+  });
+  /*for(var key in regKeys){
+    count++;
+    console.log("Key is:",key);
+    if(!(current.includes(parseInt(key)))){
+      console.log("Uh-oh no:",key);
+      var index = regKeys.splice(regKeys.indexOf(parseInt(key)),1);
+      console.log("Index to remove is:",index)
+      availKeys.unshift(parseInt(key));
+      //availKeys.sort();
+    }
   }*/
-  /*sp.write('s');
-  console.log("SENDING POLL NOW")
-  //var average = totalTemp/counter;
-   //Sent to HTML Client
-  //io.emit('temp_event', average);
-}*/
+  /*console.log("Registered Keys: ",regKeys);
+  console.log("Available Keys: ",availKeys);
+  console.log("Current is: ",current);*/
+}
 
 function myTimer() {
-  // SEND DICTIONARY TO Client
+  console.log("-----------------------------POLLING-----------------------------");
   sp.write('s');
+  // SEND DICTIONARY TO Client
   io.emit('temp_event', temp_dict);
+  count++;
+  if(count == n){
+    cleanKeys();
+    count = 0;
+  }
+  current.length = 0;
 }
 
 sp.on("open", function () {
-  console.log('Serialport Has Started');
-  //-------Check for Empty Dictionary-------// In case the coordinator reset
+  console.log('Serialport Has Started: Listening for Joins');
+  //Send out r to reset all the arduino ids
   sp.write('r');
+  console.log("RESET ALL");
 
+  //Poll every 2 seconds by sending s
   setInterval(myTimer, 2000);
 
   sp.on('data', function(data) {
     console.log('data received: ' + data);
     //Listen for Joins
     if(data[0] == "j"){
-      key++;
-      //console.log("Sending key: " + "i" + data.slice(-(data.length-1)) + "," + key.toString()+"\n")
-      var str = "i" + data.slice(-(data.length-1)) + "," + key.toString()+"\n";
+      var key = availKeys.shift();
+      regKeys.push(key);
+      current.push(key);
+      var str = "i" + data.slice(-(data.length-1)) + "," + key.toString() + "\n";
+      console.log("data sent: " + str);
       sp.write(str);
     }
 
@@ -81,16 +110,16 @@ sp.on("open", function () {
 
 			try {
       	var parsedData = JSON.parse(data);
-	      var myID = parsedData.Id;
+	      var myID = parsedData.id;
 	      var temperature = parsedData.temp;
-	      console.log('Id: ' + myID );
-	      console.log('Temp: ' + temperature );
 
 				//DATA EVENT
 				temp_dict[myID] = temperature; 			//From the json event
 				var totalTemp = 0;
 				var counter = 0;
 				//ADD TIME FUNCTION
+        current.push(myID);
+        console.log(current);
 
 			} catch (e) {
 				console.log('Something went wrong: ' + e);
