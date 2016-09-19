@@ -40,7 +40,7 @@ var availKeys = [...Array(maxDevices).keys()]
 var current = []
 
 //Every nth iteration, check if the keys received are all in the regKeys, else remove the ones not there and add it to availKeys
-var n = 3;
+var n = 2;
 var count = 0;
 
 function cleanKeys(){
@@ -49,8 +49,11 @@ function cleanKeys(){
   console.log("Current is: ",current);*/
 
   regKeys = regKeys.filter(function(element,index,array){
+  	console.log("Working on:",element);
     if(!(current.includes(element))){
       availKeys.unshift(element);
+      delete temp_dict[element];
+      console.log("Removing",element);
       return false;
     }
     else
@@ -119,6 +122,8 @@ sp.on("open", function () {
 				var counter = 0;
 				//ADD TIME FUNCTION
         current.push(myID);
+        if(!regKeys.includes(myID))
+        	regKeys.push(myID);
         console.log(current);
 
 			} catch (e) {

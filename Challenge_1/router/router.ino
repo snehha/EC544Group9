@@ -15,8 +15,9 @@ char chr;
 //Support for 1,000 devices at most
 char id[3] = "";
 char randBuff[4] = "";
-char dataSend[30];
+char dataSend[30] = "";
 int count;
+int counter;
 
 int randNum;
 
@@ -33,14 +34,20 @@ void setup(void) {
   XBee.begin(9600);
   Serial.begin(9600);
   randomSeed(analogRead(1));
+  pinMode(13,OUTPUT);
+  join = false;
 }
 
 void initial_join() {
   Serial.write("Init\n");
+  chr = "";
 
   clearArr(id,3);
   clearArr(randBuff,4);
+  clearArr(dataSend,30);
+  clearArr(temp,10);
   count = 0;
+  counter = 0;
   
   //Generate Random Number
   randNum = random(1000);
@@ -61,6 +68,8 @@ void initial_join() {
   bool readComma = false;
   
   while(serverRunning){
+    if(counter++ == 100)
+      return;
     if(XBee.available() > 0){
       chr = XBee.read();
       //Serial.write(chr);
@@ -84,10 +93,11 @@ void initial_join() {
         count++;
         continue;
       }
-      
+
       //Check if id is meant for me
       if(atoi(randBuff) == randNum){
         //Get your id
+        Serial.write("ID");
         if(chr == '\n'){
           id[count] = '\0';
           join = true;
@@ -95,7 +105,7 @@ void initial_join() {
           Serial.write('\n');
           Serial.write("Joined");
           Serial.write('\n');
-          break;
+          return;
         }
         id[count] = chr;
         count++;
@@ -143,9 +153,9 @@ void loop(void) {
   //Ask to join and get unique id
   while(!join) {
     initial_join();
+    digitalWrite(13,1);
     delay(2000);
   }
-  
   //Read if data is available
   if(XBee.available() > 0){
     chr = XBee.read();
