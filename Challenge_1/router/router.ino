@@ -57,7 +57,7 @@ void initial_join() {
   data.toCharArray(dataSend,6);
   XBee.write(dataSend);
   Serial.write(dataSend);
-  delay(1000);
+  delay(4000);
   
   bool serverRunning = false;
   if(XBee.available() > 0)
@@ -154,7 +154,7 @@ void loop(void) {
   while(!join) {
     initial_join();
     digitalWrite(13,1);
-    delay(2000);
+    //delay(3000);
   }
   //Read if data is available
   if(XBee.available() > 0){

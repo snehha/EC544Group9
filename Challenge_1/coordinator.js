@@ -59,17 +59,7 @@ function cleanKeys(){
     else
       return true;
   });
-  /*for(var key in regKeys){
-    count++;
-    console.log("Key is:",key);
-    if(!(current.includes(parseInt(key)))){
-      console.log("Uh-oh no:",key);
-      var index = regKeys.splice(regKeys.indexOf(parseInt(key)),1);
-      console.log("Index to remove is:",index)
-      availKeys.unshift(parseInt(key));
-      //availKeys.sort();
-    }
-  }*/
+
   /*console.log("Registered Keys: ",regKeys);
   console.log("Available Keys: ",availKeys);
   console.log("Current is: ",current);*/
@@ -95,12 +85,14 @@ sp.on("open", function () {
   console.log("RESET ALL");
 
   //Poll every 2 seconds by sending s
-  setInterval(myTimer, 2000);
+  var timing = setInterval(myTimer, 3000);
 
   sp.on('data', function(data) {
     console.log('data received: ' + data);
     //Listen for Joins
     if(data[0] == "j"){
+      clearTimeout(timing);
+      timing = setInterval(myTimer,3000);
       var key = availKeys.shift();
       regKeys.push(key);
       current.push(key);
