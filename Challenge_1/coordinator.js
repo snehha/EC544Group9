@@ -33,49 +33,98 @@ http.listen(3000, function(){
   console.log('listening on *:3000');
 });
 
-var maxDevices = 4;
+var maxDevices = 10;
 var regKeys = new Array();
-var availKey = new Array(maxDevices);
+var availKeys = [...Array(maxDevices).keys()]
+
+var current = []
 
 //Every nth iteration, check if the keys received are all in the regKeys, else remove the ones not there and add it to availKeys
-var n = 10;
+var n = 2;
+var count = 0;
+
+function cleanKeys(){
+  /*console.log("Registered Keys: ",regKeys);
+  console.log("Available Keys: ",availKeys);
+  console.log("Current is: ",current);*/
+
+  regKeys = regKeys.filter(function(element,index,array){
+  	console.log("Working on:",element);
+    if(!(current.includes(element))){
+      availKeys.unshift(element);
+      delete temp_dict[element];
+      console.log("Removing",element);
+      return false;
+    }
+    else
+      return true;
+  });
+  /*for(var key in regKeys){
+    count++;
+    console.log("Key is:",key);
+    if(!(current.includes(parseInt(key)))){
+      console.log("Uh-oh no:",key);
+      var index = regKeys.splice(regKeys.indexOf(parseInt(key)),1);
+      console.log("Index to remove is:",index)
+      availKeys.unshift(parseInt(key));
+      //availKeys.sort();
+    }
+  }*/
+  /*console.log("Registered Keys: ",regKeys);
+  console.log("Available Keys: ",availKeys);
+  console.log("Current is: ",current);*/
+}
+
+function myTimer() {
+  console.log("-----------------------------POLLING-----------------------------");
+  sp.write('s');
+  // SEND DICTIONARY TO Client
+  io.emit('temp_event', temp_dict);
+  count++;
+  if(count == n){
+    cleanKeys();
+    count = 0;
+  }
+  current.length = 0;
+}
+
 sp.on("open", function () {
-  console.log('open');
+  console.log('Serialport Has Started: Listening for Joins');
+  //Send out r to reset all the arduino ids
+  sp.write('r');
+  console.log("RESET ALL");
+
+  //Poll every 2 seconds by sending s
+  setInterval(myTimer, 2000);
+
   sp.on('data', function(data) {
-
-
-  	if(n == 10){
-  		//regKeys.forEach(availKeys.has())
-  		n = -1;
-  	}
-  	n += 1;
-
-  	//New Devices send this string
-  	if(data[0] == "j"){
-  		var key = availKeys.shift();
-  		regKeys.push(key);
-  		sp.write("Id is " + key)
-  	}
+    console.log('data received: ' + data);
+    //Listen for Joins
+    if(data[0] == "j"){
+      var key = availKeys.shift();
+      regKeys.push(key);
+      current.push(key);
+      var str = "i" + data.slice(-(data.length-1)) + "," + key.toString() + "\n";
+      console.log("data sent: " + str);
+      sp.write(str);
+    }
 
   	if(data[0] == '{'){
 
 			try {
       	var parsedData = JSON.parse(data);
-	      var myID = parsedData.ID;
+	      var myID = parsedData.id;
 	      var temperature = parsedData.temp;
-	      console.log('ID: ' + myID );
-	      console.log('Temp: ' + temperature );
 
 				//DATA EVENT
 				temp_dict[myID] = temperature; 			//From the json event
 				var totalTemp = 0;
 				var counter = 0;
 				//ADD TIME FUNCTION
-				var secondsDelay = setInterval(myTimer, 2000);
-				function myTimer() {
-					// SEND DICTIONARY TO Client
-					io.emit('temp_event', temp_dict);
-				}
+        current.push(myID);
+        if(!regKeys.includes(myID))
+        	regKeys.push(myID);
+        console.log(current);
 
 			} catch (e) {
 				console.log('Something went wrong: ' + e);
