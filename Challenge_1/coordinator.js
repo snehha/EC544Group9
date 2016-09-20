@@ -35,7 +35,11 @@ http.listen(3000, function(){
 
 var maxDevices = 10;
 var regKeys = new Array();
-var availKeys = [...Array(maxDevices).keys()]
+//var availKeys = [...Array(maxDevices).keys()]
+var availKeys = [];
+for(var i = 0; i < maxDevices; i++){
+  availKeys[i] = i;
+}
 
 var current = []
 
