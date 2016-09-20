@@ -40,16 +40,16 @@ var availKeys = [...Array(maxDevices).keys()]
 var current = []
 
 //Every nth iteration, check if the keys received are all in the regKeys, else remove the ones not there and add it to availKeys
-var n = 2;
+var n = 3;
 var count = 0;
 
 function cleanKeys(){
-  /*console.log("Registered Keys: ",regKeys);
+  console.log("------Debugging-------");
+  console.log("Registered Keys: ",regKeys);
   console.log("Available Keys: ",availKeys);
-  console.log("Current is: ",current);*/
-
+  console.log("Current is: ",current);
   regKeys = regKeys.filter(function(element,index,array){
-  	console.log("Working on:",element);
+  	console.log("Checking:",element);
     if(!(current.includes(element))){
       availKeys.unshift(element);
       delete temp_dict[element];
@@ -59,11 +59,19 @@ function cleanKeys(){
     else
       return true;
   });
+  regKeys = regKeys.filter(function(element, index, array) {
+    return index == array.indexOf(element);
+})
+  availKeys.sort();
 
-  /*console.log("Registered Keys: ",regKeys);
+  current.length = 0;
+  console.log("Registered Keys: ",regKeys);
   console.log("Available Keys: ",availKeys);
-  console.log("Current is: ",current);*/
+  console.log("Current is: ",current);
+  console.log("------Debugging-------");
 }
+
+var waiting = 1;
 
 function myTimer() {
   console.log("-----------------------------POLLING-----------------------------");
@@ -75,7 +83,9 @@ function myTimer() {
     cleanKeys();
     count = 0;
   }
-  current.length = 0;
+
+  if(waiting == 1)
+    waiting = 0;
 }
 
 sp.on("open", function () {
@@ -84,15 +94,15 @@ sp.on("open", function () {
   sp.write('r');
   console.log("RESET ALL");
 
-  //Poll every 2 seconds by sending s
-  var timing = setInterval(myTimer, 3000);
+  var timing = setInterval(myTimer,3000);
 
   sp.on('data', function(data) {
     console.log('data received: ' + data);
     //Listen for Joins
     if(data[0] == "j"){
       clearTimeout(timing);
-      timing = setInterval(myTimer,3000);
+      timing = setInterval(myTimer,6000);
+      waiting = 1;
       var key = availKeys.shift();
       regKeys.push(key);
       current.push(key);
@@ -102,7 +112,12 @@ sp.on("open", function () {
     }
 
   	if(data[0] == '{'){
-
+      if(!waiting){
+        console.log("!wait");
+        clearTimeout(timing);
+        timing = setInterval(myTimer,3000);
+        waiting = 2;
+      }
 			try {
       	var parsedData = JSON.parse(data);
 	      var myID = parsedData.id;
@@ -112,11 +127,14 @@ sp.on("open", function () {
 				temp_dict[myID] = temperature; 			//From the json event
 				var totalTemp = 0;
 				var counter = 0;
-				//ADD TIME FUNCTION
-        current.push(myID);
+
+				//Make sure arrays are up to date based on current responses
+        if(!current.includes(myID))
+          current.push(myID);
         if(!regKeys.includes(myID))
         	regKeys.push(myID);
-        console.log(current);
+        if(availKeys.includes(myID))
+          availKeys.splice(availKeys.indexOf(myID),1);
 
 			} catch (e) {
 				console.log('Something went wrong: ' + e);

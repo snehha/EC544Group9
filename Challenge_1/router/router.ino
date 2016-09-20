@@ -40,6 +40,7 @@ void setup(void) {
 
 void initial_join() {
   Serial.write("Init\n");
+  digitalWrite(13,1);
   chr = "";
 
   clearArr(id,3);
@@ -50,14 +51,15 @@ void initial_join() {
   counter = 0;
   
   //Generate Random Number
-  randNum = random(1000);
+  randNum = random(10000);
+  Serial.write(randNum);
 
   //Ask to Join
   String data = "j" + String(randNum) + "\n";
-  data.toCharArray(dataSend,6);
+  data.toCharArray(dataSend,8);
   XBee.write(dataSend);
   Serial.write(dataSend);
-  delay(4000);
+  delay(5000);
   
   bool serverRunning = false;
   if(XBee.available() > 0)
@@ -68,7 +70,8 @@ void initial_join() {
   bool readComma = false;
   
   while(serverRunning){
-    if(counter++ == 100)
+    digitalWrite(13,0);
+    if(counter++ == 1000)
       return;
     if(XBee.available() > 0){
       chr = XBee.read();
@@ -153,8 +156,11 @@ void loop(void) {
   //Ask to join and get unique id
   while(!join) {
     initial_join();
-    digitalWrite(13,1);
-    //delay(3000);
+    if(join){
+      break;
+    }
+    //Wait before asking again to join
+    delay(2000);
   }
   //Read if data is available
   if(XBee.available() > 0){
