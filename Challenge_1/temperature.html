@@ -22,7 +22,7 @@
 	  <br /><br />
   <div style="border-radius: 550px; background: #bdc3c7; padding-top: 25px; width: 550px; margin-left: auto; margin-right: auto; height: 550px;">
       <div style="border-radius: 500px; border: 50px solid black; background: #34495e; padding: 20px; width: 500px; padding-top: 100px; margin-left: auto; margin-right: auto; height: 500px; color: #ecf0f1;">
-    		<h3 style="text-align: center;">Temperature: <b id="temp"> - </b> <p id="tempUnit" style="display: inline;">&deg;F</p></h3>
+    		<h3 style="text-align: center;">Temperature: <b id="temp"> - </b> <p id="temperatureUnit" style="display: inline;">&deg;F</p></h3>
             <br /><br /><br />
             <ul id="temp-lists" style="text-align: center; padding-left: 0px; list-style: none; width: 450px; margin-left: auto; margin-right: auto; ">
                   <!-- <li>Sensor X: <b id="temp"> - </b>&deg; F </li> -->
@@ -31,8 +31,8 @@
     	</div>
   </div>
   <div style="text-align: center; padding-top: 25px;">
-    <button type="fToggle" onclick="tempToggle()">Fahrenheit</button>
-    <button type="cToggle" onclick="tempToggle()">Celcius</button>
+    <button onclick="tempToggle('℉')">Fahrenheit</button>
+    <button onclick="tempToggle('℃')">Celcius</button>
   </div>
   <footer style="text-align: center; padding-top: 200px;">
     <p>Designed and Made by Group 9</p>
@@ -59,12 +59,10 @@
 
         //toggle between Fahrenheit and Celcius
         var tempUnit = '℉';
-        document.getElementById("ftemp").onClick = function(){tempToggle('℉')};
-        document.getElementById("ctemp").onClick = function(){tempToggle('℃')};
 
         function tempToggle(unit) {
           tempUnit = unit;
-          document.getElementById("tempUnit").innerHTML = unit;
+          document.getElementById("temperatureUnit").innerHTML = unit;
         }
 
         // Calculate Temperature Average
