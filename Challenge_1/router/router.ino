@@ -57,7 +57,7 @@ void initial_join() {
   data.toCharArray(dataSend,6);
   XBee.write(dataSend);
   Serial.write(dataSend);
-  delay(4000);
+  delay(2000);
   
   bool serverRunning = false;
   if(XBee.available() > 0)

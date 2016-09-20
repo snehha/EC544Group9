@@ -40,7 +40,7 @@ var availKeys = [...Array(maxDevices).keys()]
 var current = []
 
 //Every nth iteration, check if the keys received are all in the regKeys, else remove the ones not there and add it to availKeys
-var n = 2;
+var n = 5;
 var count = 0;
 
 function cleanKeys(){
