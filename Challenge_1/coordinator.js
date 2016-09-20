@@ -35,7 +35,11 @@ http.listen(3000, function(){
 
 var maxDevices = 10;
 var regKeys = new Array();
-var availKeys = [...Array(maxDevices).keys()]
+//var availKeys = [...Array(maxDevices).keys()]
+var availKeys = [];
+for(var i = 0; i < maxDevices; i++){
+  availKeys[i] = i;
+}
 
 var current = []
 
@@ -59,7 +63,6 @@ function cleanKeys(){
     else
       return true;
   });
-
   /*console.log("Registered Keys: ",regKeys);
   console.log("Available Keys: ",availKeys);
   console.log("Current is: ",current);*/
