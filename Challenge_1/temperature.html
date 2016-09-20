@@ -44,6 +44,49 @@
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
 
+    <script type="text/javascript">
+      //toggle between Fahrenheit and Celcius
+      var tempUnit = '℉';
+
+      function tempToggle(unit) {
+        tempUnit = unit;
+        document.getElementById("temperatureUnit").innerHTML = unit;
+        //$('#temp-lists').empty();
+        // Recieve dictionary and process logic here
+        var totalTemp = 0;
+        var counter = 0;
+
+        // Calculate Temperature Average
+        for (var key in msg){
+          totalTemp += msg[key];
+          counter++;
+          $('#temp-lists').append($('<li style="width: 370px;">').text('Sensor ' + key + ': ' + displayTemp(msg[key]).toFixed(2) + ' '+ tempUnit));
+        }
+        var average = totalTemp/counter;
+
+        if( average == null ){
+          document.getElementById("temp").innerHTML = "-";
+        } else {
+          // convert to Celcius
+          
+          average = displayTemp(average);
+
+          document.getElementById("temp").innerHTML = average.toFixed(2);
+        }
+      }
+
+      function displayTemp(temp){
+        if(tempUnit == '℃'){
+          return ((5/9) * (temp-32))/1.0;
+        }
+        else
+          return temp/1.0;
+      }
+
+
+
+    </script>
+
     <script>
       var socket = io();
     </script>
@@ -57,19 +100,11 @@
         var totalTemp = 0;
         var counter = 0;
 
-        //toggle between Fahrenheit and Celcius
-        var tempUnit = '℉';
-
-        function tempToggle(unit) {
-          tempUnit = unit;
-          document.getElementById("temperatureUnit").innerHTML = unit;
-        }
-
         // Calculate Temperature Average
         for (var key in msg){
 					totalTemp += msg[key];
 					counter++;
-          $('#temp-lists').append($('<li style="width: 370px;">').text('Sensor ' + key + ': ' + msg[key] + ' '+ tempUnit));
+          $('#temp-lists').append($('<li style="width: 370px;">').text('Sensor ' + key + ': ' + displayTemp(msg[key]).toFixed(2) + ' '+ tempUnit));
 				}
 				var average = totalTemp/counter;
 
@@ -77,9 +112,9 @@
           document.getElementById("temp").innerHTML = "-";
         } else {
           // convert to Celcius
-          if(tempUnit == '℃') {
-            average = (5/9) * (average-32);
-          }
+          
+          average = displayTemp(average);
+
           document.getElementById("temp").innerHTML = average.toFixed(2);
         }
 
