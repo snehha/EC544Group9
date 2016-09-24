@@ -17,10 +17,12 @@
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
   </head>
-  <body style="color: #2c3e50; background: linear-gradient(white, #bdc3c7); height: 100%">
+  <body style="color: #2c3e50; background: linear-gradient(white, #bdc3c7); height: 100%; background-repeat: no-repeat; background-attachment: fixed;">
     <h1 style="text-align: center;">Nest Home Reader</h1>
-	  <br /><br />
-  <div style="border-radius: 550px; background: #bdc3c7; padding-top: 25px; width: 550px; margin-left: auto; margin-right: auto; height: 550px;">
+	  <br />
+    <center><button onclick="chartToggle()" id = "chartButton">Show Historical Chart</button></center>
+    <br />
+  <div style="border-radius: 550px; background: #bdc3c7; padding-top: 25px; width: 550px; margin-left: auto; margin-right: auto; height: 550px;" id = "realtimeDisplay">
       <div style="border-radius: 500px; border: 50px solid black; background: #34495e; padding: 20px; width: 500px; padding-top: 100px; margin-left: auto; margin-right: auto; height: 500px; color: #ecf0f1;">
     		<h3 style="text-align: center;">Temperature: <b id="temp"> - </b> <p id="temperatureUnit" style="display: inline;">&deg;F</p></h3>
             <br /><br /><br />
@@ -30,10 +32,141 @@
           <br class="clear"/>
     	</div>
   </div>
+  <!--Chart-->
+  <div id="temperatureChart" style="display: none;">
+    <head>
+      <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/d3/3.2.2/d3.v3.min.js"></script>
+      <script type="text/javascript" src="./canvasjs.min.js"></script>
+    </head>
+    <body>
+      <center><div id="chartContainer" style="height: 300px; width: 90%;"></div></center>
+    </body>
+
+    <script>
+    var chartTitle = "(Fake) Temperature Readings Over Time";
+    var names = ["SensorA", "SensorB", "SensorC", "SensorD"];
+    var names = ["A", "B", "C", "D"]
+    var sensorData = {};
+    var time = 5;
+    var randomDelay = 2000; 
+    sensorData = {}
+
+    var addTimePoint = function(dataset, sensorName, timepoint, value){
+      if (!dataset.hasOwnProperty(sensorName)){
+        dataset[sensorName] = [];
+      }
+      dataset[sensorName].push({
+        x: timepoint,
+        y: value
+      });
+      refreshChart();
+    }
+
+    var addRandomPoint = function(){
+    if (time <= 300){
+      var randomValue = 0;
+      time += randomDelay/1000; 
+      for( var i = 0; i < 4; i++) {
+        randomValue = Math.round(Math.random() * 10);
+        addTimePoint(sensorData, names[i], time, randomValue);
+      }
+    }
+    else {
+    window.clearInterval(timer);
+    }
+    }
+
+    var compareReadingsByTime = function(readingA,readingB){
+      return readingA.x - readingB.x;
+    }
+
+    var makeData = function(dataset){
+      var data = [];
+      for (var sensorName in dataset){
+        var subset = makeSubset(dataset, sensorName);
+        data.push(subset);
+      }
+      return data;
+    }
+
+    var makeSubset = function(dataset, sensorName){
+      var subset = {
+        type: "line",
+        showInLegend: true,
+        lineThickness: 2,
+        name: "sensor " + sensorName,
+        dataPoints: dataset[sensorName].sort(compareReadingsByTime)
+      };
+      return subset;
+    }
+
+    var renderChart = function(sensorData){
+      var data = makeData(sensorData);
+      var chartParams = {
+        title: {
+          text: chartTitle,
+          fontSize: 15
+        },
+        data: data
+      };
+
+      chartParams = 
+      {
+
+          title:{
+            text: chartTitle,
+            fontSize: 30
+          },
+          animationEnabled: false,
+          axisX:{
+
+            gridColor: "Silver",
+            tickColor: "silver",
+          },                        
+          toolTip:{
+            shared:true
+          },
+          theme: "theme1",
+          axisY: {
+            gridColor: "Silver",
+            tickColor: "silver"
+          },
+          legend:{
+            verticalAlign: "center",
+            horizontalAlign: "right"
+          },
+          data: data,
+          legend:{
+            cursor:"pointer",
+            itemclick:function(e){
+              if (typeof(e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+                e.dataSeries.visible = false;
+              }
+              else{
+                e.dataSeries.visible = true;
+              }
+              chart.render();
+            }
+          }
+      };
+      var chart = new CanvasJS.Chart("chartContainer", chartParams);
+      chart.render();
+    }
+
+    var refreshChart = function(){
+      renderChart(sensorData);
+    }
+
+    var timer = window.setInterval(addRandomPoint, randomDelay);
+
+    </script>
+  </div>
+
   <div style="text-align: center; padding-top: 25px;">
     <button onclick="tempToggle('℉')">Fahrenheit</button>
-    <button onclick="tempToggle('℃')">Celcius</button>
+    <button onclick="tempToggle('℃')">Celcius</button><br><br>
   </div>
+
   <footer style="text-align: center; padding-top: 200px;">
     <p>Designed and Made by Group 9</p>
   </footer>
@@ -84,7 +217,18 @@
           return temp/1.0;
       }
 
-
+      // Temperature Chart view toggle
+      function chartToggle(){
+        if( document.getElementById("temperatureChart").style.display == 'none' ){
+          $("#temperatureChart").fadeIn(1000);
+          document.getElementById("realtimeDisplay").style.display = 'none';
+          document.getElementById("chartButton").innerHTML = "Show Realtime Temperatures";
+        } else {
+          document.getElementById("temperatureChart").style.display = 'none';
+          $("#realtimeDisplay").fadeIn(1000);
+          document.getElementById("chartButton").innerHTML = "Show Historical Chart";
+        }
+      }
 
     </script>
 
