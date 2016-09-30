@@ -88,7 +88,6 @@
 
     <script>
     var chartTitle = "Average Temperature Readings Over Time";
-    //var names = ["SensorA", "SensorB", "SensorC", "SensorD"];
     var sensorData = {};
  
     sensorData = {}
@@ -121,7 +120,7 @@
         type: "line",
         showInLegend: true,
         lineThickness: 2,
-        name: "sensor " + sensorName,
+        name: sensorName,
         dataPoints: dataset[sensorName].sort(compareReadingsByTime)
       };
       return subset;
@@ -140,7 +139,7 @@
           axisX: { gridColor: "Silver", tickColor: "silver", valueFormatString: "DDD HH:mm:ss" },                        
           toolTip:{ shared:true },
           theme: "theme1",
-          axisY: { gridColor: "Silver", tickColor: "silver" },
+          axisY: { title: "Degrees Fahrenheit", gridColor: "Silver", tickColor: "silver" },
           legend: { verticalAlign: "center", horizontalAlign: "right" },
           data: data,
           legend:{ cursor:"pointer",
@@ -151,12 +150,27 @@
             }
           }
       };
+
       var chart = new CanvasJS.Chart("chartContainer", chartParams);
       chart.render();
     }
 
     var refreshChart = function(){
       renderChart(sensorData);
+    }
+
+    var tempUnit = '℉';
+
+    var toggleChartUnit = function(dataset,sensorName, unit){
+      var size = 0;
+      for( var sensor in dataset[sensorName]) size++;
+      for (var i = 0; i < size; i++){
+        if(unit == '℃' && unit != tempUnit ) 
+          dataset[sensorName][i].y = ((5/9) * (dataset[sensorName][i].y-32))/1.0;
+        else if(unit == '℉' && unit != tempUnit ) 
+          dataset[sensorName][i].y = dataset[sensorName][i].y * (9 / 5) + 32;
+      }
+      refreshChart();
     }
 
     </script>
@@ -178,12 +192,10 @@
 
     <script type="text/javascript">
       //toggle between Fahrenheit and Celcius
-      var tempUnit = '℉';
       function tempToggle(unit) {
+        toggleChartUnit(sensorData,"Average Temperature", unit);
         tempUnit = unit;
         document.getElementById("temperatureUnit").innerHTML = unit;
-        //msg = $('#temp-lists');
-        //$('#temp-lists').empty();
         // Recieve dictionary and process logic here
         var totalTemp = 0;
         var counter = 0;
@@ -198,7 +210,6 @@
           document.getElementById("temp").innerHTML = "-";
         } else {
           // convert to Celcius
-          
           average = displayTemp(average);
           document.getElementById("temp").innerHTML = average.toFixed(2);
         }
@@ -217,13 +228,12 @@
               tx.executeSql('SELECT * FROM avgTemps', [], function (tx, results) {
                  var len = results.rows.length, i;
                  for (i = 0; i < len; i++){
-                    addTimePoint(sensorData,"Average Temperature", new Date(), results.rows.item(i).temperature);
+                    addTimePoint(sensorData,"Average Temperature", new Date(results.rows.item(i).timeReceived), results.rows.item(i).temperature);
                  }
               }, null);
            });
       }
 
-      //loadTemps();
       var dataLoaded = false;
       // Temperature Chart view toggle
       function chartToggle(){
@@ -241,8 +251,6 @@
           document.getElementById("chartButton").innerHTML = "Show Historical Chart";
         }
       }
-      saveTemp(70);
-
     </script>
 
     <script>
@@ -268,7 +276,6 @@
         if( average == null ){
           document.getElementById("temp").innerHTML = "-";
         } else {
-
           // save average temp to DB
           saveTemp(average.toFixed(2));
           // convert to Celcius
