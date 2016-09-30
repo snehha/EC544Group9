@@ -111,8 +111,8 @@ sp.on("open", function () {
   var timing = setInterval(myTimer,3000);
 
   sp.on('data', function(data) {
-    console.log("data received",data.toString('hex'));
-
+    console.log("buffer",data.toString('hex'));
+    console.log('data received: ' + data);
     //Listen for Joins -> FFFF
     /*if(data.charCodeAt(0) == 127 && data.charCodeAt(1) == 127){
       //Reset timer to setTime seconds 
