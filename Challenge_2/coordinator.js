@@ -38,7 +38,7 @@ http.listen(3000, function(){
 var sendReset = 0;
 var sendPoll = 1;
 //Create Buffer object to pass to pass to sp.write
-var buffer = Buffer.allocUnsafe(4);
+var buffer = Buffer.allocUnsafe(5);
 
 
 var maxDevices = 10;

@@ -49,12 +49,12 @@ void initial_join() {
   //Generate Random Number max 2^16-1
   uint8_t randNum = random(pow(2,16)-1);
   //Ask to Join [FFFF][randNum]
-  clearArr(data,5);
-  firstbyte = B11111111;
-  secondbyte = B11111111;
-  thirdbyte = char(0 | (randNum >> 8));
-  fourthbyte = char(0 | randNum);
-  sprintf(data,"%c%c%c%c",firstbyte,secondbyte,thirdbyte,fourthbyte);
+  clearArr(data,100);
+  firstbyte = 255;
+  secondbyte = 255;
+  thirdbyte = 255;
+  fourthbyte = 255;
+  sprintf(data,"%c%c%c%c\n",firstbyte,secondbyte,thirdbyte,fourthbyte);
   XBee.write(data);
   delay(5000);
 
@@ -144,12 +144,8 @@ void loop(void) {
   //Ask to join and get unique id
   while(!join) {
     initial_join();
-    if(join){
-      break;
-    }
-    //Wait before asking again to join
-    delay(2000);
   }
+  
   //Read if data is available
   if(XBee.available() > 0){
     chr = XBee.read();
