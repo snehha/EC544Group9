@@ -33,31 +33,26 @@ http.listen(3000, function(){
   console.log('listening on *:3000');
 });
 
+
 //Format of strings to send
-var msgSend = "";
 var sendReset = 0;
 var sendPoll = 1;
-//Variable to receive message
-var msgReceive = "";
-//4-byte buffer to store the messages to send
-var buffer = new ArrayBuffer(4);
-//Views for the buffer
-var int16View = new Int16Array(buffer); //Will be used to send pair of two bytes
-var int32View = new Int32Array(buffer); //Will be used to send poll/reset
+//Create Buffer object to pass to pass to sp.write
+var buffer = Buffer.allocUnsafe(4);
+
 
 var maxDevices = 10;
+var current = [];
 var regKeys = new Array();
 //var availKeys = [...Array(maxDevices).keys()]
 var availKeys = [];
 for(var i = 0; i < maxDevices; i++){
   availKeys[i] = i;
 }
-var current = []
 
 //Every nth iteration, check if the keys received are all in the regKeys, else remove the ones not there and add it to availKeys
 var n = 3;
 var count = 0;
-
 function cleanKeys(){
   console.log("------Debugging-------");
   console.log("Registered Keys: ",regKeys);
@@ -91,11 +86,11 @@ var waiting = 1;
 function myTimer() {
   console.log("-----------------------------POLLING-----------------------------");
   //Write 1 to buffer to send
-  int32View = sendPoll;
+  buffer.writeInt32BE(sendPoll,0);
   sp.write(buffer);
-
   // SEND DICTIONARY TO Client
   io.emit('temp_event', temp_dict);
+
   count++;
   if(count == n){
     cleanKeys();
@@ -109,7 +104,7 @@ function myTimer() {
 sp.on("open", function () {
   console.log('Serialport Has Started: Listening for Joins');
   //Write 0 to buffer to reset devices
-  int32View = sendReset;
+  buffer.writeInt32BE(sendReset,0);
   sp.write(buffer);
   console.log("RESET ALL");
 
@@ -117,9 +112,17 @@ sp.on("open", function () {
 
   sp.on('data', function(data) {
     console.log('data received: ' + data);
+    console.log(data.length);
+    console.log(data.charCodeAt(0));
+    var dataBuffer = Buffer.from(data,'ascii');
+    console.log(dataBuffer.length);
+
+    console.log(dataBuffer.readUInt16(0));
+    console.log(dataBuffer.readUInt16(1));
     //Listen for Joins -> FFFF
-    if(data[0] == 255 && data[1] == 255){
+    if(data.charCodeAt(0) == 127 && data.charCodeAt(1) == 127){
       //Reset timer to setTime seconds 
+      console.log("Someone wants to join")
       var setTime = 6;
       clearTimeout(timing);
       timing = setInterval(myTimer,setTime*1000);
@@ -166,7 +169,6 @@ sp.on("open", function () {
 
 			} catch (e) {
 				console.log('Something went wrong: ' + e);
-
 			}
 		}
   });

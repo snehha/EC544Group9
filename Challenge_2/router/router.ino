@@ -16,15 +16,15 @@ char temp[2] = "";
 //Support for 2^16 devices at most
 char id[2] = "";
 char randBuff[4] = "";
-//Will send 4 bytes every time -> either join or send temp/id
-char dataSend[4] = "";
+//Will send 5 bytes every time -> either join or send temp/id
+char data[5];
 
-uint16_t firstbytes;
-uint16_t secondbytes;
+char firstbyte;
+char secondbyte;
+char thirdbyte;
+char fourthbyte;
 
-int count;
 int counter;
-uint16_t randNum;
 
 int samples[NUMSAMPLES];
 bool join = false;
@@ -44,88 +44,67 @@ void setup(void) {
 }
 
 void initial_join() {
-  //Serial.write("Init\n");
-  digitalWrite(13,1);
-  chr = '\0';
-
-  clearArr(id,2);
-  clearArr(randBuff,4);
-  clearArr(dataSend,4);
-  clearArr(temp,2);
-  count = 0;
   counter = 0;
   
   //Generate Random Number max 2^16-1
-  randNum = random(pow(2,16)-1);
+  char randNum1 = random(pow(2,7)-1);
+  char randNum2 = random(pow(2,7)-1);
+  //Ask to Join [FFFF][randNum]
+  clearArr(data,5);
+  firstbyte = B1111111;
+  secondbyte = B1111111;
+  thirdbyte = randNum1;
+  fourthbyte = randNum2;
+  sprintf(data,"%c%c%c%c\n",firstbyte,secondbyte,thirdbyte,fourthbyte);
+  XBee.write(data);
+  delay(5000);
 
-  //Ask to Join
-  //String data = "j" + String(randNum) + "\n";
-  //data.toCharArray(dataSend,8);
-  char data[5];
-  Serial.write("Join:65535\nRandNum:%u\n",randNum);
-  sprintf(data,"%u%u\n",65535,randNum);
-  Serial.write(data);
-  delay(5000);
-  return;
-  //XBee.write(dataSend);
-  //Serial.write(dataSend);
-  delay(5000);
-  
+  //Check if server is sending data
   bool serverRunning = false;
   if(XBee.available() > 0)
     serverRunning = true;
 
-  //Keep reading until you get an id
-  bool readId = false;
-  bool readComma = false;
+  //Keep reading until you get the correct randNum
+  int countRand = 0;
+  uint16_t randRead = 0;
+  int countId = 0;
+  uint16_t idRead = 0;
   
   while(serverRunning){
     digitalWrite(13,0);
     if(counter++ == 1000)
       return;
     if(XBee.available() > 0){
-      chr = XBee.read();
-      //Serial.write(chr);
-      
-      if(!readId){
-        if(chr == 'i'){
-          readId = true;
-        }
+      uint16_t byteRead = XBee.read();
+      char sender[10];
+      sprintf(sender,"--%u--\n",byteRead);
+      Serial.write(sender);
+
+      //Receive msb first
+      if(countRand == 0){
+        randRead = (randRead | byteRead << 8 );
+        countRand++;
+        continue;
+      }
+      if(countRand == 1){
+        randRead = (randRead | byteRead);
+        countRand++;
+      }
+      //If randNum read is not mine then it was meant for other arduino
+      if(randRead != randNum1){
+        countRand = 0;
         continue;
       }
   
-      //Get returned RandNum
-      if(!readComma){
-        if(chr == ','){
-          randBuff[count] = '\0';
-          readComma = true;
-          count = 0;
-          continue;
-        }
-        randBuff[count] = chr;
-        count++;
+      //Read ID
+      if(countId == 0){
+        idRead = (idRead | byteRead << 8);
+        countId++;
         continue;
       }
-
-      //Check if id is meant for me
-      if(atoi(randBuff) == randNum){
-        //Get your id
-        Serial.write("ID");
-        if(chr == '\n'){
-          id[count] = '\0';
-          join = true;
-          Serial.write(id);
-          Serial.write('\n');
-          Serial.write("Joined");
-          Serial.write('\n');
-          return;
-        }
-        id[count] = chr;
-        count++;
-      }
-      else{
-        readId = false;
-        readComma = false;
+      if(countId == 1){
+        idRead = (idRead | byteRead);
+        break;
       }
     }
   }
@@ -187,8 +166,8 @@ void loop(void) {
 
       //Send one long string terminated by null
       String data = "{ \"id\": " + String(id) + ", \"temp\": " + String(temp) + " }\n";
-      data.toCharArray(dataSend,30);
-      XBee.write(dataSend);
+//      data.toCharArray(dataSend,30);
+ //     XBee.write(dataSend);
       /*XBee.write("{ \"id\": ");
       XBee.write(id);
       XBee.write(", \"temp\": ");
