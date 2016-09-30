@@ -47,15 +47,14 @@ void initial_join() {
   counter = 0;
   
   //Generate Random Number max 2^16-1
-  char randNum1 = random(pow(2,7)-1);
-  char randNum2 = random(pow(2,7)-1);
+  uint8_t randNum = random(pow(2,16)-1);
   //Ask to Join [FFFF][randNum]
   clearArr(data,5);
-  firstbyte = B1111111;
-  secondbyte = B1111111;
-  thirdbyte = randNum1;
-  fourthbyte = randNum2;
-  sprintf(data,"%c%c%c%c\n",firstbyte,secondbyte,thirdbyte,fourthbyte);
+  firstbyte = B11111111;
+  secondbyte = B11111111;
+  thirdbyte = char(0 | (randNum >> 8));
+  fourthbyte = char(0 | randNum);
+  sprintf(data,"%c%c%c%c",firstbyte,secondbyte,thirdbyte,fourthbyte);
   XBee.write(data);
   delay(5000);
 
@@ -91,7 +90,7 @@ void initial_join() {
         countRand++;
       }
       //If randNum read is not mine then it was meant for other arduino
-      if(randRead != randNum1){
+      if(randRead != randNum){
         countRand = 0;
         continue;
       }

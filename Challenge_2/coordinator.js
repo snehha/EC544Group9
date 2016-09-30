@@ -6,7 +6,7 @@ var io = require('socket.io')(http);
 var portName = process.argv[2],
 portConfig = {
 	baudRate: 9600,
-	parser: SerialPort.parsers.readline("\n")
+	parser: SerialPort.parsers.byteLength(4)
 };
 // Temperature Dictionary for Sensor Data
 var temp_dict = {};
@@ -111,16 +111,10 @@ sp.on("open", function () {
   var timing = setInterval(myTimer,3000);
 
   sp.on('data', function(data) {
-    console.log('data received: ' + data);
-    console.log(data.length);
-    console.log(data.charCodeAt(0));
-    var dataBuffer = Buffer.from(data,'ascii');
-    console.log(dataBuffer.length);
+    console.log("data received",data.toString('hex'));
 
-    console.log(dataBuffer.readUInt16(0));
-    console.log(dataBuffer.readUInt16(1));
     //Listen for Joins -> FFFF
-    if(data.charCodeAt(0) == 127 && data.charCodeAt(1) == 127){
+    /*if(data.charCodeAt(0) == 127 && data.charCodeAt(1) == 127){
       //Reset timer to setTime seconds 
       console.log("Someone wants to join")
       var setTime = 6;
@@ -170,6 +164,6 @@ sp.on("open", function () {
 			} catch (e) {
 				console.log('Something went wrong: ' + e);
 			}
-		}
+		}*/
   });
 });
