@@ -6,7 +6,7 @@ var io = require('socket.io')(http);
 var portName = process.argv[2],
 portConfig = {
 	baudRate: 9600,
-	parser: SerialPort.parsers.byteLength(4)
+	parser: SerialPort.parsers.byteDelimiter([20,30])
 };
 // Temperature Dictionary for Sensor Data
 var temp_dict = {};
@@ -38,7 +38,7 @@ http.listen(3000, function(){
 var sendReset = 0;
 var sendPoll = 1;
 //Create Buffer object to pass to pass to sp.write
-var buffer = Buffer.allocUnsafe(5);
+var buffer = Buffer.allocUnsafe(4);
 
 
 var maxDevices = 10;
@@ -46,8 +46,8 @@ var current = [];
 var regKeys = new Array();
 //var availKeys = [...Array(maxDevices).keys()]
 var availKeys = [];
-for(var i = 0; i < maxDevices; i++){
-  availKeys[i] = i;
+for(var i = 1; i < maxDevices+1; i++){
+  availKeys[i-1] = i;
 }
 
 //Every nth iteration, check if the keys received are all in the regKeys, else remove the ones not there and add it to availKeys
@@ -88,6 +88,7 @@ function myTimer() {
   //Write 1 to buffer to send
   buffer.writeInt32BE(sendPoll,0);
   sp.write(buffer);
+  console.log("Send code: ",buffer.toString('hex'));
   // SEND DICTIONARY TO Client
   io.emit('temp_event', temp_dict);
 
@@ -106,15 +107,15 @@ sp.on("open", function () {
   //Write 0 to buffer to reset devices
   buffer.writeInt32BE(sendReset,0);
   sp.write(buffer);
-  console.log("RESET ALL");
+  console.log("RESET ALL with code: ",buffer.toString('hex'));
 
   var timing = setInterval(myTimer,3000);
 
   sp.on('data', function(data) {
-    console.log("buffer",data.toString('hex'));
-    console.log('data received: ' + data);
+    console.log('buffer',data.toString('hex'));
+    /*console.log(data.charCodeAt(0),data.charCodeAt(1),data.charCodeAt(2),data.charCodeAt(3));
     //Listen for Joins -> FFFF
-    /*if(data.charCodeAt(0) == 127 && data.charCodeAt(1) == 127){
+    if(data.charCodeAt(0) == 127 && data.charCodeAt(1) == 127){
       //Reset timer to setTime seconds 
       console.log("Someone wants to join")
       var setTime = 6;
@@ -126,10 +127,15 @@ sp.on("open", function () {
       var key = availKeys.shift();
       regKeys.push(key);
       current.push(key);
+      console.log('key:',key);
 
       //Send Data
-      int16View[0] = parseInt(data.slice(2,4)); //Place randNum first
-      int16View[1] = key; //Place id second
+      console.log('buffer before overwrite: ',buffer.toString('hex'));
+      buffer.writeInt8(data.charCodeAt(2),0); //Place randNum first
+      buffer.writeInt8(data.charCodeAt(3),1); //Place randNum first
+      buffer.writeInt8(key>>8,2);
+      buffer.writeInt8(key,3);
+      console.log('writing: ',buffer.toString('hex'));
       //console.log("data sent: " + str);
       sp.write(buffer);
     }

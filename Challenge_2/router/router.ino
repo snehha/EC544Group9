@@ -40,59 +40,57 @@ void setup(void) {
   Serial.begin(9600);
   randomSeed(analogRead(1));
   pinMode(13,OUTPUT);
+  digitalWrite(13,1);
   join = false;
 }
 
 void initial_join() {
   counter = 0;
   
-  //Generate Random Number max 2^16-1
-  uint8_t randNum = random(pow(2,16)-1);
-  //Ask to Join [FFFF][randNum]
-  clearArr(data,100);
-  firstbyte = 255;
-  secondbyte = 255;
-  thirdbyte = 255;
-  fourthbyte = 255;
-  sprintf(data,"%c%c%c%c\n",firstbyte,secondbyte,thirdbyte,fourthbyte);
+  //Generate 2 random numbers
+  char randNum1 = random(pow(2,7)-1);
+  char randNum2 = random(pow(2,7)-1);
+  //Send 4 bytes
+  firstbyte = 20;
+  secondbyte = 127;
+  thirdbyte = randNum1;
+  fourthbyte = 30;
+  sprintf(data,"%c%c%c%c",firstbyte,secondbyte,thirdbyte,fourthbyte);
   XBee.write(data);
   delay(5000);
 
   //Check if server is sending data
   bool serverRunning = false;
-  if(XBee.available() > 0)
+  if(XBee.available() > 0){
     serverRunning = true;
+    //Serial.write("SERVER RUNNING");
+  }
 
   //Keep reading until you get the correct randNum
   int countRand = 0;
-  uint16_t randRead = 0;
+  char randRead = 0;
   int countId = 0;
-  uint16_t idRead = 0;
+  uint8_t idRead = 0;
   
   while(serverRunning){
     digitalWrite(13,0);
     if(counter++ == 1000)
       return;
     if(XBee.available() > 0){
-      uint16_t byteRead = XBee.read();
-      char sender[10];
-      sprintf(sender,"--%u--\n",byteRead);
-      Serial.write(sender);
+      char byteRead = XBee.read();
+      Serial.write(byteRead);
 
       //Receive msb first
       if(countRand == 0){
-        randRead = (randRead | byteRead << 8 );
-        countRand++;
+        if(byteRead == randNum1)
+          countRand++;
         continue;
       }
       if(countRand == 1){
-        randRead = (randRead | byteRead);
-        countRand++;
-      }
-      //If randNum read is not mine then it was meant for other arduino
-      if(randRead != randNum){
-        countRand = 0;
-        continue;
+        if(byteRead == randNum2)
+          countRand++;
+        else
+          countRand = 0;
       }
   
       //Read ID
@@ -145,6 +143,8 @@ void loop(void) {
   while(!join) {
     initial_join();
   }
+  digitalWrite(13,1);
+  Serial.write("WTF");
   
   //Read if data is available
   if(XBee.available() > 0){
