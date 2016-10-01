@@ -6,7 +6,8 @@ var io = require('socket.io')(http);
 var portName = process.argv[2],
 portConfig = {
 	baudRate: 9600,
-	parser: SerialPort.parsers.byteDelimiter([20,30])
+	//parser: SerialPort.parsers.readline('\n')
+  parser: SerialPort.parsers.byteLength(4)
 };
 // Temperature Dictionary for Sensor Data
 var temp_dict = {};
@@ -45,7 +46,7 @@ var maxDevices = 10;
 var current = [];
 var regKeys = new Array();
 //var availKeys = [...Array(maxDevices).keys()]
-var availKeys = [];
+var availKeys = new Array();
 for(var i = 1; i < maxDevices+1; i++){
   availKeys[i-1] = i;
 }
@@ -71,8 +72,11 @@ function cleanKeys(){
   });
   regKeys = regKeys.filter(function(element, index, array) {
     return index == array.indexOf(element);
-})
-  availKeys.sort();
+});
+
+  availKeys.sort(function (a,b){
+    return a - b;
+  });
 
   current.length = 0;
   console.log("Registered Keys: ",regKeys);
@@ -88,9 +92,7 @@ function myTimer() {
   //Write 1 to buffer to send
   buffer.writeInt32BE(sendPoll,0);
   sp.write(buffer);
-  console.log("Send code: ",buffer.toString('hex'));
-  // SEND DICTIONARY TO Client
-  io.emit('temp_event', temp_dict);
+  console.log("Send code: ",buffer.toString('hex'),'to poll');
 
   count++;
   if(count == n){
@@ -100,6 +102,9 @@ function myTimer() {
 
   if(waiting == 1)
     waiting = 0;
+
+  // SEND DICTIONARY TO Client
+  io.emit('temp_event', temp_dict);
 }
 
 sp.on("open", function () {
@@ -107,16 +112,13 @@ sp.on("open", function () {
   //Write 0 to buffer to reset devices
   buffer.writeInt32BE(sendReset,0);
   sp.write(buffer);
-  console.log("RESET ALL with code: ",buffer.toString('hex'));
+  console.log("RESET ALL with code: ",buffer.toString('hex'),'of length: ',buffer.length,'bytes');
 
   var timing = setInterval(myTimer,3000);
 
   sp.on('data', function(data) {
-    console.log('buffer',data.toString('hex'));
-    /*console.log(data.charCodeAt(0),data.charCodeAt(1),data.charCodeAt(2),data.charCodeAt(3));
-    //Listen for Joins -> FFFF
-    if(data.charCodeAt(0) == 127 && data.charCodeAt(1) == 127){
-      //Reset timer to setTime seconds 
+    console.log('data:',data.toString('hex'),'length:',data.toString('hex').length);
+    if(data.readInt16BE(0) == -1){
       console.log("Someone wants to join")
       var setTime = 6;
       clearTimeout(timing);
@@ -127,16 +129,13 @@ sp.on("open", function () {
       var key = availKeys.shift();
       regKeys.push(key);
       current.push(key);
-      console.log('key:',key);
+      console.log('key to give:',key);
 
       //Send Data
       console.log('buffer before overwrite: ',buffer.toString('hex'));
-      buffer.writeInt8(data.charCodeAt(2),0); //Place randNum first
-      buffer.writeInt8(data.charCodeAt(3),1); //Place randNum first
-      buffer.writeInt8(key>>8,2);
-      buffer.writeInt8(key,3);
-      console.log('writing: ',buffer.toString('hex'));
-      //console.log("data sent: " + str);
+      buffer.writeUInt16BE(data.readUInt16BE(2),0); //Place randNum first
+      buffer.writeUInt16BE(key,2);  //Key goes second
+      console.log('buffer after: ',buffer.toString('hex'));
       sp.write(buffer);
     }
 
@@ -151,8 +150,8 @@ sp.on("open", function () {
       }
 			try {
         //data[0] holds higher 8 bits
-	      var myID = (((0 | data[0]) << 8) | data[1]); //These are both integers
-	      var temperature = data[2] + data[3] / 100;
+	      var myID = data.readUInt16BE(0); //These are both integers
+	      var temperature = data.readUInt8(2) + data.readUInt8(3)/100;
 
 				//DATA EVENT
 				temp_dict[myID.toString()] = temperature; 			//From the json event
@@ -170,6 +169,6 @@ sp.on("open", function () {
 			} catch (e) {
 				console.log('Something went wrong: ' + e);
 			}
-		}*/
+		}
   });
 });
