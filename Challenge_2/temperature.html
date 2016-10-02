@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en" style="height: 100%">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>Group 9 - Nest Challenge 1 </title>
+
+    <script type="text/javascript">
+
+    var names = ["Average Temperature"];
+
+      var dbTable = {
+            name: "historicalDB",
+            version: "1.0",
+            description: "Historical average temperature data",
+            maxSize: 1024
+        };
+
+        var temperatureDB = openDatabase(
+            dbTable.name,
+            dbTable.version,
+            dbTable.description,
+            dbTable.maxSize
+        );
+
+        // Open DB
+        temperatureDB.transaction(
+            function( transaction ){
+                transaction.executeSql(
+                    "CREATE TABLE IF NOT EXISTS avgTemps (" +
+                        "id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," +
+                        "temperature FLOAT NOT NULL," + "timeReceived STRING NOT NULL" + 
+                    ");"
+                );
+            }
+        );
+
+        // save temperature to DB
+        var saveTemp = function(temp) {
+          temperatureDB.transaction(function(tx){
+            var timeReceived = new Date();
+            tx.executeSql("INSERT INTO avgTemps(temperature, timeReceived) VALUES (?,?)",
+                [temp, timeReceived],
+                temperatureDB.onSuccess,
+                temperatureDB.onError);
+           });
+          addTimePoint(sensorData,"Average Temperature",timeReceived,temp);
+        }
+        
+    </script>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body style="color: #2c3e50; background: linear-gradient(white, #bdc3c7); height: 100%; background-repeat: no-repeat; background-attachment: fixed;">
+    <h1 style="text-align: center;">Nest Home Reader</h1>
+    <br />
+    <center><button onclick="chartToggle()" id = "chartButton">Show Historical Chart</button></center>
+    <br />
+  <div style="border-radius: 550px; background: #bdc3c7; padding-top: 25px; width: 550px; margin-left: auto; margin-right: auto; height: 550px;" id = "realtimeDisplay">
+      <div style="border-radius: 500px; border: 50px solid black; background: #34495e; padding: 20px; width: 500px; padding-top: 100px; margin-left: auto; margin-right: auto; height: 500px; color: #ecf0f1;">
+        <h3 style="text-align: center;">Temperature: <b id="temp"> - </b> <p id="temperatureUnit" style="display: inline;">&deg;F</p></h3>
+            <br /><br /><br />
+            <ul id="temp-lists" style="text-align: center; padding-left: 0px; list-style: none; width: 450px; margin-left: auto; margin-right: auto; ">
+                  <!-- <li>Sensor X: <b id="temp"> - </b>&deg; F </li> -->
+            </ul>
+          <br class="clear"/>
+      </div>
+  </div>
+  <!--Chart-->
+  <div id="temperatureChart" style="display: none;">
+    <head>
+      <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/d3/3.2.2/d3.v3.min.js"></script>
+      <script type="text/javascript" src="./canvasjs.min.js"></script>
+    </head>
+    <body>
+      <center><div id="chartContainer" style="height: 300px; width: 90%;"></div></center>
+    </body>
+
+    <script>
+    var chartTitle = "Average Temperature Readings Over Time";
+    var sensorData = {};
+ 
+    sensorData = {}
+    var addTimePoint = function(dataset, sensorName, timepoint, value){
+      if (!dataset.hasOwnProperty(sensorName)){
+        dataset[sensorName] = [];
+      }
+      dataset[sensorName].push({
+        x: timepoint,
+        y: value
+      });
+      refreshChart();
+    }
+
+    var compareReadingsByTime = function(readingA,readingB){
+      return readingA.x - readingB.x;
+    }
+
+    var makeData = function(dataset){
+      var data = [];
+      for (var sensorName in dataset){
+        var subset = makeSubset(dataset, sensorName);
+        data.push(subset);
+      }
+      return data;
+    }
+
+    var makeSubset = function(dataset, sensorName){
+      var subset = {
+        type: "line",
+        showInLegend: true,
+        lineThickness: 2,
+        name: sensorName,
+        dataPoints: dataset[sensorName].sort(compareReadingsByTime)
+      };
+      return subset;
+    }
+
+    var renderChart = function(sensorData){
+      var data = makeData(sensorData);
+      var chartParams = {
+        title: { text: chartTitle, fontSize: 15 },
+        data: data
+      };
+
+      chartParams = {
+          title: { text: chartTitle, fontSize: 30 },
+          animationEnabled: false,
+          axisX: { gridColor: "Silver", tickColor: "silver", valueFormatString: "DDD HH:mm:ss" },                        
+          toolTip:{ shared:true },
+          theme: "theme1",
+          axisY: { title: "Degrees Fahrenheit", gridColor: "Silver", tickColor: "silver" },
+          legend: { verticalAlign: "center", horizontalAlign: "right" },
+          data: data,
+          legend:{ cursor:"pointer",
+            itemclick:function(e) {
+              if (typeof(e.dataSeries.visible) === "undefined" || e.dataSeries.visible) e.dataSeries.visible = false;
+              else e.dataSeries.visible = true;
+              chart.render();
+            }
+          }
+      };
+
+      var chart = new CanvasJS.Chart("chartContainer", chartParams);
+      chart.render();
+    }
+
+    var refreshChart = function(){
+      renderChart(sensorData);
+    }
+
+    var tempUnit = '℉';
+
+    var toggleChartUnit = function(dataset,sensorName, unit){
+      var size = 0;
+      for( var sensor in dataset[sensorName]) size++;
+      for (var i = 0; i < size; i++){
+        if(unit == '℃' && unit != tempUnit ) 
+          dataset[sensorName][i].y = ((5/9) * (dataset[sensorName][i].y-32))/1.0;
+        else if(unit == '℉' && unit != tempUnit ) 
+          dataset[sensorName][i].y = dataset[sensorName][i].y * (9 / 5) + 32;
+      }
+      refreshChart();
+    }
+
+    </script>
+  </div>
+
+  <div style="text-align: center; padding-top: 25px;">
+    <button onclick="tempToggle('℉')">Fahrenheit</button>
+    <button onclick="tempToggle('℃')">Celcius</button><br><br>
+  </div>
+
+  <footer style="text-align: center; padding-top: 200px;">
+    <p>Designed and Made by Group 9</p>
+  </footer>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+
+    <script type="text/javascript">
+      //toggle between Fahrenheit and Celcius
+      function tempToggle(unit) {
+        toggleChartUnit(sensorData,"Average Temperature", unit);
+        tempUnit = unit;
+        document.getElementById("temperatureUnit").innerHTML = unit;
+        // Recieve dictionary and process logic here
+        var totalTemp = 0;
+        var counter = 0;
+        // Calculate Temperature Average
+        for (var key in msg){
+          totalTemp += msg[key];
+          counter++;
+          $('#temp-lists').append($('<li style="width: 370px;">').text('Sensor ' + key + ': ' + displayTemp(msg[key]).toFixed(2) + ' '+ tempUnit));
+        }
+        var average = totalTemp/counter;
+        if( average == null ){
+          document.getElementById("temp").innerHTML = "-";
+        } else {
+          // convert to Celcius
+          average = displayTemp(average);
+          document.getElementById("temp").innerHTML = average.toFixed(2);
+        }
+      }
+
+      function displayTemp(temp){
+        if(tempUnit == '℃'){
+          return ((5/9) * (temp-32))/1.0;
+        }
+        else
+          return temp/1.0;
+      }
+
+      var loadTemps = function() {
+        temperatureDB.transaction(function (tx) {
+              tx.executeSql('SELECT * FROM avgTemps', [], function (tx, results) {
+                 var len = results.rows.length, i;
+                 for (i = 0; i < len; i++){
+                    addTimePoint(sensorData,"Average Temperature", new Date(results.rows.item(i).timeReceived), results.rows.item(i).temperature);
+                 }
+              }, null);
+           });
+      }
+
+      var dataLoaded = false;
+      // Temperature Chart view toggle
+      function chartToggle(){
+        if( document.getElementById("temperatureChart").style.display == 'none' ){
+          $("#temperatureChart").fadeIn(1000);
+          document.getElementById("realtimeDisplay").style.display = 'none';
+          document.getElementById("chartButton").innerHTML = "Show Realtime Temperatures";
+          if(!dataLoaded) {
+            loadTemps();
+            dataLoaded = true;
+          }
+        } else {
+          document.getElementById("temperatureChart").style.display = 'none';
+          $("#realtimeDisplay").fadeIn(1000);
+          document.getElementById("chartButton").innerHTML = "Show Historical Chart";
+        }
+      }
+    </script>
+
+    <script>
+      var socket = io();
+    </script>
+    <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+    <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+    <script>
+      var socket = io();
+      socket.on('temp_event', function(msg){
+        $('#temp-lists').empty();
+        // Recieve dictionary and process logic here
+        var totalTemp = 0;
+        var counter = 0;
+        var timeReceived = new Date();
+        // Calculate Temperature Average
+        for (var key in msg){
+          totalTemp += msg[key];
+          counter++;
+          $('#temp-lists').append($('<li style="width: 370px;">').text('Sensor ' + key + ': ' + displayTemp(msg[key]).toFixed(2) + ' '+ tempUnit));
+        }
+        var average = totalTemp/counter;
+        if( average == null ){
+          document.getElementById("temp").innerHTML = "-";
+        } else {
+          // save average temp to DB
+          saveTemp(average.toFixed(2));
+          // convert to Celcius
+          average = displayTemp(average);
+          document.getElementById("temp").innerHTML = average.toFixed(2);
+        }
+        console.log(msg);
+      });
+    </script>
+  </body>
+</html>

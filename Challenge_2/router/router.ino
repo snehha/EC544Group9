@@ -12,11 +12,13 @@ SoftwareSerial XBee(2, 3); // RX, TX
 char chr;
 char temp[4];
 //Will send 5 bytes every time -> either join or send temp/id
-char data[5];
+char data[4];
+char go[4] = "hey";
 
 int samples[NUMSAMPLES];
 bool join;
 int count;
+uint16_t idRead = 0;
 
 void setup(void) {
   // put your setup code here, to run once:
@@ -48,9 +50,7 @@ void initial_join() {
 
   //Keep reading until you get the correct randNum
   int countRand = 0;
-  char randRead = 0;
   int countId = 0;
-  uint8_t idRead = 0;
   count = 0;
   
   while(serverRunning){
@@ -174,12 +174,21 @@ void loop(void) {
     if(val1 == 0 && val2 == 1){
       Serial.write("Got Send\n");
       getTemp();
+      
       //ID and Temp to send
-      char firstbyte = idRead >> 8;
-      char secondbyte = idRead;
+      Serial.write("ID is ");
+      Serial.print(idRead);
+      Serial.write("\n");
+      //char firstbyte = char(idRead >> 8);
+      //char secondbyte = char(idRead);
+      Serial.print(uint16_t(idRead));
+      char firstbyte = 0;
+      char secondbyte = 40;
       char thirdbyte = 74;
       char fourthbyte = 85;
       sprintf(data,"%c%c%c%c",firstbyte,secondbyte,thirdbyte,fourthbyte);
+      XBee.write(data);
+      //XBee.write("What");
     }
   }
 }

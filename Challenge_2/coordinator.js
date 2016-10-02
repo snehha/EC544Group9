@@ -141,7 +141,7 @@ sp.on("open", function () {
 
   	else{
       if(!waiting){
-        //console.log("!wait");
+        console.log("!wait");
         //Set timer to poll every setTime seconds
         clearTimeout(timing);
         var setTime = 3;
@@ -149,6 +149,7 @@ sp.on("open", function () {
         waiting = 2;
       }
 			try {
+        console.log("Got temprature");
         //data[0] holds higher 8 bits
 	      var myID = data.readUInt16BE(0); //These are both integers
 	      var temperature = data.readUInt8(2) + data.readUInt8(3)/100;
