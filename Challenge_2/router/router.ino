@@ -13,7 +13,7 @@ SoftwareSerial XBee(2, 3); // RX, TX
 char data[4];
 //Temperature Variable
 int samples[NUMSAMPLES];
-
+char temp[4] = "";
 //Communication Variables
 bool join;
 int count;
@@ -38,6 +38,7 @@ void initial_join() {
   char thirdbyte = randNum >> 8;
   char fourthbyte = randNum;
   sprintf(data,"%c%c%c%c",firstbyte,secondbyte,thirdbyte,fourthbyte);
+  Serial.print(data);
   XBee.write(data);
   delay(5000);
 
@@ -129,8 +130,8 @@ void sendTemp(){
   String whole_temp = string_temperature.substring(0,find_period);
   String float_temp = string_temperature.substring(find_period+1);
   
-  char whole_t = int(whole_temp);
-  char float_t = int(float_temp);
+  char whole_t = whole_temp.toInt();
+  char float_t = float_temp.toInt();
   
   char firstbyte = B10000000;
   if(idRead >= 255){
