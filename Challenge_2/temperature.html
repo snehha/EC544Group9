@@ -281,11 +281,11 @@
         } else {
           // save average temp to DB
           var timeReceived = new Date();
-          saveTemp(average.toFixed(2), timeReceived);
+          if(average != null) saveTemp(average.toFixed(2), timeReceived);
           // convert to Celcius if needed
           average = displayTemp(average);
           // plot average temperature
-          addTimePoint(sensorData,"Average Temperature",timeReceived,average.toFixed(2));
+          if (average != null) addTimePoint(sensorData,"Average Temperature",timeReceived,average.toFixed(2));
           document.getElementById("temp").innerHTML = average.toFixed(2);
         }
         console.log(msg);
