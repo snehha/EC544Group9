@@ -138,17 +138,21 @@ void sendTemp(){
   
   uint16_t idRead_temp = idRead;
   Serial.println("Before ID: " + String(idRead));
+  
   if(idRead_temp >= 255){
     firstbyte = char(idRead_temp >> 8);
   }
   unsigned char secondbyte = char(idRead_temp);
   
+  
   //Send 4 bytes of data [id_high, id_low, whole number of temp, decimal portion of temp]
   sprintf(data,"%c%c%c%c", firstbyte, secondbyte, whole_t, float_t);
+  idRead = idRead_temp;
+  Serial.println("After ID: " + String(idRead));
   //Transmit Data via XBEE to Node
   Serial.print(data[0], DEC);
   Serial.println(data[1], HEX);
-  Serial.println("After ID: " + String(idRead));
+  
   Serial.print(data[2], HEX);
   Serial.println(data[3], HEX);
   XBee.write(data);

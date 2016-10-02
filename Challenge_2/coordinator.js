@@ -17,6 +17,9 @@ var sp = new SerialPort(portName, portConfig);
 app.get('/', function(req, res){
   res.sendfile('temperature.html');
 });
+app.get('/canvasjs.min.js', function(req, res){
+  res.sendfile('canvasjs.min.js');
+});
 
 io.on('connection', function(socket){
   console.log('a user connected');
