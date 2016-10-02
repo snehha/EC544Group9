@@ -206,8 +206,6 @@
 
       function pauseRefresh(){
         refresh = !refresh;
-        if(refresh) document.getElemtentById.innerHTML = "Play";
-        else document.getElemtentById.innerHTML = "Pause";
       }
     </script>
   </div>
@@ -215,7 +213,7 @@
   <div style="text-align: center; padding-top: 25px;">
     <button onclick="toggleChartUnit('℉')">Fahrenheit</button>
     <button onclick="toggleChartUnit('℃')">Celcius</button>
-    <button id = "pauseButton" onclick="pauseRefresh()">Pause</button><br><br>
+    <button id="pauseButton" onclick="pauseRefresh()">Play/Pause</button><br><br>
   </div>
    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>

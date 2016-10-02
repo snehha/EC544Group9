@@ -111,7 +111,7 @@ function myTimer() {
   // SEND DICTIONARY TO Client
   io.emit('temp_event', temp_dict);
 }
-
+var setTime = 1.5;
 sp.on("open", function () {
   console.log('Serialport Has Started: Listening for Joins');
   //Write 0 to buffer to reset devices
@@ -119,15 +119,15 @@ sp.on("open", function () {
   sp.write(buffer);
   console.log("RESET ALL with code: ",buffer.toString('hex'),'of length: ',buffer.length,'bytes');
 
-  var timing = setInterval(myTimer,3000);
+  var timing = setInterval(myTimer,setTime*1000);
 
   sp.on('data', function(data) {
     console.log('data:',data.toString('hex'));
     if(data.readInt16BE(0) == -1){
       console.log("Someone wants to join, resetting timer to 6 sconds once")
-      var setTime = 6;
+      var longTime = 3;
       clearTimeout(timing);
-      timing = setInterval(myTimer,setTime*1000);
+      timing = setInterval(myTimer,longTime*1000);
       waiting = 1;
 
       //Adjust Keys arrays
@@ -148,7 +148,6 @@ sp.on("open", function () {
         //Set timer to poll every setTime seconds
         console.log("Entered Wait and Resetting timer to 3 seconds")
         clearTimeout(timing);
-        var setTime = 3;
         timing = setInterval(myTimer,setTime*1000);
         waiting = 2;
       }
