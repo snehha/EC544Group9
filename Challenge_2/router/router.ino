@@ -8,30 +8,16 @@
 #define THERMISTORNOMINAL 4720      
 #define TEMPERATURENOMINAL 25
 SoftwareSerial XBee(2, 3); // RX, TX
-//Only 4 precision
-char temp[10] = "";
-//Reading one char at a time
-char chr;
-//Support for 1,000 devices at most
-char id[3] = "";
-char randBuff[4] = "";
-char dataSend[4] = "";
-int count;
-int counter;
-///FF+rand_num is request to join
-///////////////////////////////////////////////////
 
-
-//////////////////////////////////////////////////
-int randNum;
-
+//Will send 5 bytes every time -> either join or send temp/id
+char data[4];
+//Temperature Variable
 int samples[NUMSAMPLES];
-bool join = false;
 
-void clearArr(char *arr,int n){
-  for(int i = 0; i < n; i++)
-    arr[i] = '\0';
-}
+//Communication Variables
+bool join;
+int count;
+uint16_t idRead = 0;
 
 void setup(void) {
   // put your setup code here, to run once:
@@ -39,93 +25,76 @@ void setup(void) {
   Serial.begin(9600);
   randomSeed(analogRead(1));
   pinMode(13,OUTPUT);
+  digitalWrite(13,1);
   join = false;
 }
 
 void initial_join() {
-  Serial.write("Init\n");
-  digitalWrite(13,1);
-  chr = '\0';
-
-  clearArr(id,3);
-  clearArr(randBuff,4);
-  clearArr(dataSend,30);
-  clearArr(temp,10);
-  count = 0;
-  counter = 0;
-  
-  //Generate Random Number
-  randNum = random(10000);
-  Serial.write(randNum);
-
-  //Ask to Join
-  String data = "j" + String(randNum) + "\n";
-  data.toCharArray(dataSend,8);
-  XBee.write(dataSend);
-  Serial.write(dataSend);
+  //Generate 2 random numbers
+  uint16_t randNum = random(pow(2,16)-1);
+  //Send 4 bytes
+  char firstbyte = 255;
+  char secondbyte = 255;
+  char thirdbyte = randNum >> 8;
+  char fourthbyte = randNum;
+  sprintf(data,"%c%c%c%c",firstbyte,secondbyte,thirdbyte,fourthbyte);
+  XBee.write(data);
   delay(5000);
-  
-  bool serverRunning = false;
-  if(XBee.available() > 0)
-    serverRunning = true;
 
-  //Keep reading until you get an id
-  bool readId = false;
-  bool readComma = false;
+  //Check if server is sending data
+  bool serverRunning = false;
+  if(XBee.available() > 0){
+    serverRunning = true;
+  }
+
+  //Keep reading until you get the correct randNum
+  int countRand = 0;
+  int countId = 0;
+  count = 0;
   
   while(serverRunning){
     digitalWrite(13,0);
-    if(counter++ == 1000)
+    if(count++ == 1000)
       return;
     if(XBee.available() > 0){
-      chr = XBee.read();
-      //Serial.write(chr);
-      
-      if(!readId){
-        if(chr == 'i'){
-          readId = true;
-        }
+      char byteRead = XBee.read();
+      Serial.write(byteRead);
+
+      //Receive msb first
+      if(countRand == 0){
+        if(byteRead == char(randNum >> 8))
+          countRand++;
+        continue;
+      }
+      if(countRand == 1){
+        if(byteRead == char(randNum))
+          countRand++;
+        else
+          countRand = 0;
         continue;
       }
   
-      //Get returned RandNum
-      if(!readComma){
-        if(chr == ','){
-          randBuff[count] = '\0';
-          readComma = true;
-          count = 0;
-          continue;
-        }
-        randBuff[count] = chr;
-        count++;
+      //Read ID
+      if(countId == 0){
+        idRead = (idRead | uint8_t(byteRead) << 8);
+        countId++;
         continue;
       }
-
-      //Check if id is meant for me
-      if(atoi(randBuff) == randNum){
-        //Get your id
-        Serial.write("ID");
-        if(chr == '\n'){
-          id[count] = '\0';
-          join = true;
-          Serial.write(id);
-          Serial.write('\n');
-          Serial.write("Joined");
-          Serial.write('\n');
-          return;
-        }
-        id[count] = chr;
-        count++;
-      }
-      else{
-        readId = false;
-        readComma = false;
+      if(countId == 1){
+        idRead = (idRead | byteRead);
+        Serial.print("Id is: ");
+        Serial.print(idRead);
+        Serial.print(" -> Successfully Joined\n");
+        join = true;
+        count = 0;
+        break;
       }
     }
   }
 }
 
-void getTemp(){
+void sendTemp(){
+
   uint8_t i;
   float average;
   
@@ -164,50 +133,67 @@ void getTemp(){
   char float_t = int(float_temp);
   
   char firstbyte = B10000000;
-  char secondbyte = char(id);
-  if(id >= 255){
-    firstbyte = char(id >> 8);
+  if(idRead >= 255){
+    firstbyte = char(idRead >> 8);
   }
-  //Send 4 bytes of data [id_high, id_low, whole number of temp, decimal portion of temp]
-  sprintf(dataSend,"%c%c%c%c", firstbyte, secondbyte, whole_t, float_t);
-  //Transmit Data via XBEE to Node
-  XBee.write(dataSend);
+  char secondbyte = char(idRead);
   
+  //Send 4 bytes of data [id_high, id_low, whole number of temp, decimal portion of temp]
+  sprintf(data,"%c%c%c%c", firstbyte, secondbyte, whole_t, float_t);
+  //Transmit Data via XBEE to Node
+  XBee.write(data);
+
 }
 
 void loop(void) {
   //Ask to join and get unique id
   while(!join) {
     initial_join();
-    if(join){
-      break;
-    }
-    //Wait before asking again to join
-    delay(2000);
   }
+  digitalWrite(13,1);
+
+  //Evaluates once it reads 4 bytes
+  uint16_t val1, val2;
   //Read if data is available
   if(XBee.available() > 0){
-    chr = XBee.read();
-    Serial.write(chr);
+    char byteRead = XBee.read();
+    Serial.write("Byte ");
+    Serial.print(count);
+    Serial.print(" is: ");
+    Serial.print(byteRead);
+    Serial.print("\n");
 
-    //Coordinator sends out r when it's restarted so no one is registered
-    if(chr == 'r'){
+    switch(count++){
+      case 0:
+        val1 = uint16_t(byteRead) << 8;
+        break;
+      case 1:
+        val1 |= byteRead;
+        break;
+      case 2:
+        val2 = uint16_t(byteRead) << 8;
+        break;
+      case 3:
+        val2 |= byteRead;
+        break;
+    }
+      
+    if(count == 4)
+      count = 0;
+
+    else
+      return;
+
+    //00000000
+    if(val1 == 0 && val2 == 0){
       join = false;
+      Serial.write("Got Reset\n");
     }
     
-    if(chr == 's'){
-      getTemp();
-
-      //Send one long string terminated by null
-//      String data = "{ \"id\": " + String(id) + ", \"temp\": " + String(temp) + " }\n";
-//      data.toCharArray(dataSend,30);
-//
-//      Serial.write(dataSend);
-//      XBee.write(dataSend);
-      //XBee.write(dataSend);
-     
-      //Might need to delay to prevent buffer overflow
-      //delay(randNum(1000));
+    //00000001
+    if(val1 == 0 && val2 == 1){
+      Serial.write("Got Send\n");
+      sendTemp();
     }
   }
 }
