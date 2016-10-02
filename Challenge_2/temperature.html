@@ -38,15 +38,13 @@
         );
 
         // save temperature to DB
-        var saveTemp = function(temp) {
+        var saveTemp = function(temp,time) {
           temperatureDB.transaction(function(tx){
-            var timeReceived = new Date();
             tx.executeSql("INSERT INTO avgTemps(temperature, timeReceived) VALUES (?,?)",
-                [temp, timeReceived],
+                [temp, time],
                 temperatureDB.onSuccess,
                 temperatureDB.onError);
            });
-          addTimePoint(sensorData,"Average Temperature",timeReceived,temp);
         }
         
     </script>
@@ -126,6 +124,8 @@
       return subset;
     }
 
+    var axisYtitle = "Degrees Fahrenheit";
+
     var renderChart = function(sensorData){
       var data = makeData(sensorData);
       var chartParams = {
@@ -139,7 +139,7 @@
           axisX: { gridColor: "Silver", tickColor: "silver", valueFormatString: "DDD HH:mm:ss" },                        
           toolTip:{ shared:true },
           theme: "theme1",
-          axisY: { title: "Degrees Fahrenheit", gridColor: "Silver", tickColor: "silver" },
+          axisY: { title: axisYtitle, gridColor: "Silver", tickColor: "silver" },
           legend: { verticalAlign: "center", horizontalAlign: "right" },
           data: data,
           legend:{ cursor:"pointer",
@@ -159,16 +159,20 @@
       renderChart(sensorData);
     }
 
-    var tempUnit = '℉';
+    var tempUnit = '℉'; 
 
     var toggleChartUnit = function(dataset,sensorName, unit){
       var size = 0;
       for( var sensor in dataset[sensorName]) size++;
       for (var i = 0; i < size; i++){
-        if(unit == '℃' && unit != tempUnit ) 
+        if(unit == '℃' && unit != tempUnit ) {
           dataset[sensorName][i].y = ((5/9) * (dataset[sensorName][i].y-32))/1.0;
-        else if(unit == '℉' && unit != tempUnit ) 
+          axisYtitle = "Degrees Celcius";
+        }
+        else if(unit == '℉' && unit != tempUnit ) {
           dataset[sensorName][i].y = dataset[sensorName][i].y * (9 / 5) + 32;
+          axisYtitle = "Degrees Fahrenheit";
+        }
       }
       refreshChart();
     }
@@ -210,7 +214,6 @@
           document.getElementById("temp").innerHTML = "-";
         } else {
           // convert to Celcius
-          average = displayTemp(average);
           document.getElementById("temp").innerHTML = average.toFixed(2);
         }
       }
@@ -277,9 +280,12 @@
           document.getElementById("temp").innerHTML = "-";
         } else {
           // save average temp to DB
-          saveTemp(average.toFixed(2));
-          // convert to Celcius
+          var timeReceived = new Date();
+          saveTemp(average.toFixed(2), timeReceived);
+          // convert to Celcius if needed
           average = displayTemp(average);
+          // plot average temperature
+          addTimePoint(sensorData,"Average Temperature",timeReceived,average.toFixed(2));
           document.getElementById("temp").innerHTML = average.toFixed(2);
         }
         console.log(msg);
