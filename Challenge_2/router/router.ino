@@ -131,31 +131,52 @@ void sendTemp(){
   String whole_temp = string_temperature.substring(0,find_period);
   String float_temp = string_temperature.substring(find_period+1);
   
-  char whole_t = whole_temp.toInt();
-  char float_t = float_temp.toInt();
+  unsigned char whole_t = whole_temp.toInt();
+  unsigned char float_t = float_temp.toInt();
+  uint32_t whole_seq = 0xFFFFFFFF;
+  Serial.println(whole_seq, BIN);
+  Serial.println(whole_seq, HEX);
   
-  unsigned char firstbyte = B10000000;
   
   uint16_t idRead_temp = idRead;
   Serial.println("Before ID: " + String(idRead));
   
-  if(idRead_temp >= 255){
+  /*if(idRead_temp >= 255){
     firstbyte = char(idRead_temp >> 8);
-  }
-  unsigned char secondbyte = char(idRead_temp);
-  
+  }*/
+  unsigned char firstbyte = byte(idRead_temp >> 8);
+  firstbyte = firstbyte + 1;
+  unsigned char secondbyte = byte(idRead_temp);
+
+  whole_seq = (whole_seq & firstbyte) << 8;
+  whole_seq = (whole_seq | secondbyte) << 8;
+  whole_seq = (whole_seq | whole_t) << 8;
+  whole_seq = (whole_seq | float_t);
+
+  Serial.println(whole_seq, BIN);
+  Serial.println(whole_seq, HEX);
+  Serial.println(sizeof(whole_seq));
+
+  //Serial.println(firstbyte, BIN);
+  //Serial.println(secondbyte, BIN);
   
   //Send 4 bytes of data [id_high, id_low, whole number of temp, decimal portion of temp]
-  sprintf(data,"%c%c%c%c", firstbyte, secondbyte, whole_t, float_t);
+  char tempData[4];
+  sprintf(tempData,"%c%c%c%c", firstbyte, secondbyte, whole_t, float_t);
+
+  Serial.println(sizeof(data));
+  
   idRead = idRead_temp;
   Serial.println("After ID: " + String(idRead));
   //Transmit Data via XBEE to Node
-  Serial.print(data[0], DEC);
-  Serial.println(data[1], HEX);
-  
-  Serial.print(data[2], HEX);
-  Serial.println(data[3], HEX);
-  XBee.write(data);
+  Serial.print(tempData[0], HEX);
+  Serial.print(" ");
+  Serial.print(tempData[1], HEX);
+  Serial.print(" ");
+  Serial.print(tempData[2], HEX);
+  Serial.print(" ");
+  Serial.println(tempData[3], HEX);
+  XBee.write(tempData);
 
 }
 
