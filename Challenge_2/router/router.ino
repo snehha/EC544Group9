@@ -9,13 +9,12 @@
 #define TEMPERATURENOMINAL 25
 SoftwareSerial XBee(2, 3); // RX, TX
 
-char chr;
-char temp[4];
 //Will send 5 bytes every time -> either join or send temp/id
 char data[4];
-char go[4] = "hey";
-
+//Temperature Variable
 int samples[NUMSAMPLES];
+
+//Communication Variables
 bool join;
 int count;
 uint16_t idRead = 0;
@@ -94,7 +93,8 @@ void initial_join() {
   }
 }
 
-void getTemp(){
+void sendTemp(){
+
   uint8_t i;
   float average;
   
@@ -116,6 +116,7 @@ void getTemp(){
   
   float f_temp = 0;
   float steinhart;
+  int find_period;
   steinhart = log (average / THERMISTORNOMINAL);     // ln (R/Ro)
   steinhart = steinhart/BCOEFFICIENT;               // ln(R/Ro)/B
   steinhart += (1.0 / (TEMPERATURENOMINAL + 273.15)); // + (1/To)
@@ -123,6 +124,25 @@ void getTemp(){
   steinhart =  steinhart - 273.15;                         // convert to C
   f_temp = (steinhart * 9.0)/ 5.0 + 32.0;
   dtostrf(f_temp, 4, 2, temp);
+  String string_temperature = String(f_temp, 2);
+  find_period = string_temperature.indexOf('.');
+  String whole_temp = string_temperature.substring(0,find_period);
+  String float_temp = string_temperature.substring(find_period+1);
+  
+  char whole_t = int(whole_temp);
+  char float_t = int(float_temp);
+  
+  char firstbyte = B10000000;
+  if(idRead >= 255){
+    firstbyte = char(idRead >> 8);
+  }
+  char secondbyte = char(idRead);
+  
+  //Send 4 bytes of data [id_high, id_low, whole number of temp, decimal portion of temp]
+  sprintf(data,"%c%c%c%c", firstbyte, secondbyte, whole_t, float_t);
+  //Transmit Data via XBEE to Node
+  XBee.write(data);
+
 }
 
 void loop(void) {
@@ -173,22 +193,7 @@ void loop(void) {
     //00000001
     if(val1 == 0 && val2 == 1){
       Serial.write("Got Send\n");
-      getTemp();
-      
-      //ID and Temp to send
-      Serial.write("ID is ");
-      Serial.print(idRead);
-      Serial.write("\n");
-      //char firstbyte = char(idRead >> 8);
-      //char secondbyte = char(idRead);
-      Serial.print(uint16_t(idRead));
-      char firstbyte = 0;
-      char secondbyte = 40;
-      char thirdbyte = 74;
-      char fourthbyte = 85;
-      sprintf(data,"%c%c%c%c",firstbyte,secondbyte,thirdbyte,fourthbyte);
-      XBee.write(data);
-      //XBee.write("What");
+      sendTemp();
     }
   }
 }
