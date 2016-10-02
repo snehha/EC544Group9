@@ -111,7 +111,7 @@ function myTimer() {
   // SEND DICTIONARY TO Client
   io.emit('temp_event', temp_dict);
 }
-var setTime = 1.5;
+var setTime = 2;
 sp.on("open", function () {
   console.log('Serialport Has Started: Listening for Joins');
   //Write 0 to buffer to reset devices
