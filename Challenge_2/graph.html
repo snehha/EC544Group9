@@ -1,0 +1,225 @@
+<html lang="en" style="height: 100%">
+<head>
+ <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+    <center><button onclick="window.location.href='/'" id = "chartButton">Show Realtime Temperature</button></center>
+
+    <script type="text/javascript">
+
+    var names = ["Average Temperature"];
+
+      var dbTable = {
+            name: "historicalDB",
+            version: "1.0",
+            description: "Historical average temperature data",
+            maxSize: 1024
+        };
+
+        var temperatureDB = openDatabase(
+            dbTable.name,
+            dbTable.version,
+            dbTable.description,
+            dbTable.maxSize
+        );
+
+        // Open DB
+        temperatureDB.transaction(
+            function( transaction ){
+                transaction.executeSql(
+                    "CREATE TABLE IF NOT EXISTS avgTemps (" +
+                        "id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," +
+                        "temperature FLOAT NOT NULL," + "timeReceived STRING NOT NULL" + 
+                    ");"
+                );
+            }
+        );
+        
+    </script>
+</head>
+<body style="color: #2c3e50; background: linear-gradient(white, #bdc3c7); height: 100%; background-repeat: no-repeat; background-attachment: fixed;">
+<!--Chart-->
+  <div id="temperatureChart" onload="loadTemps()">
+    <head>
+      <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/d3/3.2.2/d3.v3.min.js"></script>
+      <script type="text/javascript" src="canvasjs.min.js"></script>
+    </head>
+    <body>
+      <center><div id="chartContainer" style="height: 300px; width: 90%;"></div></center>
+    </body>
+
+    <script>
+    var chartTitle = "Average Temperature Readings Over Time";
+    var sensorData = {};
+ 
+    sensorData = {}
+    var addTimePoint = function(dataset, sensorName, timepoint, value){
+      if (!dataset.hasOwnProperty(sensorName)){
+        dataset[sensorName] = [];
+      }
+      dataset[sensorName].push({
+        x: timepoint,
+        y: value
+      });
+      refreshChart();
+    }
+
+    var compareReadingsByTime = function(readingA,readingB){
+      return readingA.x - readingB.x;
+    }
+
+    var makeData = function(dataset){
+      var data = [];
+      for (var sensorName in dataset){
+        var subset = makeSubset(dataset, sensorName);
+        data.push(subset);
+      }
+      return data;
+    }
+
+    var makeSubset = function(dataset, sensorName){
+      var subset = {
+        type: "line",
+        showInLegend: true,
+        lineThickness: 2,
+        name: sensorName,
+        dataPoints: dataset[sensorName].sort(compareReadingsByTime)
+      };
+      return subset;
+    }
+
+    var axisYtitle = "Degrees Fahrenheit";
+
+    var renderChart = function(sensorData){
+      var data = makeData(sensorData);
+      var chartParams = {
+        title: { text: chartTitle, fontSize: 15 },
+        data: data
+      };
+
+      chartParams = {
+          zoomEnabled : true,
+          title: { text: chartTitle, fontSize: 30 },
+          animationEnabled: false,
+          axisX: { title: "Time",gridColor: "Silver", tickColor: "silver", valueFormatString: "DDD HH:mm:ss" },                        
+          toolTip:{ shared:true },
+          theme: "theme1",
+          axisY: { title: axisYtitle, gridColor: "Silver", tickColor: "silver" },
+          legend: { verticalAlign: "center", horizontalAlign: "right" },
+          data: data,
+          legend:{ cursor:"pointer",
+            itemclick:function(e) {
+              if (typeof(e.dataSeries.visible) === "undefined" || e.dataSeries.visible) e.dataSeries.visible = false;
+              else e.dataSeries.visible = true;
+              chart.render();
+            }
+          }
+      };
+
+      var chart = new CanvasJS.Chart("chartContainer", chartParams);
+      chart.render();
+    }
+
+    var refreshChart = function(){
+      renderChart(sensorData);
+    }
+
+    var tempUnit = '℉'; 
+
+    var toggleChartUnit = function(dataset,sensorName, unit){
+      var size = 0;
+      for( var sensor in dataset[sensorName]) size++;
+      for (var i = 0; i < size; i++){
+        if(unit == '℃' && unit != tempUnit ) {
+          dataset[sensorName][i].y = ((5/9) * (dataset[sensorName][i].y-32))/1.0;
+          axisYtitle = "Degrees Celcius";
+        }
+        else if(unit == '℉' && unit != tempUnit ) {
+          dataset[sensorName][i].y = dataset[sensorName][i].y * (9 / 5) + 32;
+          axisYtitle = "Degrees Fahrenheit";
+        }
+      }
+      refreshChart();
+    }
+
+    var lastTimePoint = 0;
+    var tempUnit = '℉'; 
+
+    function displayTemp(temp){
+        if(tempUnit == '℃'){
+          return ((5/9) * (temp-32))/1.0;
+        }
+        else
+          return temp/1.0;
+      }
+
+    var loadTemps = function() {
+        temperatureDB.transaction(function (tx) {
+              tx.executeSql('SELECT * FROM avgTemps', [], function (tx, results) {
+                 var len = results.rows.length, i;
+                 for (i = 0; i < len; i++){
+                    addTimePoint(sensorData,"Average Temperature", new Date(results.rows.item(i).timeReceived), results.rows.item(i).temperature);
+                 }
+              }, null);
+           });
+      }
+      loadTemps();
+
+      var getNewTemps = function() {
+        temperatureDB.transaction(function (tx) {
+              tx.executeSql('SELECT * FROM avgTemps', [], function (tx, results) {
+                 var len = results.rows.length, i;
+                 for (i = lastTimePoint; i < len; i++){
+                    addTimePoint(sensorData,"Average Temperature", new Date(results.rows.item(i).timeReceived), displayTemp(results.rows.item(i).temperature));
+                 }
+                 lastTimePoint = len - 1;
+              }, null);
+           });
+      }
+
+      var myTimeVar = setInterval(timedChartRefresh, 2000);
+
+      var toggleChartUnit = function(unit){
+        var dataset = sensorData;
+        var sensorName = "Average Temperature"
+        var size = 0;
+        for( var sensor in dataset[sensorName]) size++;
+        for (var i = 0; i < size; i++){
+          if(unit == '℃' && unit != tempUnit ) {
+            dataset[sensorName][i].y = ((5/9) * (dataset[sensorName][i].y-32))/1.0;
+            axisYtitle = "Degrees Celcius";
+          }
+          else if(unit == '℉' && unit != tempUnit ) {
+            dataset[sensorName][i].y = dataset[sensorName][i].y * (9 / 5) + 32;
+            axisYtitle = "Degrees Fahrenheit";
+          }
+        }
+        tempUnit = unit;
+        refreshChart();
+      }
+
+      var refresh = true;
+
+      function timedChartRefresh() {
+        if(refresh) getNewTemps();
+      }
+
+      function pauseRefresh(){
+        refresh = !refresh;
+        if(refresh) document.getElemtentById.innerHTML = "Play";
+        else document.getElemtentById.innerHTML = "Pause";
+      }
+    </script>
+  </div>
+
+  <div style="text-align: center; padding-top: 25px;">
+    <button onclick="toggleChartUnit('℉')">Fahrenheit</button>
+    <button onclick="toggleChartUnit('℃')">Celcius</button>
+    <button id = "pauseButton" onclick="pauseRefresh()">Pause</button><br><br>
+  </div>
+   <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+    </body>
+</html>

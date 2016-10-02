@@ -20,7 +20,9 @@ app.get('/', function(req, res){
 app.get('/canvasjs.min.js', function(req, res){
   res.sendfile('canvasjs.min.js');
 });
-
+app.get('/graph', function(req, res){
+  res.sendfile('graph.html');
+});
 io.on('connection', function(socket){
   console.log('a user connected');
   socket.on('disconnect', function(){
