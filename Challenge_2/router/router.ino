@@ -10,6 +10,7 @@
 SoftwareSerial XBee(2, 3); // RX, TX
 
 //Will send 5 bytes every time -> either join or send temp/id
+char temp[4];
 char data[4];
 //Temperature Variable
 int samples[NUMSAMPLES];
@@ -129,8 +130,11 @@ void sendTemp(){
   String whole_temp = string_temperature.substring(0,find_period);
   String float_temp = string_temperature.substring(find_period+1);
   
-  char whole_t = int(whole_temp);
-  char float_t = int(float_temp);
+  char whole_t = whole_temp.toInt();
+  char float_t = float_temp.toInt();
+  Serial.write(whole_t);
+  Serial.write("----");
+  Serial.write(float_t);
   
   char firstbyte = B10000000;
   if(idRead >= 255){
