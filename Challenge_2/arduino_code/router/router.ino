@@ -15,7 +15,7 @@ char chr;
 //Support for 1,000 devices at most
 char id[3] = "";
 char randBuff[4] = "";
-char dataSend[30] = "";
+char dataSend[4] = "";
 int count;
 int counter;
 ///FF+rand_num is request to join
@@ -147,6 +147,7 @@ void getTemp(){
   
   float f_temp = 0;
   float steinhart;
+  int find_period;
   steinhart = log (average / THERMISTORNOMINAL);     // ln (R/Ro)
   steinhart = steinhart/BCOEFFICIENT;               // ln(R/Ro)/B
   steinhart += (1.0 / (TEMPERATURENOMINAL + 273.15)); // + (1/To)
@@ -154,7 +155,24 @@ void getTemp(){
   steinhart =  steinhart - 273.15;                         // convert to C
   f_temp = (steinhart * 9.0)/ 5.0 + 32.0;
   dtostrf(f_temp, 4, 2, temp);
-  Serial.print(f_temp);
+  String string_temperature = String(f_temp, 2);
+  find_period = string_temperature.indexOf('.');
+  String whole_temp = string_temperature.substring(0,find_period);
+  String float_temp = string_temperature.substring(find_period+1);
+  
+  char whole_t = int(whole_temp);
+  char float_t = int(float_temp);
+  
+  char firstbyte = B10000000;
+  char secondbyte = char(id);
+  if(id >= 255){
+    firstbyte = char(id >> 8);
+  }
+  //Send 4 bytes of data [id_high, id_low, whole number of temp, decimal portion of temp]
+  sprintf(dataSend,"%c%c%c%c", firstbyte, secondbyte, whole_t, float_t);
+  //Transmit Data via XBEE to Node
+  XBee.write(dataSend);
+  
 }
 
 void loop(void) {
@@ -181,17 +199,13 @@ void loop(void) {
       getTemp();
 
       //Send one long string terminated by null
-      String data = "{ \"id\": " + String(id) + ", \"temp\": " + String(temp) + " }\n";
-      data.toCharArray(dataSend,30);
-      XBee.write(dataSend);
-      /*XBee.write("{ \"id\": ");
-      XBee.write(id);
-      XBee.write(", \"temp\": ");
-      XBee.write(temp);
-      XBee.write(" }\n");*/
-      /*String data = String(id) + "\n";
-      data.toCharArray(dataSend,2);
-      XBee.write(dataSend);*/
+//      String data = "{ \"id\": " + String(id) + ", \"temp\": " + String(temp) + " }\n";
+//      data.toCharArray(dataSend,30);
+//
+//      Serial.write(dataSend);
+//      XBee.write(dataSend);
+      //XBee.write(dataSend);
+     
       //Might need to delay to prevent buffer overflow
       //delay(randNum(1000));
     }

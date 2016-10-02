@@ -1,6 +1,4 @@
 #include <SoftwareSerial.h>
-
-
 // which analog pin to connect
 #define THERMISTORPIN A0         
 #define NUMSAMPLES 5
@@ -14,7 +12,7 @@ SoftwareSerial XBee(2, 3); // RX, TX
 
 int samples[NUMSAMPLES];
 char temp[10] = "";
-char dataSend[3]= "";
+char dataSend[4]= "";
 char randBuff[4] = "";
 char float_t[10] = "";
  
@@ -60,32 +58,19 @@ void loop(void) {
   find_period = string_temperature.indexOf('.');
   String whole_temp = string_temperature.substring(0,find_period);
   String float_temp = string_temperature.substring(find_period+1);
+
+  char whole_t = int(whole_temp);
+  char float_t = int(float_temp);
   
-  //Serial.print("The whole number char:");
-//  char whole_t = whole_temp.toInt();
-  char whole_t = 100;
-  //Serial.println(whole_t);
-// 
-  //Serial.print("The float number char :");
-//  char float_t = float_temp.toInt();
-  char float_t = 100;
-  //Serial.println(float_t);
-
-  //String data = "";
-//  dataSend[0] = whole_t;
-//  dataSend[1] = float_t;
-//  dataSend[2] = '\n';
-  sprintf(dataSend,"%c%c\n",whole_t,float_t);
-
-//  String data = String(whole_t)+String(float_t); 
-//  data.toCharArray(dataSend,2);
-//  dataSend[2] = '\n';
-  Serial.write(dataSend);
-//  XBee.write(whole_t);
-//  XBee.write(float_t);
-//  XBee.write("\n");
+  char firstbyte = B10000000;
+  char secondbyte = char(id);
+  if(id >= 255){
+    firstbyte = char(id >> 8);
+  }
+  //Send 4 bytes of data [id_high, id_low, whole number of temp, decimal portion of temp]
+  sprintf(dataSend,"%c%c%c%c", firstbyte, secondbyte, whole_t, float_t);
+  //Transmit Data via XBEE to Node
   XBee.write(dataSend);
-  //XBee.write("\n");
-//  
+    
   delay(2000);
 }
