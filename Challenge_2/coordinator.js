@@ -120,9 +120,9 @@ sp.on("open", function () {
   var timing = setInterval(myTimer,3000);
 
   sp.on('data', function(data) {
-    console.log('data:',data.toString('hex'),'length:',data.toString('hex').length);
+    console.log('data:',data.toString('hex'));
     if(data.readInt16BE(0) == -1){
-      console.log("Someone wants to join")
+      console.log("Someone wants to join, resetting timer to 6 sconds once")
       var setTime = 6;
       clearTimeout(timing);
       timing = setInterval(myTimer,setTime*1000);
@@ -132,30 +132,32 @@ sp.on("open", function () {
       var key = availKeys.shift();
       regKeys.push(key);
       current.push(key);
-      console.log('key to give:',key);
+      console.log('Will send key:',key);
 
       //Send Data
-      console.log('buffer before overwrite: ',buffer.toString('hex'));
       buffer.writeUInt16BE(data.readUInt16BE(2),0); //Place randNum first
       buffer.writeUInt16BE(key,2);  //Key goes second
-      console.log('buffer after: ',buffer.toString('hex'));
+      console.log('buffer sent: ',buffer.toString('hex'));
       sp.write(buffer);
     }
 
   	else{
       if(!waiting){
-        console.log("!wait");
         //Set timer to poll every setTime seconds
+        console.log("Entered Wait and Resetting timer to 3 seconds")
         clearTimeout(timing);
         var setTime = 3;
         timing = setInterval(myTimer,setTime*1000);
         waiting = 2;
       }
 			try {
-        console.log("Got temprature");
         //data[0] holds higher 8 bits
-	      var myID = data.readUInt16BE(0); //These are both integers
+	      var myIDmsb = (data.readUInt8(0)-1); //These are both integers
+        var myIDlsb = data.readUInt8(1);
+        var myID = (myIDmsb << 8) | myIDlsb;
 	      var temperature = data.readUInt8(2) + data.readUInt8(3)/100;
+        console.log("Got id: ",myID);
+        console.log("Got temperature: ",temperature)
 
 				//DATA EVENT
 				temp_dict[myID.toString()] = temperature; 			//From the json event
