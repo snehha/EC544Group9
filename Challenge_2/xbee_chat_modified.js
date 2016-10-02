@@ -6,7 +6,7 @@ var io = require('socket.io')(http);
 var portName = process.argv[2],
 portConfig = {
 	baudRate: 9600,
-	parser: SerialPort.parsers.byteLength(3)
+	parser: SerialPort.parsers.byteLength(4)
 };
 var sp;
 sp = new SerialPort.SerialPort(portName, portConfig);

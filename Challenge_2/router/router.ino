@@ -18,6 +18,7 @@ char temp[4] = "";
 bool join;
 int count;
 uint16_t idRead = 0;
+uint16_t randNum = 0;
 
 void setup(void) {
   // put your setup code here, to run once:
@@ -27,11 +28,11 @@ void setup(void) {
   pinMode(13,OUTPUT);
   digitalWrite(13,1);
   join = false;
+  //Generate 2 random numbers
+  randNum = random(pow(2,16)-1);
 }
 
 void initial_join() {
-  //Generate 2 random numbers
-  uint16_t randNum = random(pow(2,16)-1);
   //Send 4 bytes
   char firstbyte = 255;
   char secondbyte = 255;
@@ -133,15 +134,23 @@ void sendTemp(){
   char whole_t = whole_temp.toInt();
   char float_t = float_temp.toInt();
   
-  char firstbyte = B10000000;
-  if(idRead >= 255){
-    firstbyte = char(idRead >> 8);
+  unsigned char firstbyte = B10000000;
+  
+  uint16_t idRead_temp = idRead;
+  Serial.println("Before ID: " + String(idRead));
+  if(idRead_temp >= 255){
+    firstbyte = char(idRead_temp >> 8);
   }
-  char secondbyte = char(idRead);
+  unsigned char secondbyte = char(idRead_temp);
   
   //Send 4 bytes of data [id_high, id_low, whole number of temp, decimal portion of temp]
   sprintf(data,"%c%c%c%c", firstbyte, secondbyte, whole_t, float_t);
   //Transmit Data via XBEE to Node
+  Serial.print(data[0], DEC);
+  Serial.println(data[1], HEX);
+  Serial.println("After ID: " + String(idRead));
+  Serial.print(data[2], HEX);
+  Serial.println(data[3], HEX);
   XBee.write(data);
 
 }
@@ -161,7 +170,7 @@ void loop(void) {
     Serial.write("Byte ");
     Serial.print(count);
     Serial.print(" is: ");
-    Serial.print(byteRead);
+    Serial.print(int(byteRead));
     Serial.print("\n");
 
     switch(count++){
@@ -188,6 +197,7 @@ void loop(void) {
     //00000000
     if(val1 == 0 && val2 == 0){
       join = false;
+      randNum = random(pow(2,16)-1);
       Serial.write("Got Reset\n");
     }
     
