@@ -2,6 +2,31 @@ var SerialPort = require("serialport");
 var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
+//database file
+var fs = require("fs");
+var file = "historicalDB.db";
+var exists = fs.existsSync(file);
+
+// create database
+if(!exists) {
+  console.log("Creating DB file.");
+  fs.openSync(file, "w");
+}
+var sqlite3 = require("sqlite3").verbose();
+var db = new sqlite3.Database(file);
+var tempDB = {};
+// Create table for temperatures
+db.serialize(function() {
+  if(!exists) {
+    db.run("CREATE TABLE temperatureAverages (temperature FLOAT, timeReceived TEXT)");
+  }
+  var temperatureDB = db.prepare("INSERT INTO temperatureAverages VALUES (?,?)");
+  temperatureDB.finalize();
+  // Load average temperatures and time from database
+  db.each("SELECT rowid AS id, temperature, timeReceived FROM temperatureAverages", function(err, row) {
+    tempDB[row.timeReceived] = row.temperature;
+  });
+});
 
 var portName = process.argv[2],
 portConfig = {
@@ -33,6 +58,11 @@ io.on('connection', function(socket){
     io.emit('chat message', msg);
     sp.write(msg + "\n");
   });
+  // send database to graph.html
+  socket.on('loadDB',function(){
+    console.log("load Db");
+      io.emit('load graph', tempDB);
+    });
 });
 
 http.listen(3000, function(){
@@ -108,8 +138,23 @@ function myTimer() {
   if(waiting == 1)
     waiting = 0;
 
+  // calculate average temperature
+  var average = 0;
+  var count = 0;
+  for(var i in temp_dict) {
+    average += temp_dict[i];
+    count++;
+  }
+  // save average to database
+  average = average / count;
+  average = average.toFixed(2)
+  var dateReceived = new Date().toISOString();
+  temperatureDB.run(average,dateReceived);
+  tempDB[dateReceived] = average;
   // SEND DICTIONARY TO Client
   io.emit('temp_event', temp_dict);
+  // Send average to graph client
+  io.emit('refresh graph',average;
 }
 var setTime = 2;
 sp.on("open", function () {
@@ -179,3 +224,5 @@ sp.on("open", function () {
 		}
   });
 });
+
+db.close();

@@ -74,111 +74,6 @@
           <br class="clear"/>
       </div>
   </div>
-  <!--Chart-->
-  <div id="temperatureChart" style="display: none;">
-    <head>
-      <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/d3/3.2.2/d3.v3.min.js"></script>
-      <script type="text/javascript" src="canvasjs.min.js"></script>
-    </head>
-    <body>
-      <center><div id="chartContainer" style="height: 300px; width: 90%;"></div></center>
-    </body>
-
-    <script>
-    var chartTitle = "Average Temperature Readings Over Time";
-    var sensorData = {};
- 
-    sensorData = {}
-    var addTimePoint = function(dataset, sensorName, timepoint, value){
-      if (!dataset.hasOwnProperty(sensorName)){
-        dataset[sensorName] = [];
-      }
-      dataset[sensorName].push({
-        x: timepoint,
-        y: value
-      });
-      refreshChart();
-    }
-
-    var compareReadingsByTime = function(readingA,readingB){
-      return readingA.x - readingB.x;
-    }
-
-    var makeData = function(dataset){
-      var data = [];
-      for (var sensorName in dataset){
-        var subset = makeSubset(dataset, sensorName);
-        data.push(subset);
-      }
-      return data;
-    }
-
-    var makeSubset = function(dataset, sensorName){
-      var subset = {
-        type: "line",
-        showInLegend: true,
-        lineThickness: 2,
-        name: sensorName,
-        dataPoints: dataset[sensorName].sort(compareReadingsByTime)
-      };
-      return subset;
-    }
-
-    var axisYtitle = "Degrees Fahrenheit";
-
-    var renderChart = function(sensorData){
-      var data = makeData(sensorData);
-      var chartParams = {
-        title: { text: chartTitle, fontSize: 15 },
-        data: data
-      };
-
-      chartParams = {
-          title: { text: chartTitle, fontSize: 30 },
-          animationEnabled: false,
-          axisX: { gridColor: "Silver", tickColor: "silver", valueFormatString: "DDD HH:mm:ss" },                        
-          toolTip:{ shared:true },
-          theme: "theme1",
-          axisY: { title: axisYtitle, gridColor: "Silver", tickColor: "silver" },
-          legend: { verticalAlign: "center", horizontalAlign: "right" },
-          data: data,
-          legend:{ cursor:"pointer",
-            itemclick:function(e) {
-              if (typeof(e.dataSeries.visible) === "undefined" || e.dataSeries.visible) e.dataSeries.visible = false;
-              else e.dataSeries.visible = true;
-              chart.render();
-            }
-          }
-      };
-
-      var chart = new CanvasJS.Chart("chartContainer", chartParams);
-      chart.render();
-    }
-
-    var refreshChart = function(){
-      renderChart(sensorData);
-    }
-
-    var tempUnit = '℉'; 
-
-    var toggleChartUnit = function(dataset,sensorName, unit){
-      var size = 0;
-      for( var sensor in dataset[sensorName]) size++;
-      for (var i = 0; i < size; i++){
-        if(unit == '℃' && unit != tempUnit ) {
-          dataset[sensorName][i].y = ((5/9) * (dataset[sensorName][i].y-32))/1.0;
-          axisYtitle = "Degrees Celcius";
-        }
-        else if(unit == '℉' && unit != tempUnit ) {
-          dataset[sensorName][i].y = dataset[sensorName][i].y * (9 / 5) + 32;
-          axisYtitle = "Degrees Fahrenheit";
-        }
-      }
-      refreshChart();
-    }
-
-    </script>
-  </div>
 
   <div style="text-align: center; padding-top: 25px;">
     <button onclick="tempToggle('℉')">Fahrenheit</button>
@@ -195,9 +90,9 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
 
     <script type="text/javascript">
+      var tempUnit = '℉'; 
       //toggle between Fahrenheit and Celcius
       function tempToggle(unit) {
-        toggleChartUnit(sensorData,"Average Temperature", unit);
         tempUnit = unit;
         document.getElementById("temperatureUnit").innerHTML = unit;
         // Recieve dictionary and process logic here
@@ -225,35 +120,6 @@
         else
           return temp/1.0;
       }
-
-      var loadTemps = function() {
-        temperatureDB.transaction(function (tx) {
-              tx.executeSql('SELECT * FROM avgTemps', [], function (tx, results) {
-                 var len = results.rows.length, i;
-                 for (i = 0; i < len; i++){
-                    addTimePoint(sensorData,"Average Temperature", new Date(results.rows.item(i).timeReceived), results.rows.item(i).temperature);
-                 }
-              }, null);
-           });
-      }
-
-      var dataLoaded = false;
-      // Temperature Chart view toggle
-      function chartToggle(){
-        if( document.getElementById("temperatureChart").style.display == 'none' ){
-          $("#temperatureChart").fadeIn(1000);
-          document.getElementById("realtimeDisplay").style.display = 'none';
-          document.getElementById("chartButton").innerHTML = "Show Realtime Temperatures";
-          if(!dataLoaded) {
-            loadTemps();
-            dataLoaded = true;
-          }
-        } else {
-          document.getElementById("temperatureChart").style.display = 'none';
-          $("#realtimeDisplay").fadeIn(1000);
-          document.getElementById("chartButton").innerHTML = "Show Historical Chart";
-        }
-      }
     </script>
 
     <script>
@@ -279,13 +145,10 @@
         if( average == null || average !== average ){
           document.getElementById("temp").innerHTML = "-";
         } else {
-          // save average temp to DB
-          var timeReceived = new Date();
           saveTemp(average.toFixed(2), timeReceived);
           // convert to Celcius if needed
           average = displayTemp(average);
           // plot average temperature
-          addTimePoint(sensorData,"Average Temperature",timeReceived,average.toFixed(2));
           document.getElementById("temp").innerHTML = average.toFixed(2);
         }
         console.log(msg);
