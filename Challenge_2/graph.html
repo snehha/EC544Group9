@@ -172,9 +172,11 @@
       socket.on('refresh graph',function(dateReceived, temperature){
         console.log(dateReceived);
         console.log(new Date(dateReceived) + ": " + temperature);
-        if(refresh) addTimePoint(sensorData,"Average Temperature", new Date(dateReceived), displayTemp(temperature));
+        if(refresh) {
+          addTimePoint(sensorData,"Average Temperature", new Date(dateReceived), displayTemp(temperature));
+          refreshChart();
+        }
         else refreshDb[dateReceived] = temperature;
-        refreshChart();
       });
     </script>
   </div>
