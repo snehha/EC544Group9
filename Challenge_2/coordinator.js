@@ -146,15 +146,21 @@ function myTimer() {
     count++;
   }
   // save average to database
-  average = average / count;
-  average = average.toFixed(2)
-  var dateReceived = new Date().toISOString();
-  temperatureDB.run(average,dateReceived);
-  tempDB[dateReceived] = average;
-  // SEND DICTIONARY TO Client
-  io.emit('temp_event', temp_dict);
-  // Send average to graph client
-  io.emit('refresh graph',average;
+  if( count != 0 ){
+    average = average / count;
+    average = average.toFixed(2)
+    var dateReceived = new Date().toISOString();
+    console.log("DATE RECEIVED: "+dateReceived);
+    var temperatureDB = db.prepare("INSERT INTO temperatureAverages VALUES (?,?)");
+    temperatureDB.run(average,dateReceived);
+    temperatureDB.finalize();    
+    tempDB[dateReceived] = average;
+    // Send average to graph client
+    io.emit('refresh graph',dateReceived,average);
+  }
+    // SEND DICTIONARY TO Client
+    io.emit('temp_event', temp_dict);
+
 }
 var setTime = 2;
 sp.on("open", function () {
@@ -224,5 +230,3 @@ sp.on("open", function () {
 		}
   });
 });
-
-db.close();

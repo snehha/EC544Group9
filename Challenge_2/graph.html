@@ -20,26 +20,6 @@
     <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
     <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
     <script>
-      var socket = io();
-
-      // request data from database
-      socket.emit('loadDB');
-
-      // receive database data
-      socket.on('load graph', function(msg){
-        // Plot historical data
-        for (var key in msg) addTimePoint(sensorData,"Average Temperature", new Date(key), msg[key]);
-      });
-
-      refreshDb = {};
-      var refresh = true;
-
-      // receive new average temperature and refresh graph
-      socket.on('refresh graph',function(dateReceived, temperature){
-        console.log(new Date(dateReceived) + ": " + temperature);
-        if(refresh) addTimePoint(sensorData,"Average Temperature", new Date(dateReceived), temperature);
-        else refreshDb[dateReceived] = temperature;
-      });
 
     var chartTitle = "Average Temperature Readings Over Time";
     var sensorData = {};
@@ -145,8 +125,6 @@
           return temp/1.0;
       }
 
-      var myTimeVar = setInterval(timedChartRefresh, 2000);
-
       var toggleChartUnit = function(unit){
         var dataset = sensorData;
         var sensorName = "Average Temperature"
@@ -175,6 +153,29 @@
         }
         refresh = !refresh;
       }
+
+      var socket = io();
+
+      // request data from database
+      socket.emit('loadDB');
+
+      // receive database data
+      socket.on('load graph', function(msg){
+        // Plot historical data
+        for (var key in msg) addTimePoint(sensorData,"Average Temperature", new Date(key), msg[key]);
+      });
+
+      refreshDb = {};
+      var refresh = true;
+
+      // receive new average temperature and refresh graph
+      socket.on('refresh graph',function(dateReceived, temperature){
+        console.log(dateReceived);
+        console.log(new Date(dateReceived) + ": " + temperature);
+        if(refresh) addTimePoint(sensorData,"Average Temperature", new Date(dateReceived), displayTemp(temperature));
+        else refreshDb[dateReceived] = temperature;
+        refreshChart();
+      });
     </script>
   </div>
 
