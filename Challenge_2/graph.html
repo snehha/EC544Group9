@@ -4,39 +4,8 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
 
     <center><button onclick="window.location.href='/'" id = "chartButton">Show Realtime Temperature</button></center>
-
-    <script type="text/javascript">
-
-    var names = ["Average Temperature"];
-
-      var dbTable = {
-            name: "historicalDB",
-            version: "1.0",
-            description: "Historical average temperature data",
-            maxSize: 1024
-        };
-
-        var temperatureDB = openDatabase(
-            dbTable.name,
-            dbTable.version,
-            dbTable.description,
-            dbTable.maxSize
-        );
-
-        // Open DB
-        temperatureDB.transaction(
-            function( transaction ){
-                transaction.executeSql(
-                    "CREATE TABLE IF NOT EXISTS avgTemps (" +
-                        "id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," +
-                        "temperature FLOAT NOT NULL," + "timeReceived STRING NOT NULL" + 
-                    ");"
-                );
-            }
-        );
-        
-    </script>
 </head>
+
 <body style="color: #2c3e50; background: linear-gradient(white, #bdc3c7); height: 100%; background-repeat: no-repeat; background-attachment: fixed;">
 <!--Chart-->
   <div id="temperatureChart" onload="loadTemps()">
@@ -48,7 +17,10 @@
       <center><div id="chartContainer" style="height: 300px; width: 90%;"></div></center>
     </body>
 
+    <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+    <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
     <script>
+
     var chartTitle = "Average Temperature Readings Over Time";
     var sensorData = {};
  
@@ -153,32 +125,6 @@
           return temp/1.0;
       }
 
-    var loadTemps = function() {
-        temperatureDB.transaction(function (tx) {
-              tx.executeSql('SELECT * FROM avgTemps', [], function (tx, results) {
-                 var len = results.rows.length, i;
-                 for (i = 0; i < len; i++){
-                    addTimePoint(sensorData,"Average Temperature", new Date(results.rows.item(i).timeReceived), results.rows.item(i).temperature);
-                 }
-              }, null);
-           });
-      }
-      loadTemps();
-
-      var getNewTemps = function() {
-        temperatureDB.transaction(function (tx) {
-              tx.executeSql('SELECT * FROM avgTemps', [], function (tx, results) {
-                 var len = results.rows.length, i;
-                 for (i = lastTimePoint; i < len; i++){
-                    addTimePoint(sensorData,"Average Temperature", new Date(results.rows.item(i).timeReceived), displayTemp(results.rows.item(i).temperature));
-                 }
-                 lastTimePoint = len - 1;
-              }, null);
-           });
-      }
-
-      var myTimeVar = setInterval(timedChartRefresh, 2000);
-
       var toggleChartUnit = function(unit){
         var dataset = sensorData;
         var sensorName = "Average Temperature"
@@ -198,15 +144,40 @@
         refreshChart();
       }
 
-      var refresh = true;
-
-      function timedChartRefresh() {
-        if(refresh) getNewTemps();
-      }
-
       function pauseRefresh(){
+        if(refresh) refreshDb = {};
+        else {
+          for(var key in refreshDb) {
+            addTimePoint(sensorData,"Average Temperature", new Date(key), refreshDb[key]);
+          }
+        }
         refresh = !refresh;
       }
+
+      var socket = io();
+
+      // request data from database
+      socket.emit('loadDB');
+
+      // receive database data
+      socket.on('load graph', function(msg){
+        // Plot historical data
+        for (var key in msg) addTimePoint(sensorData,"Average Temperature", new Date(key), msg[key]);
+      });
+
+      refreshDb = {};
+      var refresh = true;
+
+      // receive new average temperature and refresh graph
+      socket.on('refresh graph',function(dateReceived, temperature){
+        console.log(dateReceived);
+        console.log(new Date(dateReceived) + ": " + temperature);
+        if(refresh) {
+          addTimePoint(sensorData,"Average Temperature", new Date(dateReceived), displayTemp(temperature));
+          refreshChart();
+        }
+        else refreshDb[dateReceived] = temperature;
+      });
     </script>
   </div>
 
