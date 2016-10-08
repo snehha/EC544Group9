@@ -39,7 +39,7 @@
       <div class="row">
         <div class="col-md-4 center">
 
-          <a role="button" data-toggle="collapse" href="#colorWheelDrop_Led1" aria-expanded="false" aria-controls="colorWheelDrop_Led1" style="text-decoration: none;">
+          <a role="button" data-toggle="collapse" href="#colorWheelDrop" aria-expanded="false" aria-controls="colorWheelDrop" style="text-decoration: none;">
             <svg xmlns="http://www.w3.org/2000/svg" style="display: block; margin: auto;" height="300" viewBox="0 0 338 513">
               <g class="led" fill="none">
                 <g class="lightbulb" transform="translate(1 1)">
@@ -56,7 +56,7 @@
           </a>
         </div>
         <div class="col-md-4 center">
-          <a role="button" data-toggle="collapse" href="#colorWheelDrop_Led2" aria-expanded="false" aria-controls="colorWheelDrop_Led2" style="text-decoration: none;">
+          <a role="button" data-toggle="collapse" href="#colorWheelDrop" aria-expanded="false" aria-controls="colorWheelDrop" style="text-decoration: none;">
             <svg xmlns="http://www.w3.org/2000/svg" style="display: block; margin: auto;" height="300" viewBox="0 0 338 513">
               <g class="led" fill="none">
                 <g class="lightbulb" transform="translate(1 1)">
@@ -73,7 +73,7 @@
           </a>
         </div>
         <div class="col-md-4 center">
-          <a role="button" data-toggle="collapse" href="#colorWheelDrop_Led3" aria-expanded="false" aria-controls="colorWheelDrop_Led3" style="text-decoration: none;">
+          <a role="button" data-toggle="collapse" href="#colorWheelDrop" aria-expanded="false" aria-controls="colorWheelDrop" style="text-decoration: none;">
             <svg xmlns="http://www.w3.org/2000/svg" style="display: block; margin: auto;" height="300" viewBox="0 0 338 513">
               <g class="led" fill="none">
                 <g class="lightbulb" transform="translate(1 1)">
@@ -91,25 +91,22 @@
         </div>
       </div>
     </div>
-    <div class="collapse" id="colorWheelDrop_Led1">
+    <div class="collapse" id="colorWheelDrop">
       <div class="well">
-        <button onclick="changeColor()">Try it</button>
+        <canvas id="c"></canvas>
+    		<script>
+    			var b = document.getElementById('colorWheelDrop');
+    			var c = document.getElementById('c');
+    			var a = c.getContext('2d');
+    			document.body.clientWidth; // fix bug in webkit: http://qfox.nl/weblog/218
+    		</script>
       </div>
     </div>
-    <div class="collapse" id="colorWheelDrop_Led2">
-      <div class="well">
-        <button onclick="changeColor()">Try it</button>
-      </div>
-    </div>
-    <div class="collapse" id="colorWheelDrop_Led3">
-      <div class="well">
-        <button onclick="changeColor()">Try it</button>
-      </div>
     </div>
 
 
 
-
+    <script src='1k.js'></script>
     <script>
       function changeColor() {
     	     document.getElementById('bulb-1').setAttribute('style','fill: #CC0000;');
