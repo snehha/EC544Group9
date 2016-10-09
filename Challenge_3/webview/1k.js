@@ -55,7 +55,8 @@
     }
 
     // Bind Event Handlers
-    input.onchange = redraw;
+    input.onmousemove = redrawLower;
+
     c.onmousedown = doc.onmouseup = function(e) {
         // Unbind mousemove if this is a mouseup event, or bind mousemove if this a mousedown event
         doc.onmousemove = /p/.test(e.type) ? 0 : (redraw(e), redraw);
@@ -113,6 +114,51 @@
         a.fillText("\u2B29", currentX+radiusPlusOffset-4,currentY+radiusPlusOffset+4);
     }
 
+    function redrawLower(e) {
+
+        // Scope these locally so the compiler will minify the names.  Will manually remove the 'var' keyword in the minified version.
+        var theta = atan2(currentY, currentX),
+            d = currentX * currentX + currentY * currentY;
+
+        // If the x/y is not in the circle, find angle between center and mouse point:
+        //   Draw a line at that angle from center with the distance of radius
+        //   Use that point on the circumference as the draggable location
+        if (d > radiusSquared) {
+            currentX = radius * math.cos(theta);
+            currentY = radius * math.sin(theta);
+            theta = atan2(currentY, currentX);
+            d = currentX * currentX + currentY * currentY;
+        }
+
+        label.textContent = b.style.background = hsvToRgb(
+            (theta + PI) / PI2,         // Current hue (how many degrees along the circle)
+            sqrt(d) / radius,           // Current saturation (how close to the middle)
+            input.value / oneHundred    // Current value (input type="range" slider value)
+        )[3];
+
+        // Reset to color wheel and draw a spot on the current location.
+        a.putImageData(imageData, 0, 0);
+        document.getElementById(bulbClicked).setAttribute('style','fill:'+rgbHex(label.textContent)+';');
+
+        // Draw the current spot.
+        // I have tried a rectangle, circle, and heart shape.
+        /*
+        // Rectangle:
+        a.fillStyle = '#000';
+        a.fillRect(currentX+radiusPlusOffset,currentY+radiusPlusOffset, 6, 6);
+        */
+        /*
+        // Circle:
+        a.beginPath();
+        a.strokeStyle = '#000';
+        a.arc(~~currentX+radiusPlusOffset,~~currentY+radiusPlusOffset, 4, 0, PI2);
+        a.stroke();
+        */
+
+        // Heart:
+        a.font = "1em arial";
+        a.fillText("\u2B29", currentX+radiusPlusOffset-4,currentY+radiusPlusOffset+4);
+    }
     // Created a shorter version of the HSV to RGB conversion function in TinyColor
     // https://github.com/bgrins/TinyColor/blob/master/tinycolor.js
     function hsvToRgb(h, s, v) {
