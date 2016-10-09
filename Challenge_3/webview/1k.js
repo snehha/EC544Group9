@@ -91,6 +91,7 @@
 
         // Reset to color wheel and draw a spot on the current location.
         a.putImageData(imageData, 0, 0);
+        document.getElementById(bulbClicked).setAttribute('style','fill:'+rgbHex(label.textContent)+';');
 
         // Draw the current spot.
         // I have tried a rectangle, circle, and heart shape.
@@ -110,7 +111,6 @@
         // Heart:
         a.font = "1em arial";
         a.fillText("\u2B29", currentX+radiusPlusOffset-4,currentY+radiusPlusOffset+4);
-
     }
 
     // Created a shorter version of the HSV to RGB conversion function in TinyColor
@@ -128,6 +128,14 @@
             b = [p, p, t, v, v, q][mod] * two55;
 
         return [r, g, b, "rgb("+ ~~r + "," + ~~g + "," + ~~b + ")"];
+    }
+
+
+    function rgbHex(hex){
+        var myVals = hex.replace(/[rgb()]+/g,'');
+        return '#' + myVals.split(',').map(function strToHex(current,index,array){
+            return parseInt(current).toString(16);
+        }).join('');
     }
 
     // Kick everything off

@@ -38,8 +38,7 @@
       </header>
       <div class="row">
         <div class="col-md-4 center">
-
-          <a role="button" data-toggle="collapse" href="#colorWheelDrop" aria-expanded="false" aria-controls="colorWheelDrop" style="text-decoration: none;">
+          <a role="button" href="#colorWheelDrop" aria-expanded="false" aria-controls="colorWheelDrop" style="text-decoration: none;">
             <svg xmlns="http://www.w3.org/2000/svg" style="display: block; margin: auto;" height="300" viewBox="0 0 338 513">
               <g class="led" fill="none">
                 <g class="lightbulb" transform="translate(1 1)">
@@ -56,7 +55,7 @@
           </a>
         </div>
         <div class="col-md-4 center">
-          <a role="button" data-toggle="collapse" href="#colorWheelDrop" aria-expanded="false" aria-controls="colorWheelDrop" style="text-decoration: none;">
+          <a role="button" href="#colorWheelDrop" aria-expanded="false" aria-controls="colorWheelDrop" style="text-decoration: none;">
             <svg xmlns="http://www.w3.org/2000/svg" style="display: block; margin: auto;" height="300" viewBox="0 0 338 513">
               <g class="led" fill="none">
                 <g class="lightbulb" transform="translate(1 1)">
@@ -73,7 +72,7 @@
           </a>
         </div>
         <div class="col-md-4 center">
-          <a role="button" data-toggle="collapse" href="#colorWheelDrop" aria-expanded="false" aria-controls="colorWheelDrop" style="text-decoration: none;">
+          <a role="button" href="#colorWheelDrop" aria-expanded="false" aria-controls="colorWheelDrop" style="text-decoration: none;">
             <svg xmlns="http://www.w3.org/2000/svg" style="display: block; margin: auto;" height="300" viewBox="0 0 338 513">
               <g class="led" fill="none">
                 <g class="lightbulb" transform="translate(1 1)">
@@ -104,20 +103,52 @@
     </div>
     </div>
 
-
-
-    <script src='1k.js'></script>
-    <script>
-      function changeColor() {
-    	     document.getElementById('bulb-1').setAttribute('style','fill: #CC0000;');
-           document.getElementById('bulb-2').setAttribute('style','fill: #32C129;');
-           document.getElementById('bulb-3').setAttribute('style','fill: #44EDC1;');
-
-      }
-    </script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script>
+      var bulbClicked;
+      var bCount = 0;
+      $('#bulb-1').on('click',function(){
+        if(bCount == 0){
+          $('.collapse').collapse('show');
+          bCount = 1;
+        }
+        else if(bCount == 1){
+          if(bulbClicked == 'bulb-1'){
+            $('.collapse').collapse('hide');
+            bCount = 0;
+          }
+        }
+        bulbClicked = 'bulb-1';
+      });
+      $('#bulb-2').on('click',function(){
+        if(bCount == 0){
+          $('.collapse').collapse('show');
+          bCount = 1;
+        }
+        else if(bCount == 1){
+          if(bulbClicked == 'bulb-2'){
+            $('.collapse').collapse('hide');
+            bCount = 0;
+          }
+        }
+        bulbClicked = 'bulb-2';
+      });
+      $('#bulb-3').on('click',function(){
+        if(bCount == 0){
+          $('.collapse').collapse('show');
+          bCount = 1;
+        }
+        else if(bCount == 1){
+          if(bulbClicked == 'bulb-3'){
+            $('.collapse').collapse('hide');
+            bCount = 0;
+          }
+        }
+        bulbClicked = 'bulb-3';
+      });
+    </script>
+    <script src='1k.js'></script>
     <!-- Latest compiled and minified JavaScript -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-
   </body>
 </html>
