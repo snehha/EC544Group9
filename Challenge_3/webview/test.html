@@ -2,12 +2,16 @@
   <head>
     <!-- Latest compiled and minified CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <link href="https://fonts.googleapis.com/css?family=Roboto+Slab" rel="stylesheet">
     <style>
       body{
         background-color: #ecf0f1;
         font-family: 'Roboto Slab', serif;
+        overflow-x:hidden;
+      }
+      #c{
+        overflow-x:hidden;
       }
       .a{
         fill:#C8D0CE;
@@ -29,15 +33,15 @@
       }
     </style>
   </head>
-  <body>
+  <body onload=resizeSVG() onresize=resizeSVG()>
     <div class="container">
-      <header class="row" style="background-color: #3D3F41; margin-top: 5px; border-radius: 10px; text-align: center; padding-bottom: 10px; color:#ecf0f1;">
+      <header class="row" style="background-color: #3D3F41; margin-top: 5px; border-radius: 10px; text-align: center; padding-bottom: 10px; margin-bottom: 20px; color:#ecf0f1;">
         <div style="width: 300px; display: block; margin: auto;" >
           <span><h1 class="rainbow center">Chroma Light</h1></span>
         </div>
       </header>
       <div class="row">
-        <div class="col-md-4 center">
+        <div class="col-xs-4 center">
           <a id="btn_led_1" role="button" href="#colorWheelDrop" aria-expanded="false" aria-controls="colorWheelDrop" style="text-decoration: none;">
             <svg xmlns="http://www.w3.org/2000/svg" style="display: block; margin: auto;" height="300" viewBox="0 0 338 513">
               <g class="led" fill="none">
@@ -54,7 +58,7 @@
             </svg>
           </a>
         </div>
-        <div class="col-md-4 center">
+        <div class="col-xs-4 center">
           <a id="btn_led_2" role="button" href="#colorWheelDrop" aria-expanded="false" aria-controls="colorWheelDrop" style="text-decoration: none;">
             <svg xmlns="http://www.w3.org/2000/svg" style="display: block; margin: auto;" height="300" viewBox="0 0 338 513">
               <g class="led" fill="none">
@@ -71,7 +75,7 @@
             </svg>
           </a>
         </div>
-        <div class="col-md-4 center">
+        <div class="col-xs-4 center">
           <a id="btn_led_3" role="button" href="#colorWheelDrop" aria-expanded="false" aria-controls="colorWheelDrop" style="text-decoration: none;">
             <svg xmlns="http://www.w3.org/2000/svg" style="display: block; margin: auto;" height="300" viewBox="0 0 338 513">
               <g class="led" fill="none">
@@ -165,6 +169,47 @@
         label.textContent = b.style.background = wheeldropBGStyle;
         document.getElementById('light-name-id').innerHTML=ledName;
       };
+
+      function resizeSVG(){
+        var width = ($(window).width());
+        var all = document.getElementsByTagName('svg');
+        for(var i = 0, max = all.length; i < max; i++)
+        {
+            if(width >= 1500){
+              all[i].setAttribute('height', 300);
+              console.log("MAX" + width);
+            }
+            else if(width < 1500 && width >= 1000){
+              all[i].setAttribute('height', 250);
+              console.log("MID" + width);
+            }
+            else if(width < 1000 && width >= 500){
+              all[i].setAttribute('height', 200);
+              console.log("LOW" + width);
+            }
+            else if(width < 500 && width > 400){
+              all[i].setAttribute('height', 180);
+              console.log("VLOW" + width);
+            }
+            else{
+              all[i].setAttribute('height', 130);
+              console.log("ELSE" + width);
+            }
+
+        }
+      }
+    </script>
+    <script>
+      $(function() {
+          var $body = $(document);
+          $body.bind('scroll', function() {
+              // "Disable" the horizontal scroll.
+              if ($body.scrollLeft() !== 0) {
+                  $body.scrollLeft(0);
+              }
+          });
+
+        });
     </script>
     <script src='1k.js'></script>
     <!-- Latest compiled and minified JavaScript -->

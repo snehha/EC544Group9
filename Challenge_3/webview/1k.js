@@ -62,10 +62,12 @@
     // Bind Event Handlers
     input.onmousemove = redrawLower;
 
-    c.onmousedown = doc.onmouseup = function(e) {
+
+    c.ontouchdown = c.onmousedown = doc.onmouseup = function(e) {
         // Unbind mousemove if this is a mouseup event, or bind mousemove if this a mousedown event
-        doc.onmousemove = /p/.test(e.type) ? 0 : (redraw(e), redraw);
+        c.ontouchup = doc.onmousemove = /p/.test(e.type) ? 0 : (redraw(e), redraw);
     }
+
 
     // Handle manual calls + mousemove event handler + input change event handler all in one place.
     function redraw(e) {
