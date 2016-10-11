@@ -32,6 +32,7 @@
     // Setup DOM properties
     b.style.textAlign="center";
     label.style.font = "2em courier";
+    label.id = 'rgbtext';
     input.type = "range";
 
     // Load color wheel data into memory.
@@ -92,7 +93,7 @@
 
         // Reset to color wheel and draw a spot on the current location.
         a.putImageData(imageData, 0, 0);
-        document.getElementById(bulbClicked).setAttribute('style','fill:'+rgbHex(label.textContent)+';');
+        document.getElementById(bulbClicked).setAttribute('style','fill: '+ label.textContent +';');
 
         // Draw the current spot.
         // I have tried a rectangle, circle, and heart shape.
@@ -111,7 +112,7 @@
 
         // Heart:
         a.font = "1em arial";
-        a.fillText("\u2B29", currentX+radiusPlusOffset-4,currentY+radiusPlusOffset+4);
+        //a.fillText("\u2B29", 0+radiusPlusOffset-4,0+radiusPlusOffset+4);
     }
 
     function redrawLower(e) {
@@ -138,7 +139,7 @@
 
         // Reset to color wheel and draw a spot on the current location.
         a.putImageData(imageData, 0, 0);
-        document.getElementById(bulbClicked).setAttribute('style','fill:'+rgbHex(label.textContent)+';');
+        document.getElementById(bulbClicked).setAttribute('style','fill: '+ label.textContent +';');
 
         // Draw the current spot.
         // I have tried a rectangle, circle, and heart shape.
@@ -157,7 +158,8 @@
 
         // Heart:
         a.font = "1em arial";
-        a.fillText("\u2B29", currentX+radiusPlusOffset-4,currentY+radiusPlusOffset+4);
+        //a.fillText("\u2B29", currentX+radiusPlusOffset-4,currentY+radiusPlusOffset+4);
+        //a.fillText("\u2B29", 0+radiusPlusOffset-4,0+radiusPlusOffset+4);
     }
     // Created a shorter version of the HSV to RGB conversion function in TinyColor
     // https://github.com/bgrins/TinyColor/blob/master/tinycolor.js
@@ -174,6 +176,46 @@
             b = [p, p, t, v, v, q][mod] * two55;
 
         return [r, g, b, "rgb("+ ~~r + "," + ~~g + "," + ~~b + ")"];
+    }
+
+    function rgb2hsv() {
+      var rr, gg, bb,
+          r = arguments[0] / 255,
+          g = arguments[1] / 255,
+          b = arguments[2] / 255,
+          h, s,
+          v = Math.max(r, g, b),
+          diff = v - Math.min(r, g, b),
+          diffc = function(c){
+              return (v - c) / 6 / diff + 1 / 2;
+          };
+
+      if (diff == 0) {
+          h = s = 0;
+      } else {
+          s = diff / v;
+          rr = diffc(r);
+          gg = diffc(g);
+          bb = diffc(b);
+
+          if (r === v) {
+              h = bb - gg;
+          }else if (g === v) {
+              h = (1 / 3) + rr - bb;
+          }else if (b === v) {
+              h = (2 / 3) + gg - rr;
+          }
+          if (h < 0) {
+              h += 1;
+          }else if (h > 1) {
+              h -= 1;
+          }
+      }
+      return {
+          h: Math.round(h * 360),
+          s: Math.round(s * 100),
+          v: Math.round(v * 100)
+      };
     }
 
 

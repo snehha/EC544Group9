@@ -38,7 +38,7 @@
       </header>
       <div class="row">
         <div class="col-md-4 center">
-          <a role="button" href="#colorWheelDrop" aria-expanded="false" aria-controls="colorWheelDrop" style="text-decoration: none;">
+          <a id="btn_led_1" role="button" href="#colorWheelDrop" aria-expanded="false" aria-controls="colorWheelDrop" style="text-decoration: none;">
             <svg xmlns="http://www.w3.org/2000/svg" style="display: block; margin: auto;" height="300" viewBox="0 0 338 513">
               <g class="led" fill="none">
                 <g class="lightbulb" transform="translate(1 1)">
@@ -55,7 +55,7 @@
           </a>
         </div>
         <div class="col-md-4 center">
-          <a role="button" href="#colorWheelDrop" aria-expanded="false" aria-controls="colorWheelDrop" style="text-decoration: none;">
+          <a id="btn_led_2" role="button" href="#colorWheelDrop" aria-expanded="false" aria-controls="colorWheelDrop" style="text-decoration: none;">
             <svg xmlns="http://www.w3.org/2000/svg" style="display: block; margin: auto;" height="300" viewBox="0 0 338 513">
               <g class="led" fill="none">
                 <g class="lightbulb" transform="translate(1 1)">
@@ -72,7 +72,7 @@
           </a>
         </div>
         <div class="col-md-4 center">
-          <a role="button" href="#colorWheelDrop" aria-expanded="false" aria-controls="colorWheelDrop" style="text-decoration: none;">
+          <a id="btn_led_3" role="button" href="#colorWheelDrop" aria-expanded="false" aria-controls="colorWheelDrop" style="text-decoration: none;">
             <svg xmlns="http://www.w3.org/2000/svg" style="display: block; margin: auto;" height="300" viewBox="0 0 338 513">
               <g class="led" fill="none">
                 <g class="lightbulb" transform="translate(1 1)">
@@ -92,6 +92,7 @@
     </div>
     <div class="collapse" id="colorWheelDrop">
       <div class="well">
+        <h3 id="light-name-id" style="text-align: center;">Light: None</h3>
         <canvas id="c"></canvas>
     		<script>
     			var b = document.getElementById('colorWheelDrop');
@@ -109,6 +110,7 @@
       $('#bulb-1').on('click',function(){
         if(bCount == 0){
           $('.collapse').collapse('show');
+          getLEDDdata(document.getElementById('bulb-1'));
           bCount = 1;
         }
         else if(bCount == 1){
@@ -116,12 +118,16 @@
             $('.collapse').collapse('hide');
             bCount = 0;
           }
+          else{
+            getLEDDdata(document.getElementById('bulb-1'));
+          }
         }
         bulbClicked = 'bulb-1';
       });
       $('#bulb-2').on('click',function(){
         if(bCount == 0){
           $('.collapse').collapse('show');
+          getLEDDdata(document.getElementById('bulb-2'));
           bCount = 1;
         }
         else if(bCount == 1){
@@ -129,12 +135,16 @@
             $('.collapse').collapse('hide');
             bCount = 0;
           }
+          else{
+            getLEDDdata(document.getElementById('bulb-2'));
+          }
         }
         bulbClicked = 'bulb-2';
       });
       $('#bulb-3').on('click',function(){
         if(bCount == 0){
           $('.collapse').collapse('show');
+          getLEDDdata(document.getElementById('bulb-3'));
           bCount = 1;
         }
         else if(bCount == 1){
@@ -142,9 +152,19 @@
             $('.collapse').collapse('hide');
             bCount = 0;
           }
+          else{
+            getLEDDdata(document.getElementById('bulb-3'));
+          }
         }
         bulbClicked = 'bulb-3';
       });
+      function getLEDDdata(bulbClicked) {
+        ledName = bulbClicked.id;
+        var wheeldropBGStyle = window.getComputedStyle(bulbClicked).getPropertyValue('fill');
+        var label = document.getElementById('rgbtext');
+        label.textContent = b.style.background = wheeldropBGStyle;
+        document.getElementById('light-name-id').innerHTML=ledName;
+      };
     </script>
     <script src='1k.js'></script>
     <!-- Latest compiled and minified JavaScript -->
