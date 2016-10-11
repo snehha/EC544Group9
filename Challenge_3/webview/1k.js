@@ -33,7 +33,11 @@
     b.style.textAlign="center";
     label.style.font = "2em courier";
     label.id = 'rgbtext';
+    label.style.padding = "0 0 15 0";
     input.type = "range";
+    input.style.width = "400px";
+    input.style.margin = "auto";
+    input.style.display = "none";
 
     // Load color wheel data into memory.
     for (y = input.min = 0; y < width; y++) {
