@@ -50,11 +50,6 @@ void init_status() {
   delay(2000);
   //Check if the server is sending data
   bool server_running = false;
-  //  if(XBee.available() > 0){
-  //      Serial.println("Starting to read the XBee.");
-  //      uint32_t byteRead = XBee.read();
-  //      Serial.write(byteRead);
-  //   }
   if (XBee.available() > 0) {
     server_running = true;
   }
