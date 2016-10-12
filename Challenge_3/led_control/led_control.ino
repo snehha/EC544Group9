@@ -1,14 +1,12 @@
-#include <Adafruit_NeoPixel.h>
-
 #include <SoftwareSerial.h>
 
-#define red_pin 8
-#define green_pin 9
-#define blue_pin 10
+int redPins[3] = {13,10,7};
+int greenPins[3] = {12,9,6};
+int bluePins[3] = {11,8,5};
+int numPins = 3;
 
 SoftwareSerial XBee(2, 3); // RX, TX
-//Adafruit_NeoPixel s = Adafruit_NeoPixel(2, A0, NEO_GRB + NEO_KHZ800);
-bool start;// = false;// = false;
+bool start;
 char data[4] = "";
 String input_string;
 String led_id;
@@ -29,12 +27,11 @@ void setup() {
   start = false;
   XBee.begin(9600);
   Serial.begin(9600);
-  pinMode(red_pin, OUTPUT);
-  pinMode(green_pin, OUTPUT);
-  pinMode(blue_pin, OUTPUT); 
-//  digitalWrite(red_pin, LOW);
-//  digitalWrite(green_pin, LOW);
-//  digitalWrite(blue_pin, LOW);
+  for( int i = 0; i < numPins; i++) {
+    pinMode(redPins[i],OUTPUT);
+    pinMode(greenPins[i],OUTPUT);
+    pinMode(bluePins[i],OUTPUT);
+  }
 }
 
 
@@ -66,77 +63,31 @@ void init_status(){
     if(XBee.available() > 0){
       //Serial.println("Server_Running is true. Starting to read the XBee.");
       uint32_t byteRead = XBee.read();
-
-      //Serial.println(byteRead);
+      Serial.println(byteRead);
         command[count] = byteRead;
         Serial.println(command[count]);
         count++;
       if(count == 4) {
         count = 0;
         int led_to_turn_on;
-        //digitalWrite(13, 1);
         Serial.print("Command[2]: ");
         Serial.println(command[2]);
-        switch(command[0]) {
-          case 1: 
-            led_to_turn_on = 8;
-             break;
-          case 2:
-            led_to_turn_on = 9;
-            break;
-          case 3:
-            led_to_turn_on = 10;
-            break;
-        }
-        //digitalWrite(led_to_turn_on, !digitalRead(led_to_turn_on));
-//          s.begin();
-//          s.setBrightness(100);
-//          s.setPixelColor(led_to_turn_on,command[1],command[2],command[3]);
-
-        set_color(command[1], command[2], command[3]);  // red
-        //delay(1000);
         
+        set_color(command[0], command[1], command[2], command[3]);  // red
       }
-        /*int led_to_turn_on;
-        //digitalWrite(13, 1);
-        switch(command[0]) {
-          case 1: 
-            led_to_turn_on = 8;
-             break;
-          case 2:
-            led_to_turn_on = 9;
-            break;
-          case 3:
-            led_to_turn_on = 10;
-            break;
-        }
-        if(red_int == 255){
-          digitalWrite(led_to_turn_on, HIGH);
-        }
-        else if(red_int == 0){
-          digitalWrite(led_to_turn_on, LOW);
-        }*/
         start = true;
     }
-    
-    
-  }
-//    );
-//    //led_id = substring(0, 8);
-    
-    
+  }    
 }
-void set_color(int red, int green, int blue){
-//  #ifdef COMMON_ANODE
-//    red = 255 - red;
-//    green = 255 - green;
-//    blue = 255 - blue;
-//  #endif
-  Serial.print("Green pin: ");
-  Serial.println(green);
-  analogWrite(red_pin, red);
-  analogWrite(green_pin, green);
-  analogWrite(blue_pin, blue);  
+void set_color(int id, int red, int green, int blue){
+  #ifdef COMMON_ANODE
+    red = 255 - red;
+    green = 255 - green;
+    blue = 255 - blue;
+  #endif
+  analogWrite(redPins[id], red);
+  analogWrite(greenPins[id], green);
+  analogWrite(bluePins[id], blue);
 }
 void loop() {
   // put your main code here, to run repeatedly:
