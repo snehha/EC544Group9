@@ -3,6 +3,7 @@
     // Declare constants and variables to help with minification
     // Some of these are inlined (with comments to the side with the actual equation)
     var doc = document;
+
     doc.c = doc.createElement;
     b.a = b.appendChild;
 
@@ -61,11 +62,16 @@
 
     // Bind Event Handlers
     input.onmousemove = redrawLower;
+    var socket = io();
 
-
-    c.ontouchdown = c.onmousedown = doc.onmouseup = function(e) {
+    c.onmousedown = doc.onmouseup = function(e) {
         // Unbind mousemove if this is a mouseup event, or bind mousemove if this a mousedown event
-        c.ontouchup = doc.onmousemove = /p/.test(e.type) ? 0 : (redraw(e), redraw);
+        doc.onmousemove = /p/.test(e.type) ? 0 : (redraw(e), redraw);
+    }
+    c.onmouseup = function(){
+      var bulblabel = document.getElementById('light-name-id');
+      var payload = {[bulblabel.textContent]:label.textContent.substring(4,label.textContent.length-1)};
+      socket.emit('bulb-change', payload);
     }
 
 
@@ -120,6 +126,8 @@
         a.font = "1em arial";
         //a.fillText("\u2B29", 0+radiusPlusOffset-4,0+radiusPlusOffset+4);
     }
+
+
 
     function redrawLower(e) {
 

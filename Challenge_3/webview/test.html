@@ -107,8 +107,16 @@
     		</script>
       </div>
     </div>
-
+    <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script>
+      var socket = io();
+      socket.on('bulbFromServer', function(msg){
+        for (key in msg){
+          document.getElementById(key).setAttribute('style','fill: rgb('+ msg[key] +');');
+        }
+      });
+    </script>
     <script>
       var bulbClicked;
       var bCount = 0;
