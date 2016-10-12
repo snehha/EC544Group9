@@ -6,21 +6,21 @@
     doc.c = doc.createElement;
     b.a = b.appendChild;
 
-    var width = c.width = c.height = 400,
+    var width = c.width = c.height = 320,
         label = b.a(doc.c("p")),
         input = b.a(doc.c("input")),
         imageData = a.createImageData(width, width),
         pixels = imageData.data,
         oneHundred = input.value = input.max = 100,
         circleOffset = 10,
-        diameter = 380,                  //width-circleOffset*2,
-        radius = 190,                    //diameter / 2,
-        radiusPlusOffset = 200,          //radius + circleOffset
+        diameter = width-circleOffset*2;
+        radius = diameter / 2;
+        radiusPlusOffset = radius + circleOffset;
         radiusSquared = radius * radius,
         two55 = 255,
         currentY = oneHundred,
         currentX = -currentY,
-        wheelPixel = 16040;              // circleOffset*4*width+circleOffset*4;
+        wheelPixel = circleOffset*4*width+circleOffset*4;
 
     // Math helpers
     var math = Math,
@@ -231,6 +231,30 @@
             return parseInt(current).toString(16);
         }).join('');
     }
+
+    window.addEventListener('load', function(){ // on page load
+
+    c.addEventListener('touchmove', function(e){
+        window.blockMenuHeaderScroll = true;
+        e.preventDefault();
+        redraw(e);
+        //alert(e.changedTouches[0].pageX) // alert pageX coordinate of touch point
+    }, false)
+
+    }, false)
+
+    window.addEventListener('load', function(){ // on page load
+
+    c.addEventListener('touchup', function(e){
+        window.blockMenuHeaderScroll = false;
+
+        //redraw(e);
+        //alert(e.changedTouches[0].pageX) // alert pageX coordinate of touch point
+    }, false)
+
+    }, false)
+
+
 
     // Kick everything off
     redraw(0);
