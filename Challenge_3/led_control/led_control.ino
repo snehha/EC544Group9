@@ -147,25 +147,5 @@ void loop() {
       delay(2000);
       init_status();
     }
-//    int led_to_turn_on;
-//    //digitalWrite(13, 1);
-//    switch(led_id_int) {
-//      case 1: 
-//        led_to_turn_on = 8;
-//         break;
-//      case 2:
-//        led_to_turn_on = 9;
-//        break;
-//      case 3:
-//        led_to_turn_on = 10;
-//        break;
-//    }
-    //Serial.print("Turned on: ");
-    //Serial.println(led_to_turn_on);
-//    digitalWrite(led_to_turn_on, HIGH);
-    //digitalWrite(led_id_int, 1);
-    //digitalWrite(led_id_int, 1);
-  
-  
     delay(1000);
 }
