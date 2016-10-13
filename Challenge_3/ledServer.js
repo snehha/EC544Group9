@@ -19,9 +19,9 @@ var ledMap = {}; // ledID : [on/off,R,G,B]
 var buffer = Buffer.allocUnsafe(4);
 
 for( var i = 1; i <= ledNum; i++) {
-    	var led = [0,255,0,0]; // [on/off , R, G, B]
-    	ledMap[i] = led;
-	}
+	var led = [0,255,0,0]; // [on/off , R, G, B]
+	ledMap[i] = led;
+}
 
 io.on('connection', function(socket){
   console.log('a user connected');
@@ -57,11 +57,11 @@ sp.on("open", function () {
 
   // receives status of LEDs (on/off and color)
   sp.on('data', function(data) {
-    console.log('data received: ' + data);
+    console.log('data received: ' + data.toString('hex'));
     //io.emit("chat message", "An XBee says: " + data);
-	for(var key in data) {
+	/*for(var key in data) {
 		ledMap[key] = data[key]; // [on/off , R, G, B]
-	}
+	}*/
   });
 
 });
