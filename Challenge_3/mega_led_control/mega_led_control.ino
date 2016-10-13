@@ -64,8 +64,6 @@ void loop() {
   while (Serial1.available() > 0) {
     //Read and print
     char byteRead = Serial1.read();
-    Serial.write("In an iteration, Read: ");
-    Serial.println(int(byteRead));
     
     //Store bytes into char array
     command[count] = byteRead;
@@ -80,7 +78,14 @@ void loop() {
         //Send current LED Values
         for (int i = 0; i < 3; i++) {
           setArray(data, ledStatuses[i][0], ledStatuses[i][1], ledStatuses[i][2], ledStatuses[i][3]);
-          Serial.write("Sent data :");
+          Serial.print("Led: ");
+          Serial.print(int(ledStatuses[i][0]));
+          Serial.print(" R: ");
+          Serial.print(int(ledStatuses[i][1]));
+          Serial.print(" G: ");
+          Serial.print(int(ledStatuses[i][2]));
+          Serial.print(" B: ");
+          Serial.println(int(ledStatuses[i][3]));
           Serial1.write(data, numBytes);
         } 
         continue;
@@ -100,14 +105,22 @@ void loop() {
         byte char_red = command[1];
         byte char_green = command[2];
         byte char_blue = command[3];
-        setArray(ledStatuses[dataCount], char_id, char_red, char_green, char_blue);
+        Serial.print("ID: ");
+        Serial.print(int(char_id));
+        Serial.print(" R: ");
+        Serial.print(int(char_red));
+        Serial.print(" G: ");
+        Serial.print(int(char_green));
+        Serial.print(" B: ");
+        Serial.println(int(char_blue));
+        setArray(ledStatuses[char_id-1], char_id, char_red, char_green, char_blue);
         set_color(char_id, char_red, char_green, char_blue);
-        Serial1.write(ledStatuses[dataCount],4);
-        if(dataCount==3){
-          dataGood = false;
-          dataCount = 0;
-          continue;
-        }
+        //Serial1.write(ledStatuses[dataCount],4);
+//        if(dataCount==3){
+//          dataGood = false;
+//          dataCount = 0;
+//          continue;
+//        }
       }
     }//4 bytes read
   }//Byte is read

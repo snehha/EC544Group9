@@ -116,23 +116,17 @@
       //Get from Node Server the color to set the bulbs.
       var socket = io();
       socket.on('led status', function(ledMap){
+        console.log("NODE to HTML >>>>>> Recieved ledmap");
         for (key in ledMap){
-            console.log(key + ': ' + ledMap[key]);
             rgbJoin = ledMap[key].join();
             document.getElementById(key).setAttribute('style','fill: rgb('+ rgbJoin +');');
-            getLEDDdata(key);
-            PWbutton = document.getElementById('light-power');
-            if(rgbJoin == '0,0,0'){
-              button.className = "btn btn-danger";
-              button.innerHTML = "Turn On";
-            }
-            else{
-              button.className = "btn btn-success";
-              button.innerHTML = "Turn Off";
-            }
+
+
         }
         document.getElementById('content').style.removeProperty('display')
         document.getElementById('content-status').innerHTML = "";
+
+
       });
 
       socket.on('disconnect site'), function(){
@@ -201,15 +195,24 @@
       function toggleLEDPower(){
           //ledName = document.getElementById('light-name-id').innerHTML;
           button = document.getElementById('light-power');
+          var ledName = document.getElementById('light-name-id').innerHTML;
+          
           if (button.className == "btn btn-success"){
-            socket.emit('power off');
+            //Power off the led all zeros
+            socket.emit('toggle led', ledName.substring(5), 0, 0, 0);
+
+            getLEDDdata(document.getElementById(ledName));
             button.className = "btn btn-danger";
-            button.innerHTML = "Turn On";
+            button.innerHTML = "Turn On to White";
+            document.getElementById(ledName).setAttribute('style','fill: '+ 'rgb(0, 0, 0)' +';');
           }
           else{
+            //power on led to white
+            socket.emit('toggle led', ledName.substring(5), 255, 255, 255);
             socket.emit('power on');
             button.className = "btn btn-success";
             button.innerHTML = "Turn Off";
+            document.getElementById(ledName).setAttribute('style','fill: '+ 'rgb(255, 255, 255)' +';');
           }
 
       }
@@ -219,8 +222,23 @@
         ledName = bulbClicked.id;
         var wheeldropBGStyle = window.getComputedStyle(bulbClicked).getPropertyValue('fill');
         var label = document.getElementById('rgbtext');
+        PWbutton = document.getElementById('light-power');
         label.textContent = b.style.background = wheeldropBGStyle;
         document.getElementById('light-name-id').innerHTML=ledName;
+        
+
+        if(label.textContent == 'rgb(0, 0, 0)'){
+          PWbutton.className = "btn btn-danger";
+          PWbutton.innerHTML = "Turn On";
+          bulbClicked.setAttribute('style','fill: '+ 'rgb(0, 0, 0)' +';');
+        }
+        else{
+          PWbutton.className = "btn btn-success";
+          PWbutton.innerHTML = "Turn Off";
+          //bulbClicked.setAttribute('style','fill: '+ 'rgb(255, 255, 255)' +';');
+        }  
+        
+
       };
 
       function resizeSVG(){

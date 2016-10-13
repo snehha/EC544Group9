@@ -69,11 +69,11 @@
         doc.onmousemove = /p/.test(e.type) ? 0 : (redraw(e), redraw);
     }
     c.ontouchup = c.onmouseup = function(){
-      var bulblabel = document.getElementById('light-name-id');
-      var bulbID = bulblabel.textContent.substring(5);
-      var payload = label.textContent.substring(4,label.textContent.length-1).split(',');
-      console.log(bulbID + ': ' + payload);
-      socket.emit('toggle led', bulbID, payload[0], payload[1], payload[2]);
+        var bulblabel = document.getElementById('light-name-id');
+        var bulbID = bulblabel.textContent.substring(5);
+        var payload = label.textContent.substring(4,label.textContent.length-1).split(',');
+        console.log('HTML to NODE >>>> ' + bulbID + ': ' + payload);
+        socket.emit('toggle led', bulbID, payload[0], payload[1], payload[2]);
     }
 
 
@@ -108,6 +108,12 @@
         // Reset to color wheel and draw a spot on the current location.
         a.putImageData(imageData, 0, 0);
         document.getElementById(bulbClicked).setAttribute('style','fill: '+ label.textContent +';');
+        
+        button = document.getElementById('light-power');
+        if (button.className != "btn btn-success"){
+            button.className = "btn btn-success";
+            button.innerHTML = "Turn Off";
+        }
 
         // Draw the current spot.
         // I have tried a rectangle, circle, and heart shape.
