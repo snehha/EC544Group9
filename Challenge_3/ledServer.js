@@ -31,8 +31,10 @@ for( var i = 1; i <= ledNum; i++) {
 	ledMap['bulb-' + i] = led;
 }
 
+//When browser loads
 io.on('connection', function(socket){
   console.log('a user connected');
+  socket.emit('led status',ledMap);
 
   //Coordinator Sends all ones to tell arduino to send status
   //This should not need to be done
@@ -57,28 +59,33 @@ io.on('connection', function(socket){
     buffer.writeUInt8(G,2);
     buffer.writeUInt8(B,3);
   	console.log("Sending command ID,R,G,B: " + buffer.toString('hex'));
+    //clearInterval(poller);
   	sp.write(buffer);
-  });
-
-  socket.on('load arduino', function(){
-    console.log("Sending arduino led request");
-    buffer.writeInt32BE(-1, 0);
-    sp.write(buffer);
   });
 
 });
 
-sp.on("open", function () {
-  console.log('open');
+var n = 5;
+var poller;
+//Write 32 1s to Arduino every n seconds
+function pollFunc(){
   buffer.writeInt32BE(-1,0);
   console.log("Sending:",buffer.toString('hex'));
+  console.log("--------Polling-----------")
   sp.write(buffer);
-  // receives status of LEDs (on/off and color)
+}
+
+//Every time coordinator starts, initializs timer to n seconds
+sp.on("open", function () {
+  console.log('open');
+  poller = setInterval(pollFunc,1000*n);
+  
+  // receives status of LEDs
   sp.on('data', function(data) {
     console.log('data received: ' + data.toString('hex'));
 
     //If arduino sent all ones, it wants the current value of the lights so send 3 rows of 4 bytes
-    if(data.readInt32BE() == -1){
+    /*if(data.readInt32BE() == -1){
       console.log("Arduino Wanting initial Value in ledMap");
 
       //Send synchronization String of all zeroes
@@ -99,20 +106,20 @@ sp.on("open", function () {
     }
     //Sending it's current Temp
     //Will not need, only for debugging and updating ledMap
-    else{
-      var id = data.readUInt8(0);
-      console.log("ID: " + id);
-      var R = data.readUInt8(1);
-      console.log("Red: " + R);
-      var G = data.readUInt8(2);
-      console.log("Green: " + G);
-      var B = data.readUInt8(3);
-      console.log("Blue: " + B);
-      if( id > 0  && id <= ledNum) {
-      	ledMap["bulb-"+id] = [R,G,B];
-      	console.log(ledMap);
-      }
-      io.emit('led status', ledMap); // ledID : [on/off,R,G,B]
+    else{*/
+    //poller = setInterval(pollFunc,1000*n);
+    var id = data.readUInt8(0);
+    console.log("ID: " + id);
+    var R = data.readUInt8(1);
+    console.log("Red: " + R);
+    var G = data.readUInt8(2);
+    console.log("Green: " + G);
+    var B = data.readUInt8(3);
+    console.log("Blue: " + B);
+    if( id > 0  && id <= ledNum) {
+    	ledMap["bulb-"+id] = [R,G,B];
+    	console.log(ledMap);
     }
+    io.emit('led status', ledMap); // ledID : [bulb,R,G,B]
   });
 });
