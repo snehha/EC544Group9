@@ -40,7 +40,8 @@
           <span><h1 class="rainbow center">Chroma Light</h1></span>
         </div>
       </header>
-      <div class="row">
+      <div id="content-status" class="row"></div>
+      <div id="content" class="row">
         <div class="col-xs-4 center">
           <a id="btn_led_1" role="button" href="#colorWheelDrop" aria-expanded="false" aria-controls="colorWheelDrop" style="text-decoration: none;">
             <svg xmlns="http://www.w3.org/2000/svg" style="display: block; margin: auto;" height="300" viewBox="0 0 338 513">
@@ -97,6 +98,8 @@
     <div class="collapse" id="colorWheelDrop">
       <div class="well">
         <h3 id="light-name-id" style="text-align: center;">Light: None</h3>
+        <button id="light-power" type="button" class="btn btn-success" onclick="toggleLEDPower()">Turn Off</button>
+        <button id="light-status" type="button" class="btn btn-info">Get Status from Arduino</button>
         <p>Click and Drag along the color wheel with your mouse or tap on the circle (if on mobile) to change the light color.</p>
         <canvas id="c"></canvas>
     		<script>
@@ -115,9 +118,28 @@
       socket.on('led status', function(ledMap){
         for (key in ledMap){
             console.log(key + ': ' + ledMap[key]);
-            document.getElementById(key).setAttribute('style','fill: rgb('+ ledMap[key].join() +');');
+            rgbJoin = ledMap[key].join();
+            document.getElementById(key).setAttribute('style','fill: rgb('+ rgbJoin +');');
+            getLEDDdata(key);
+            PWbutton = document.getElementById('light-power');
+            if(rgbJoin == '0,0,0'){
+              button.className = "btn btn-danger";
+              button.innerHTML = "Turn On";
+            }
+            else{
+              button.className = "btn btn-success";
+              button.innerHTML = "Turn Off";
+            }
         }
+        document.getElementById('content').style.removeProperty('display')
+        document.getElementById('content-status').innerHTML = "";
       });
+
+      socket.on('disconnect site'), function(){
+          var content = document.getElementById('content-status');
+          document.getElementById('content').style.setProperty('display','none');
+          content.innerHTML = "<div class='alert alert-danger' style='text-align:center;'><h2>Disconnected State</h2>Controls have been disabled.</div>";
+      };
     </script>
 
     <script>
@@ -175,6 +197,22 @@
         }
         bulbClicked = 'bulb-3';
       });
+
+      function toggleLEDPower(){
+          //ledName = document.getElementById('light-name-id').innerHTML;
+          button = document.getElementById('light-power');
+          if (button.className == "btn btn-success"){
+            socket.emit('power off');
+            button.className = "btn btn-danger";
+            button.innerHTML = "Turn On";
+          }
+          else{
+            socket.emit('power on');
+            button.className = "btn btn-success";
+            button.innerHTML = "Turn Off";
+          }
+
+      }
 
       //Change the color of the bulb in sync with the website
       function getLEDDdata(bulbClicked) {
