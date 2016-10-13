@@ -110,14 +110,18 @@
     <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <script>
+      //Get from Node Server the color to set the bulbs.
       var socket = io();
-      socket.on('bulbFromServer', function(msg){
-        for (key in msg){
-          document.getElementById(key).setAttribute('style','fill: rgb('+ msg[key] +');');
+      socket.on('led status', function(ledMap){
+        for (key in ledMap){
+            console.log(key + ': ' + ledMap[key]);
+            document.getElementById(key).setAttribute('style','fill: rgb('+ ledMap[key].join() +');');
         }
       });
     </script>
+
     <script>
+      //Detect what bulb was selected and send the data over to the color wheel funcitons.
       var bulbClicked;
       var bCount = 0;
       $('#bulb-1').on('click',function(){
@@ -171,6 +175,8 @@
         }
         bulbClicked = 'bulb-3';
       });
+
+      //Change the color of the bulb in sync with the website
       function getLEDDdata(bulbClicked) {
         ledName = bulbClicked.id;
         var wheeldropBGStyle = window.getComputedStyle(bulbClicked).getPropertyValue('fill');
@@ -204,7 +210,6 @@
               all[i].setAttribute('height', 130);
               console.log("ELSE" + width);
             }
-
         }
       }
     </script>
@@ -217,7 +222,6 @@
                   $body.scrollLeft(0);
               }
           });
-
         });
     </script>
     <script src='1k.js'></script>

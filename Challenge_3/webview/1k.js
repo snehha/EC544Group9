@@ -68,10 +68,12 @@
         // Unbind mousemove if this is a mouseup event, or bind mousemove if this a mousedown event
         doc.onmousemove = /p/.test(e.type) ? 0 : (redraw(e), redraw);
     }
-    c.onmouseup = function(){
+    c.ontouchup = c.onmouseup = function(){
       var bulblabel = document.getElementById('light-name-id');
-      var payload = {[bulblabel.textContent]:label.textContent.substring(4,label.textContent.length-1)};
-      socket.emit('bulb-change', payload);
+      var bulbID = bulblabel.textContent.substring(5);
+      var payload = label.textContent.substring(4,label.textContent.length-1).split(',');
+      console.log(bulbID + ': ' + payload);
+      socket.emit('toggle led', bulbID, payload[0], payload[1], payload[2]);
     }
 
 

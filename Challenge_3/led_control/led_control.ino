@@ -138,8 +138,6 @@ void set_color(int id, int red, int green, int blue) {
 //   Serial.print("led: ");
 //   Serial.println(led1[1]);
 //   XBee.write(led1);
-  
-  delay(2000);
   red = 255 - red;
   green = 255 - green;
   blue = 255 - blue;
@@ -152,10 +150,12 @@ void loop() {
   // put your main code here, to run repeatedly:
   // ledID R G B
   //if(Serial.read() == '*'){
+
   while (!start) {
     Serial.println("Parsing the command sent");
     delay(2000);
     init_status();
   }
   delay(1000);
+
 }
