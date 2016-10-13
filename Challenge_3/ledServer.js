@@ -11,6 +11,10 @@ app.get('/1k.js', function(req, res){
   res.sendFile(__dirname + '/webview/1k.js');
 });
 
+http.listen(3000, function(){
+  console.log('listening on *:3000');
+});
+
 var portName = process.argv[2],
 portConfig = {
 	baudRate: 9600,
@@ -28,13 +32,16 @@ for( var i = 1; i <= ledNum; i++) {
 }
 
 io.on('connection', function(socket){
-
   console.log('a user connected');
-  buffer.writeInt32BE(-1, 0);
-  sp.write(buffer);
+
+  //Coordinator Sends all ones to tell arduino to send status
+  //This should not need to be done
+  /*buffer.writeInt32BE(-1, 0);
+  sp.write(buffer);*/
+
   // when website connects, send status of LEDs
-  console.log("Sending LED status to website: ");
-  console.log(ledMap);
+  //console.log("Sending LED status to website: ");
+  //console.log(ledMap);
 
   socket.on('disconnect', function(){
   });
@@ -43,12 +50,14 @@ io.on('connection', function(socket){
   socket.on('toggle led', function(id,R,G,B){
   	console.log("Website command: " + id + " " + R + " " + G + " " + B);
   	// send led num and RGB to arduino
-	var ledCommand = (id << 8) | R;
-	ledCommand = (ledCommand << 8) | G;
-	ledCommand = (ledCommand << 8) | B;
-	buffer.writeInt32BE(ledCommand,0);
-	console.log("Sending command ID,R,G,B: " + buffer.toString('hex'));
-	sp.write(buffer);
+    //Send string to signal start of text
+    //Send values
+    buffer.writeUInt8(id,0);
+    buffer.writeUInt8(R,1);
+    buffer.writeUInt8(G,2);
+    buffer.writeUInt8(B,3);
+  	console.log("Sending command ID,R,G,B: " + buffer.toString('hex'));
+  	sp.write(buffer);
   });
 
   socket.on('load arduino', function(){
@@ -59,31 +68,51 @@ io.on('connection', function(socket){
 
 });
 
-
-
-http.listen(3000, function(){
-  console.log('listening on *:3000');
-});
-
 sp.on("open", function () {
   console.log('open');
+  buffer.writeInt32BE(-1,0);
+  console.log("Sending:",buffer.toString('hex'));
+  sp.write(buffer);
   // receives status of LEDs (on/off and color)
   sp.on('data', function(data) {
     console.log('data received: ' + data.toString('hex'));
-	//data[0] holds higher 8 bits
-    var id = data.readUInt32BE(0) >> 24;
-    console.log("ID: " + id);
-    var R = (data.readUInt32BE(0) >> 16) & 255;
-    console.log("Red: " + R);
-    var G = (data.readUInt32BE(0) >> 8) & 255;
-    console.log("Green: " + G);
-    var B = data.readUInt32BE(0) & 255;
-    console.log("Blue: " + B);
-    if( id > 0  && id <= ledNum) {
-    	ledMap["bulb-"+id] = [R,G,B];
-    	console.log(ledMap);
-    }
-    io.emit('led status', ledMap); // ledID : [on/off,R,G,B]
-  });
 
+    //If arduino sent all ones, it wants the current value of the lights so send 3 rows of 4 bytes
+    if(data.readInt32BE() == -1){
+      console.log("Arduino Wanting initial Value in ledMap");
+
+      //Send synchronization String of all zeroes
+      buffer.writeInt32BE(0,0);
+      console.log("Sending:",buffer.toString('hex'));
+      sp.write(buffer);
+      var myBuff = Buffer.allocUnsafe(12);
+
+      //Send Led values on client web
+      for(var i = 1; i <= ledNum; i++){
+        myBuff.writeUInt8(i,0+(i-1)*4);
+        myBuff.writeUInt8(ledMap['bulb-'+i][0],1+(i-1)*4);
+        myBuff.writeUInt8(ledMap['bulb-'+i][1],2+(i-1)*4);
+        myBuff.writeUInt8(ledMap['bulb-'+i][2],3+(i-1)*4);
+      }
+      console.log("Sending:",myBuff.toString('hex'));
+      sp.write(myBuff);
+    }
+    //Sending it's current Temp
+    //Will not need, only for debugging and updating ledMap
+    else{
+      var id = data.readUInt8(0);
+      console.log("ID: " + id);
+      var R = data.readUInt8(1);
+      console.log("Red: " + R);
+      var G = data.readUInt8(2);
+      console.log("Green: " + G);
+      var B = data.readUInt8(3);
+      console.log("Blue: " + B);
+      if( id > 0  && id <= ledNum) {
+      	ledMap["bulb-"+id] = [R,G,B];
+      	console.log(ledMap);
+      }
+      io.emit('led status', ledMap); // ledID : [on/off,R,G,B]
+    }
+  });
 });
