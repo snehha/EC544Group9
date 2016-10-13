@@ -1,5 +1,5 @@
 var app     =     require("express")();
-//var SerialPort = require("serialport");
+var SerialPort = require("serialport");
 var http    =     require('http').Server(app);
 var io      =     require("socket.io")(http);
 
@@ -11,12 +11,12 @@ app.get('/1k.js', function(req, res){
   res.sendFile(__dirname + '/webview/1k.js');
 });
 
-// var portName = process.argv[2],
-// portConfig = {
-// 	baudRate: 9600,
-// 	parser: SerialPort.parsers.byteLength(4)
-// };
-// var sp = new SerialPort(portName, portConfig);
+var portName = process.argv[2],
+portConfig = {
+	baudRate: 9600,
+	parser: SerialPort.parsers.byteLength(4)
+};
+var sp = new SerialPort(portName, portConfig);
 var ledNum = 3;
 var ledMap = {}; // ledID : [R,G,B]
 //Create Buffer object to pass to pass to sp.write
@@ -28,9 +28,11 @@ for( var i = 1; i <= ledNum; i++) {
 }
 
 io.on('connection', function(socket){
+
   console.log('a user connected');
+  buffer.writeInt32BE(-1, 0);
+  sp.write(buffer);
   // when website connects, send status of LEDs
-  io.emit('led status', ledMap); // ledID : [on/off,R,G,B]
   console.log("Sending LED status to website: ");
   console.log(ledMap);
 
@@ -46,10 +48,18 @@ io.on('connection', function(socket){
 	ledCommand = (ledCommand << 8) | B;
 	buffer.writeInt32BE(ledCommand,0);
 	console.log("Sending command ID,R,G,B: " + buffer.toString('hex'));
-	//sp.write(buffer);
-  })
+	sp.write(buffer);
+  });
+
+  socket.on('load arduino', function(){
+    console.log("Sending arduino led request");
+    buffer.writeInt32BE(-1, 0);
+    sp.write(buffer);
+  });
 
 });
+
+
 
 http.listen(3000, function(){
   console.log('listening on *:3000');
@@ -57,7 +67,6 @@ http.listen(3000, function(){
 
 sp.on("open", function () {
   console.log('open');
-
   // receives status of LEDs (on/off and color)
   sp.on('data', function(data) {
     console.log('data received: ' + data.toString('hex'));
@@ -70,10 +79,11 @@ sp.on("open", function () {
     console.log("Green: " + G);
     var B = data.readUInt32BE(0) & 255;
     console.log("Blue: " + B);
-    if( id > 0 ) {
-    	ledMap["bulb-"+i] = [R,G,B];
+    if( id > 0  && id <= ledNum) {
+    	ledMap["bulb-"+id] = [R,G,B];
     	console.log(ledMap);
     }
+    io.emit('led status', ledMap); // ledID : [on/off,R,G,B]
   });
 
 });

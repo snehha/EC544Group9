@@ -186,6 +186,8 @@
       };
 
       function resizeSVG(){
+        socket.emit('load arduino');
+        console.log('Client Requested New Data');
         var width = ($(window).width());
         var all = document.getElementsByTagName('svg');
         for(var i = 0, max = all.length; i < max; i++)
