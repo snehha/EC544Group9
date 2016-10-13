@@ -14,13 +14,13 @@ portConfig = {
 };
 var sp = new SerialPort(portName, portConfig);
 var ledNum = 3;
-var ledMap = {}; // ledID : [on/off,R,G,B]
+var ledMap = {}; // ledID : [R,G,B]
 //Create Buffer object to pass to pass to sp.write
 var buffer = Buffer.allocUnsafe(4);
 
 for( var i = 1; i <= ledNum; i++) {
-	var led = [0,255,0,0]; // [on/off , R, G, B]
-	ledMap[i] = led;
+	var led = [255,0,0]; // [R, G, B]
+	ledMap['bulb-' + i] = led;
 }
 
 io.on('connection', function(socket){
@@ -58,10 +58,19 @@ sp.on("open", function () {
   // receives status of LEDs (on/off and color)
   sp.on('data', function(data) {
     console.log('data received: ' + data.toString('hex'));
-    //io.emit("chat message", "An XBee says: " + data);
-	/*for(var key in data) {
-		ledMap[key] = data[key]; // [on/off , R, G, B]
-	}*/
+	//data[0] holds higher 8 bits
+    var id = data.readUInt32BE(0) >> 24;
+    console.log("ID: " + id);
+    var R = (data.readUInt32BE(0) >> 16) & 255;
+    console.log("Red: " + R);
+    var G = (data.readUInt32BE(0) >> 8) & 255;
+    console.log("Green: " + G);
+    var B = data.readUInt32BE(0) & 255;
+    console.log("Blue: " + B);
+    if( id > 0 ) {
+    	ledMap["bulb-"+i] = [R,G,B];
+    	console.log(ledMap);
+    }
   });
 
 });
