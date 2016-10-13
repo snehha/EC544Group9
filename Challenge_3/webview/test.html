@@ -130,11 +130,19 @@
 
       });
 
-      socket.on('disconnect', function(){
+      // socket.on('disconnect', function(){
+      //     var content = document.getElementById('content-status');
+      //     document.getElementById('content').style.setProperty('display','none');
+      //     content.innerHTML = "<div class='alert alert-danger' style='text-align:center;'><h2>Disconnected State</h2>Controls have been disabled.</div>";
+      // });
+
+      socket.on('disconnect site', function(){
           var content = document.getElementById('content-status');
           document.getElementById('content').style.setProperty('display','none');
           content.innerHTML = "<div class='alert alert-danger' style='text-align:center;'><h2>Disconnected State</h2>Controls have been disabled.</div>";
       });
+
+
     </script>
 
     <script>

@@ -69,26 +69,27 @@ var n = 5;
 var poller;
 var response;
 function noResponse(){
-  io.emit('disconnect');
+  io.emit('disconnect site');
 }
 //Write 32 1s to Arduino every n seconds
 function pollFunc(){
   buffer.writeInt32BE(-1,0);
   console.log("Sending:",buffer.toString('hex'));
-  console.log("--------Polling-----------")
+  console.log("--------Polling-----------");
   sp.write(buffer);
-  reponse = setTimeout(noResponse,1000*n);
-
 }
 
 //Every time coordinator starts, initializs timer to n seconds
 sp.on("open", function () {
   console.log('open');
   poller = setInterval(pollFunc,1000*n);
+  response = setInterval(noResponse,1000*2*n);
   
   // receives status of LEDs
   sp.on('data', function(data) {
     console.log('data received: ' + data.toString('hex'));
+    clearInterval(response);
+    response = setInterval(noResponse,1000*2*n);
 
     //If arduino sent all ones, it wants the current value of the lights so send 3 rows of 4 bytes
     /*if(data.readInt32BE() == -1){
