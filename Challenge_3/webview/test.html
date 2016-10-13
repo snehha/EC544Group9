@@ -115,6 +115,7 @@
     <script>
       //Get from Node Server the color to set the bulbs.
       var socket = io();
+
       socket.on('led status', function(ledMap){
         console.log("NODE to HTML >>>>>> Recieved ledmap");
         for (key in ledMap){
@@ -129,11 +130,11 @@
 
       });
 
-      socket.on('disconnect site'), function(){
+      socket.on('disconnect', function(){
           var content = document.getElementById('content-status');
           document.getElementById('content').style.setProperty('display','none');
           content.innerHTML = "<div class='alert alert-danger' style='text-align:center;'><h2>Disconnected State</h2>Controls have been disabled.</div>";
-      };
+      });
     </script>
 
     <script>

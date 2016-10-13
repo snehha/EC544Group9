@@ -67,12 +67,18 @@ io.on('connection', function(socket){
 
 var n = 5;
 var poller;
+var response;
+function noResponse(){
+  io.emit('disconnect');
+}
 //Write 32 1s to Arduino every n seconds
 function pollFunc(){
   buffer.writeInt32BE(-1,0);
   console.log("Sending:",buffer.toString('hex'));
   console.log("--------Polling-----------")
   sp.write(buffer);
+  reponse = setTimeout(noResponse,1000*n);
+
 }
 
 //Every time coordinator starts, initializs timer to n seconds
