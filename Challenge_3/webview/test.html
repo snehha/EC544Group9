@@ -99,7 +99,6 @@
       <div class="well">
         <h3 id="light-name-id" style="text-align: center;">Light: None</h3>
         <button id="light-power" type="button" class="btn btn-success" onclick="toggleLEDPower()">Turn Off</button>
-        <button id="light-status" type="button" class="btn btn-info">Get Status from Arduino</button>
         <p>Click and Drag along the color wheel with your mouse or tap on the circle (if on mobile) to change the light color.</p>
         <canvas id="c"></canvas>
     		<script>
@@ -130,11 +129,11 @@
 
       });
 
-      // socket.on('disconnect', function(){
-      //     var content = document.getElementById('content-status');
-      //     document.getElementById('content').style.setProperty('display','none');
-      //     content.innerHTML = "<div class='alert alert-danger' style='text-align:center;'><h2>Disconnected State</h2>Controls have been disabled.</div>";
-      // });
+      socket.on('disconnect', function(){
+          var content = document.getElementById('content-status');
+          document.getElementById('content').style.setProperty('display','none');
+          content.innerHTML = "<div class='alert alert-danger' style='text-align:center;'><h2>Disconnected State</h2>Controls have been disabled.</div>";
+      });
 
       socket.on('disconnect site', function(){
           var content = document.getElementById('content-status');
