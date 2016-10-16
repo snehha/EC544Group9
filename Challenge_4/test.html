@@ -1,0 +1,52 @@
+<html lang="en" style="height: 100%">
+<head>
+ <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+</head>
+
+<body style="color: #2c3e50; background: linear-gradient(white, #bdc3c7); height: 100%; background-repeat: no-repeat; background-attachment: fixed;">
+<!--Chart-->
+  <div id="temperatureChart" onload="loadTemps()">
+    <head>
+      <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/d3/3.2.2/d3.v3.min.js"></script>
+    </head>
+    <body>
+      <center><div id="chartContainer" style="height: 300px; width: 90%;"></div></center>
+    </body>
+
+    <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+    <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+    <script>
+
+      var socket = io();
+
+      // receive database data
+      socket.on('led status', function(msg){
+        console.log(msg);
+      });
+
+      var red = 0;
+      var green = 255;
+      var blue = 0;
+
+      var toggle = function(ID,R,G,B) {
+        socket.emit('toggle led',ID,R,G,B);
+      }
+    </script>
+  </div>
+
+  <div style="text-align: center; padding-top: 25px;">
+    <button onclick="toggle(1,255,0,0)">Red LED 1</button>
+    <button onclick="toggle(1,0,255,0)">Green LED 1</button>
+    <button onclick="toggle(1,0,0,0)">off LED 1</button>
+    <button onclick="toggle(2,255,0,0)">Red LED 2</button>
+    <button onclick="toggle(2,0,0,0)">off LED 2</button>
+    <button onclick="toggle(3,0,0,255)">Blue LED 3</button>
+    <button onclick="toggle(3,0,0,0)">off LED 3</button>
+  </div>
+   <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+    </body>
+</html>
