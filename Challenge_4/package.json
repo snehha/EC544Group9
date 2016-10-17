@@ -1,0 +1,14 @@
+{
+  "name": "challenge_4",
+  "version": "1.0.0",
+  "description": "photon nest simulator",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Group 9",
+  "license": "ISC",
+  "devDependencies": {
+    "particle-api-js": "^6.0.7"
+  }
+}
