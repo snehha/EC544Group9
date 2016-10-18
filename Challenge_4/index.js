@@ -122,17 +122,19 @@ var db = firebase.database();
 var ref = db.ref("temperatures");
 
 function sendTemp(id,data){
-	var id = shortid.generate();
-	var eventRef = ref.child(id);
-	eventRef.set({
-			temperature: data.body.result,
-			time: data.body.coreInfo.last_handshake_at,
-			device: data.body.coreInfo.deviceID
-	});
-	// var time = String(data.body.coreInfo.last_handshake_at);
-	// var eventRef = ref.child(id);
-	// eventRef.set({
-	// 		time: data.body.result
-	// 		// device: data.body.coreInfo.deviceID
+	//var rid = shortid.generate();
+  var stringDate = new Date();
+  //(data.body.coreInfo.last_handshake_at).substring(0,19);
+  console.log(stringDate);
+  // var ref = db.ref("temperatures/" + data.body.coreInfo.deviceID);
+  // var eventRef = ref.put(data.body.coreInfo.deviceID);
+	// ref.set({
+	// 		[stringDate]: data.body.result
 	// });
+	//var time = String(data.body.coreInfo.last_handshake_at);
+	var eventRef = ref.child(id);
+	eventRef.update({
+			[stringDate]: data.body.result
+			// device: data.body.coreInfo.deviceID
+	});
 }
