@@ -7,7 +7,7 @@ var file = "historicalDB.db";
 var exists = fs.existsSync(file);
 
 app.get('/', function(req, res){
-  res.sendfile('index.html');
+  res.sendfile('temperature.html');
 });
 
 io.on('connection',function(socket){
@@ -96,16 +96,29 @@ function getTemp(){
 	//console.log("-------------------------------------");
 	for(var i = 0; i < listDev.length; i++){
 		let id = listDev[i].id;
+		let name = listDev[i].name;
 		particle.getVariable({ deviceId: id, name: 'temperature', auth: myToken }).then(function(data) {
 		  console.log('Device variable retrieved successfully from id:',id,'with data:',data);
-		  sendTemp(id,data);
+		  sendTemp(name,data);
 		}, function(err) {
 		  console.log('An error occurred while getting attrs from device with id:',id);
+		  delete temp_dict[name];
+      	  console.log("Removing ", name);
 		});
 	}
 	//console.log("-------------------------------------");
 }
 
-function sendTemp(id,data){
+// Temperature Dictionary for Sensor Data
+var temp_dict = {};
 
+function sendTemp(name,data){
+	temp_dict[name] = data.body.result;
+}
+
+var timing = setInterval(myTimer,2000);
+
+function myTimer() {
+  // SEND DICTIONARY TO Client
+  io.emit('temp_event', temp_dict);
 }
