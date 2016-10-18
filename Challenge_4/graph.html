@@ -1,0 +1,68 @@
+<script src="http://code.jquery.com/jquery-1.11.2.min.js"></script>
+<script src="http://code.highcharts.com/highcharts.js"></script>
+<script src="http://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://cdn.firebase.com/v0/firebase.js"></script>
+<div id="container" style="width: 800px; height: 400px;"></div>
+<script>
+$(function() {
+
+    // Set up an event that is triggered whenever a new climate-data point is added to firebase
+    var fb = new Firebase('https://group9-node.firebaseio.com/temperatures');
+    fb.on('child_added', function(data) {
+        var dataVal = data.val();
+        
+        // add temperature point to series index based on device ID, don't redraw yet (false)
+        $('#container').highcharts().series[parseInt(dataVal.device)].addPoint({
+            x: new Date(dataVal.time),
+            y: dataVal.temperature
+        }, false);
+
+        // added points; redraw
+        $('#container').highcharts().redraw();
+    });
+
+    $(document).ready(function() {
+
+        Highcharts.setOptions({
+            global: {
+                useUTC: false
+            }
+        });
+
+        // set up highcharts
+        $('#container').highcharts({
+            chart: {
+                type: 'spline'
+            },
+            title: {
+                text: 'Group 9 Photon Nest'
+            },
+            xAxis: {
+                type: 'datetime'
+            },
+            yAxis: [{
+                labels: {
+                    format: '{value} F'
+                },
+                title: {
+                    text: 'Temperature'
+                }
+            }, {
+                labels: {
+                    format: '{value}%'
+                }
+            }],
+            legend: {
+                enabled: false
+            },
+            exporting: {
+                enabled: false
+            },
+            series: [{
+                name: 'Sensors',
+                yAxis: 0
+            }]
+        });
+    });
+});
+</script>
