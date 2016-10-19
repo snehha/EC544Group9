@@ -18,6 +18,20 @@ firebase.initializeApp({
   databaseURL: "https://group9-node.firebaseio.com"
 });
 
+var db = firebase.database();
+
+var ref = db.ref("temperatures");
+
+// Attach an asynchronous callback to read the data at our posts reference
+ref.on("value", function(snapshot) {
+  console.log(snapshot.val());
+}, function (errorObject) {
+  console.log("The read failed: " + errorObject.code);
+});
+
+
+
+
 app.get('/', function(req, res){
   res.sendfile('index.html');
 });
@@ -118,7 +132,7 @@ function getTemp(){
 	}
 	//console.log("-------------------------------------");
 }
-var db = firebase.database();
+
 var ref = db.ref("temperatures");
 
 function sendTemp(id,data){

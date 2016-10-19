@@ -1,163 +1,100 @@
 <!DOCTYPE html>
 <html>
+<head>
   <meta charset="utf-8" />
-    <title>tld3</title>
-  <head>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
-    <script src="tld3.js"></script>
-    <script src='https://cdn.firebase.com/js/client/2.2.1/firebase.js'></script>
-    <script></script>
-  </head>
-  <body>
-    <div id="chart">
-    </div>
-    <div id="chart2">
-    </div>
-    <div id="barchart">
-    </div>
-    <div id="barchartleft">
-    </div>
-    <div id="linechart">
-    </div>
-    <div id="scatterchart">
-    </div>
-    <div id="donutchart">
-    </div>
-    <div id="wafflechart">
-    </div>
-    <script>
-      // var bar;
-      // tld3.upload('./data/barData.csv').then((data) => {
-      //     bar = tld3.make('BarChartLeft').using(data).in('#chart');
-      // }).catch((err) => {
-      //   console.error(err);
-      // });
-      // tld3.upload('./data/multiLineData.csv')
-      //     .then((data) => {
-      //      line = tld3.make('LineChart')
-      //           .updateTimeFormat('%Y%m%d')
-      //           .using(data)
-      //           .in('#linechart');
-      //     })
-      //     .catch((err) => {
-      //       console.error(err);
-      //     });
-      tld3.uploadFirebase('https://group9-node.firebaseio.com/temps/-KUL9flvssPv7YFg49Cr')
-          .then((data) => {
-            console.log(data);
-            tld3.make('LineChart')
-                .updateTimeFormat('%Y%m%d')
-                .using(data)
-                .in('#linechart');
-          })
-          .catch((err) => {
-            console.error(err);
-          });
+  <title>tld3</title>
+  <script src='https://cdn.firebase.com/js/client/2.2.1/firebase.js'></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.2.0/Chart.js'></script>
+  <script src="http://code.jquery.com/jquery-1.11.2.min.js"></script>
+</head>
+<body>
 
-      // tld3.upload('./data/lineData.csv')
-      //        .then((data) => {
-      //          tld3.make('LineChart')
-      //                 .using(data)
-      //                 .in('#linechart');
-      //        })
-      //        .catch((err) => {
-      //          console.error(err);
-      //        });
 
-      // tld3.upload('./data/barData.csv')
-      //        .then((data) => {
-      //          tld3.make('BarChart')
-      //                 .using(data)
-      //                 .with({ theme: 'bubbly' })
-      //                 .in('#barchart');
-      //        })
-      //        .catch((err) => {
-      //          console.error(err);
-      //        });
+  <canvas id="myChart_1" width="740" height="200"></canvas>
+  <canvas id="myChart_2" width="740" height="200"></canvas>
+  <canvas id="myChart_3" width="740" height="200"></canvas>
+  <canvas id="myChart_4" width="740" height="200"></canvas>
+  <canvas id="myChart_5" width="740" height="200"></canvas>
 
-      // tld3.uploadFirebase('https://tld3-line.firebaseio.com/')
-      //        .then((data) => {
-      //          tld3.make('LineChart')
-      //                 .using(data)
-      //                 .in('#linechart')
-      //                 .changeTitle('yo yo yo');
-      //        })
-      //        .catch((err) => {
-      //          console.error(err);
-      //        });
+  <script>
+  var jsonext;
 
-      // tld3.upload('./data/lineData.csv')
-      //        .then((data) => {
-      //          tld3.make('LineChart')
-      //                 .using(data)
-      //                 .in('#linechart');
-      //        })
-      //        .catch((err) => {
-      //          console.error(err);
-      //        });
+  var myTimer = setInterval(drawLineChart,5000);
+  function drawLineChart() {
 
-      // tld3.upload('./data/barData.csv')
-      //        .then((data) => {
-      //          tld3.make('BarChartLeft')
-      //                 .using(data)
-      //                 .with({ theme: 'bubbly' })
-      //                 .in('#barchart');
-      //        })
-      //        .catch((err) => {
-      //          console.error(err);
-      //        });
+    // Add a helper to format timestamp data
+    // Date.prototype.formatMMDDYYYY = function() {
+    //   return (this.getMonth() + 1) +
+    //   "/" +  this.getDate() +
+    //   "/" +  this.getFullYear();
+    // }
 
-      // tld3.uploadFirebase('https://tld3-line.firebaseio.com/')
-      //        .then((data) => {
-      //          tld3.make('LineChart')
-      //                 .using(data)
-      //                 .in('#linechart')
-      //                 .changeTitle('yo yo yo');
-      //        })
-      //        .catch((err) => {
-      //          console.error(err);
-      //        });
+    var jsonData = $.ajax({
+      url: 'https://group9-node.firebaseio.com/temperatures.json',
+      dataType: 'json',
+    }).done(function (results) {
 
-      // tld3.uploadFirebase('https://tlde-scatter.firebaseio.com/')
-      //        .then((data) => {
-      //          tld3.make('ScatterChart')
-      //                 .using(data)
-      //                 .in('#scatterchart');
-      //        })
-      //        .catch((err) => {
-      //          console.error(err);
-      //        });
-    //  tld3.upload('./data/waffleData.csv')
-    //         .then((data) => {
-    //           tld3.make('WaffleChart')
-    //                  .using(data)
-    //                  .in('#wafflechart');
-    //         })
-    //         .catch((err) => {
-    //           console.error(err);
-    //         });
+      console.log(results);
+      jsonext = results;
+      // Split timestamp and data into separate arrays
+      var labels = {}, data = {};
+      for(device in results){
+        let myDevice = [];
+        let myData = [];
+        for (templog in results[device]){
+          myDevice.push(new Date(templog));
+          myData.push(parseFloat(results[device][templog]));
+        }
+        labels[device]= myDevice;
+        data[device] = myData;
 
-      // d3fault.uploadFirebase('https://d3fault.firebaseio.com/')
-      //        .then((data) => {
-      //          d3fault.make('BarChart')
-      //            .using(data)
-      //            .in('#barchart')
-      //            .changeTitle('Letter Frequency')
-      //            .changeFontStyle('monospace')
-      //            .changeColors(['#26408B']);
-      // });
-      //
-      // d3fault.uploadFirebase('https://d3fault.firebaseio.com/', function(err) // {
-      //   if (err) {
-      //     console.log(err);
-      //   }
-      // }).then(function(data) {
-      //     d3fault.make('BarChart')
-      //            .using(data)
-      //            .in('#barchart')
-      //            .liveUpdateFirebaseData('https://d3fault.firebaseio.com/');
+      }
+      // console.log("labels: " + labels["1e0027001847353236343033"] )
+      // console.log("data: " + data["1e0027001847353236343033"])
+      // console.log("data: " + data["1b003b000a47353235303037"])
+      // results.forEach(function(packet) {
+      //   labels.push(new Date(packet.timestamp).formatMMDDYYYY());
+      //   data.push(parseFloat(packet.payloadString));
       // });
 
-    </script>
-  </body>
+      // Create the chart.js data structure using 'labels' and 'data'
+      var counter = 1;
+      for (key in labels){
+
+        var tempData = {
+          labels : labels[key],
+          datasets : [{
+            strokeColor           : "rgba(151,187,205,1)",
+            pointColor            : "rgba(151,187,205,1)",
+            pointStrokeColor      : "#fff",
+            pointHighlightFill    : "#fff",
+            pointHighlightStroke  : "rgba(151,187,205,1)",
+            data                  : data[key]
+          }]
+        };
+
+
+        // Get the context of the canvas element we want to select
+        var Chartname = "myChart_" + counter;
+        var ctx = document.getElementById(Chartname).getContext("2d");
+        counter++;
+        Chart.defaults.global.animation.duration = 0;
+        // Instantiate a new chart
+        var myLineChart = new Chart(ctx, {
+            data: tempData,
+            type: "line"
+        });
+      }
+
+      //var myLineChart = new Chart(ctx).Line(tempData);
+
+    }).fail(function(){
+      console.log("Failed: " + jsonData)
+    });
+
+  }
+
+  drawLineChart();
+  </script>
+</body>
 </html>
