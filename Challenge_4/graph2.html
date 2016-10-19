@@ -30,7 +30,7 @@
     // }
 
     var jsonData = $.ajax({
-      url: 'https://group9-node.firebaseio.com/temperatures.json',
+      url: 'https://group9-node.firebaseio.com/temps.json',
       dataType: 'json',
     }).done(function (results) {
 
@@ -38,16 +38,21 @@
       jsonext = results;
       // Split timestamp and data into separate arrays
       var labels = {}, data = {};
-      for(device in results){
-        let myDevice = [];
-        let myData = [];
-        for (templog in results[device]){
-          myDevice.push(new Date(templog));
-          myData.push(parseFloat(results[device][templog]));
-        }
-        labels[device]= myDevice;
-        data[device] = myData;
+      for(key in results){
 
+        var deviceID = results[key].device;
+        var temperatureData = results[key].value;
+        var timeData = results[key].time;
+
+        if (!(deviceID in labels)){
+          // Found new device ID, add to dictionary
+          labels[deviceID] = [];
+          data[deviceID] = [];
+        }
+        else{
+          labels[deviceID].push(new Date(timeData));
+          data[deviceID].push(temperatureData);
+        }
       }
       // console.log("labels: " + labels["1e0027001847353236343033"] )
       // console.log("data: " + data["1e0027001847353236343033"])
@@ -64,12 +69,24 @@
         var tempData = {
           labels : labels[key],
           datasets : [{
-            strokeColor           : "rgba(151,187,205,1)",
-            pointColor            : "rgba(151,187,205,1)",
-            pointStrokeColor      : "#fff",
-            pointHighlightFill    : "#fff",
-            pointHighlightStroke  : "rgba(151,187,205,1)",
-            data                  : data[key]
+            fill: false,
+            lineTension: 0.1,
+            backgroundColor: "rgba(75,192,192,0.4)",
+            borderColor: "rgba(75,192,192,1)",
+            borderCapStyle: 'butt',
+            borderDash: [],
+            borderDashOffset: 0.0,
+            borderJoinStyle: 'miter',
+            pointBorderColor: "rgba(75,192,192,1)",
+            pointBackgroundColor: "#fff",
+            pointBorderWidth: 1,
+            pointHoverRadius: 5,
+            pointHoverBackgroundColor: "rgba(75,192,192,1)",
+            pointHoverBorderColor: "rgba(220,220,220,1)",
+            pointHoverBorderWidth: 2,
+            pointRadius: 1,
+            pointHitRadius: 10,
+            data: data[key]
           }]
         };
 
@@ -79,10 +96,19 @@
         var ctx = document.getElementById(Chartname).getContext("2d");
         counter++;
         Chart.defaults.global.animation.duration = 0;
+        Chart.defaults.global.hover.animationDuration = 0;
+        Chart.defaults.global.legend.display = false;
+
         // Instantiate a new chart
         var myLineChart = new Chart(ctx, {
             data: tempData,
-            type: "line"
+            type: "line",
+            options: {
+                title: {
+                    display: true,
+                    text: 'Temperature Sensor: ' + key
+                }
+            }
         });
       }
 
