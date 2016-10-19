@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>tld3</title>
+  <script src='https://cdn.firebase.com/js/client/2.2.1/firebase.js'></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.2.0/Chart.js'></script>
+  <script src="http://code.jquery.com/jquery-1.11.2.min.js"></script>
+</head>
+<body>
+
+
+  <canvas id="myChart_1" width="740" height="200"></canvas>
+  <canvas id="myChart_2" width="740" height="200"></canvas>
+  <canvas id="myChart_3" width="740" height="200"></canvas>
+  <canvas id="myChart_4" width="740" height="200"></canvas>
+  <canvas id="myChart_5" width="740" height="200"></canvas>
+
+  <script>
+  var jsonext;
+
+  var myTimer = setInterval(drawLineChart,5000);
+  function drawLineChart() {
+
+    // Add a helper to format timestamp data
+    // Date.prototype.formatMMDDYYYY = function() {
+    //   return (this.getMonth() + 1) +
+    //   "/" +  this.getDate() +
+    //   "/" +  this.getFullYear();
+    // }
+
+    var jsonData = $.ajax({
+      url: 'https://group9-node.firebaseio.com/temps.json',
+      dataType: 'json',
+    }).done(function (results) {
+
+      console.log(results);
+      jsonext = results;
+      // Split timestamp and data into separate arrays
+      var labels = {}, data = {};
+      for(key in results){
+
+        var deviceID = results[key].device;
+        var temperatureData = results[key].value;
+        var timeData = results[key].time;
+
+        if (!(deviceID in labels)){
+          // Found new device ID, add to dictionary
+          labels[deviceID] = [];
+          data[deviceID] = [];
+        }
+        else{
+          labels[deviceID].push(new Date(timeData));
+          data[deviceID].push(temperatureData);
+        }
+      }
+      // console.log("labels: " + labels["1e0027001847353236343033"] )
+      // console.log("data: " + data["1e0027001847353236343033"])
+      // console.log("data: " + data["1b003b000a47353235303037"])
+      // results.forEach(function(packet) {
+      //   labels.push(new Date(packet.timestamp).formatMMDDYYYY());
+      //   data.push(parseFloat(packet.payloadString));
+      // });
+
+      // Create the chart.js data structure using 'labels' and 'data'
+      var counter = 1;
+      for (key in labels){
+
+        var tempData = {
+          labels : labels[key],
+          datasets : [{
+            fill: false,
+            lineTension: 0.1,
+            backgroundColor: "rgba(75,192,192,0.4)",
+            borderColor: "rgba(75,192,192,1)",
+            borderCapStyle: 'butt',
+            borderDash: [],
+            borderDashOffset: 0.0,
+            borderJoinStyle: 'miter',
+            pointBorderColor: "rgba(75,192,192,1)",
+            pointBackgroundColor: "#fff",
+            pointBorderWidth: 1,
+            pointHoverRadius: 5,
+            pointHoverBackgroundColor: "rgba(75,192,192,1)",
+            pointHoverBorderColor: "rgba(220,220,220,1)",
+            pointHoverBorderWidth: 2,
+            pointRadius: 1,
+            pointHitRadius: 10,
+            data: data[key]
+          }]
+        };
+
+
+        // Get the context of the canvas element we want to select
+        var Chartname = "myChart_" + counter;
+        var ctx = document.getElementById(Chartname).getContext("2d");
+        counter++;
+        Chart.defaults.global.animation.duration = 0;
+        Chart.defaults.global.hover.animationDuration = 0;
+        Chart.defaults.global.legend.display = false;
+
+        // Instantiate a new chart
+        var myLineChart = new Chart(ctx, {
+            data: tempData,
+            type: "line",
+            options: {
+                title: {
+                    display: true,
+                    text: 'Temperature Sensor: ' + key
+                }
+            }
+        });
+      }
+
+      //var myLineChart = new Chart(ctx).Line(tempData);
+
+    }).fail(function(){
+      console.log("Failed: " + jsonData)
+    });
+
+  }
+
+  drawLineChart();
+  </script>
+</body>
+</html>
