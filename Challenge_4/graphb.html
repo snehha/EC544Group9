@@ -24,7 +24,6 @@
     var chartTitle = "Average Temperature Readings Over Time";
     var sensorData = {};
  
-    sensorData = {}
     var addTimePoint = function(dataset, sensorName, timepoint, value){
       if (!dataset.hasOwnProperty(sensorName)){
         dataset[sensorName] = [];
@@ -160,9 +159,12 @@
       socket.emit('loadDB');
 
       // receive database data
-      socket.on('load graph', function(msg){
+      socket.on('load graph', function(msg, tableNames){
         // Plot historical data
         for (var key in msg) addTimePoint(sensorData,"Average Temperature", new Date(key), msg[key]);
+
+        // add button to view graph for each device
+        //for(var key in tableNames) addTable(tableNames[key]);
       });
 
       refreshDb = {};
@@ -185,10 +187,26 @@
     <button onclick="toggleChartUnit('℉')">Fahrenheit</button>
     <button onclick="toggleChartUnit('℃')">Celcius</button>
     <button id="pauseButton" onclick="pauseRefresh()">Play/Pause</button><br><br>
+
+    View Graph for Specific Device<br>
+    <ul id="Devices"><br></ul>
   </div>
    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
     </body>
+
+    
+    <script type="text/javascript">
+      function addTable(deviceName) {
+        var btn = document.createElement("BUTTON");        // Create a <button> element
+        var t = document.createTextNode(deviceName);       // Create a text node
+        btn.appendChild(t);                                // Append the text to <button> 
+
+        var deviceGraphs = document.getElementById("Devices");
+        //Append button for device 
+        deviceGraphs.appendChild(btn);
+      }
+    </script>
 </html>
