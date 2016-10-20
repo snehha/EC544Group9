@@ -1,5 +1,5 @@
 PRODUCT_ID(1793);
-PRODUCT_VERSION(1);
+PRODUCT_VERSION(3);
 #include <math.h>
 
 // which analog pin to connect
@@ -14,8 +14,15 @@ int TEMPERATURENOMINAL = 25;
 
 String string_temperature;
 float average = 0;
+
+void handler(const char *topic, const char *data) {
+    Serial.println("received " + String(topic) + ": " + String(data));
+}
+
 void setup(void) {
   Particle.variable("temperature", &string_temperature, STRING);
+  Particle.subscribe("spark/", handler);
+  Particle.publish("spark/device/name");
 }
  
 void loop(void) {
@@ -43,5 +50,5 @@ void loop(void) {
   string_temperature = String(f_temp, 2);
   Particle.publish("f_temperature", string_temperature);
   
-  delay(2000);
+  delay(3000);
 }
