@@ -6,6 +6,10 @@ bool startup = true; // used to ensure startup only happens once
 int startupDelay = 1000; // time to pause at each calibration step
 double maxSpeedOffset = 45; // maximum speed magnitude, in servo 'degrees'
 double maxWheelOffset = 85; // maximum wheel turn magnitude, in servo 'degrees'
+
+const double MAXDISTANCE = 1000;
+double simulateLeftRAND = 500;
+double simulateRightRAND = 500;
  
 void setup()
 {
@@ -56,10 +60,45 @@ void oscillate(){
   }
   Serial.println(maxWheelOffset);
 }
+
+
+void simulate(){
+  
+  double diffAmount = random(10,70);
+
+  
+  double picker = random(0,10);
+  if(picker > 5){
+    if( (simulateRightRAND - diffAmount) < 0 ){
+      simulateRightRAND = 0;
+      simulateLeftRAND = MAXDISTANCE;
+    }
+    else{
+      simulateLeftRAND += diffAmount ;
+      simulateRightRAND -= diffAmount;
+    }
+  }
+  else{
+    if( (simulateLeftRAND - diffAmount) < 0 ){
+      simulateRightRAND = MAXDISTANCE;
+      simulateLeftRAND = 0;
+    }
+    else{
+      simulateLeftRAND -= diffAmount ;
+      simulateRightRAND += diffAmount;
+    }
+  }
+
+  Serial.print("Left: " + String(simulateLeftRAND));
+  Serial.println(" Right: " + String(simulateRightRAND));
+  
+
+  
+}
  
 void loop()
 {
-   oscillate();
+   //oscillate();
+   simulate();
 }
-
 
