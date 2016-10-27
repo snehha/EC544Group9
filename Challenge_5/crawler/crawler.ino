@@ -9,6 +9,8 @@ double maxWheelOffset = 85; // maximum wheel turn magnitude, in servo 'degrees'
  
 void setup()
 {
+  Serial.begin(9600);
+ 
   wheels.attach(8); // initialize wheel servo to Digital IO Pin #8
   esc.attach(9); // initialize ESC to Digital IO Pin #9
   /*  If you're re-uploading code via USB while leaving the ESC powered on, 
@@ -48,8 +50,11 @@ void oscillate(){
     double wheelOffset = sin(rad) * maxWheelOffset;
     esc.write(90 + speedOffset);
     wheels.write(90 + wheelOffset);
+    Serial.print("  ");
+    Serial.println(wheelOffset);
     delay(50);
   }
+  Serial.println(maxWheelOffset);
 }
  
 void loop()
