@@ -15,6 +15,9 @@ int sensorPins[] = {2,3}; // Array of pins connected to the sensor Power Enable 
 unsigned char addresses[] = {0x66,0x68};
 const float pi = 3.14;
 
+double speed = 75;
+
+
 LIDARLite myLidarLite;
 
 void setup() {
@@ -26,6 +29,12 @@ void setup() {
   myLidarLite.begin();
   myLidarLite.changeAddressMultiPwrEn(2,sensorPins,addresses,false);
 
+  int i = 90;
+  while(i != speed)
+  {
+    delay(45);
+    esc.write(i--);
+  }
   //calibrateESC();
 }
 
@@ -51,39 +60,101 @@ void calibrateESC(){
 }
 
 void loop() {
-
+  
+  double newSpeed = speed;
   int sensor1 = 0;
   int sensor2 = 0;
-  for(int i = 0; i < 40; i++){
+  for(int i = 0; i < 10; i++){
     sensor1 += myLidarLite.distance(true,true,0x66);
     sensor2 += myLidarLite.distance(true,true,0x68);
   }
-  sensor1 = sensor1/40;
-  sensor2 = sensor2/40;
+  sensor1 = sensor1/10;
+  sensor2 = sensor2/10;
 
-  Serial.print(sensor1);
-  Serial.print(" ");
-  Serial.println(sensor2);
+  Serial.println("About to print");
+  if ((sensor1 < 50) || (sensor2 < 50)){
+    //Serial.print(sensor1);
+    //Serial.print(" ");
+    //Serial.println(sensor2);
+    newSpeed = 90;
+    Serial.println("I WAS HERE");
+  }
+  else{
+    newSpeed = 75;
+  }
 
   double wheelOffsetLeft = 0;
   double wheelOffsetRight = 0;
+
+  bool myCount = false;
   //Move Right
-  if(sensor1 < 90){
+  if(sensor1 < 110){
     //Turn wheel X points
-    wheelOffsetRight = -1 * maxWheelOffset * cos((pi*sensor1)/180);
+    //newSpeed = 75;
+    myCount = true;
+    wheelOffsetRight = -1 * maxWheelOffset * cos((pi*sensor1)/220);
   }
-
   //Move Left
-  if(sensor2 < 90){
-    wheelOffsetLeft = maxWheelOffset * cos((pi*sensor2)/180); 
+  if(sensor2 < 110){
+    //newSpeed = 75;
+    myCount = true;
+    wheelOffsetLeft = maxWheelOffset * cos((pi*sensor2)/220);
+  }
+  
+  
+//  //Control Speed
+//  int stoppingDistance = 30;
+//  if( (sensor1 < stoppingDistance) ) {
+//      //newSpeed = (-1/2)*(sensor1)+87;
+//      myCount = true;
+//      newSpeed = 90;
+//  }
+//  //Control Speed
+//  if( (sensor2 < stoppingDistance) ) {
+//      myCount = true;
+//      if (newSpeed < 90); //((-1/2)*(sensor2)+87))
+//        newSpeed = 90;
+//  }
+  if(!myCount){
+    newSpeed = 70;
   }
 
+  
+  
   double wheelOffset = wheelOffsetRight + wheelOffsetLeft;
 
-  esc.write(78);
+  //esc.write(speed);
   wheels.write(90 + wheelOffset);
 
-  Serial.print("Wheel Degree: ");
-  Serial.println(wheelOffset);
+  
+  //Speed Funtion
+  //Serial.print("Old Speed: ");
+  //Serial.println(speed);
+  if(newSpeed > speed){
+    while(newSpeed != speed)
+    {
+      delay(45);
+      speed++;
+      esc.write(speed);
+      //Serial.print("Slowing down: ");
+      //Serial.println(speed);
+    }
+  }
+  //Serial.println("---------------");
+  if(newSpeed < speed){
+    while(newSpeed != speed)
+    {
+      delay(45);
+      speed--;
+      esc.write(speed);
+      //Serial.print("Speeding Up: ");
+      //Serial.println(speed);
+    }
+  }
+  
+  
+
+  //Serial.print("Speed: ");
+  //Serial.println(speed);
 
 }
