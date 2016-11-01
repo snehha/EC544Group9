@@ -1,6 +1,7 @@
 #include <Wire.h>
 #include <LIDARLite.h>
 #include <Servo.h>
+#include <SoftwareSerial.h>
  
 Servo wheels; // servo for turning the wheels
 Servo esc; // not actually a servo, but controlled like one!
@@ -16,7 +17,7 @@ const float pi = 3.14;
 //Speed values
 int curSpeed = 0;
 const int errDistance = 110;
-const int haltDistance = 50;
+const int haltDistance = 35;
 const int stopped = 0;
 const int fullSpeed = 15;
 
@@ -38,14 +39,18 @@ long sensorFront;
 
 //Center distance on startup
 int centerPoint;
-int maxGapOffset = 50;
+int maxGapOffset = 100;
 int medGapOffset = 30;
 int centerBuffer;
+
+//XBEE Output
+SoftwareSerial XBee(2, 3);
 
 LIDARLite myLidarLite;
 
 void setup() {
   Serial.begin(115200);
+  XBee.begin(9600);
 
   wheels.attach(8); // initialize wheel servo to Digital IO Pin #8
   esc.attach(9); // initialize ESC to Digital IO Pin #9
@@ -92,7 +97,11 @@ void changeSpeed(int newSpeed){
   //curSpeed = The actual speed of the rover at the moment
   //fullSpeed = The full speed of the rover
   // 90 - newSpeed >> get the real speed
-
+  if(newSpeed == stopped){
+    curSpeed = stopped;
+    esc.write(90);
+    return;
+  }
   //if the newSpeed is greater than the curSpeed then we are speeding up
   // 20 > 0
   if(newSpeed > curSpeed){
@@ -109,6 +118,42 @@ void changeSpeed(int newSpeed){
     while(curSpeed != newSpeed)
     {
       curSpeed--;
+      esc.write(90-curSpeed);
+      delay(25);
+    }
+  }
+}
+
+void changeReverseSpeed(int newSpeed){
+  //curSpeed = The actual speed of the rover at the moment
+  //fullSpeed = The full speed of the rover
+  // 90 - newSpeed >> get the real speed
+  if(newSpeed == stopped){
+    curSpeed = stopped;
+    esc.write(90);
+    return;
+  }
+  //if the newSpeed is greater than the curSpeed then we are speeding up
+  // 20 > 0
+  if(newSpeed < curSpeed){
+    Serial.print("Entering changeSpeed: ");
+    Serial.println(newSpeed);
+    while(curSpeed != newSpeed)
+    {
+      curSpeed--;
+      esc.write(90-curSpeed);
+      delay(25);
+      Serial.print("Speed new: ");
+      Serial.println(curSpeed);
+    }
+  }
+  //If the newSpeed is less than the curSpeed then we are slowing down
+  // 0 < 20
+  else if(newSpeed > curSpeed){
+    Serial.println("Entering changeSpeed Bottom");
+    while(curSpeed != newSpeed)
+    {
+      curSpeed++;
       esc.write(90-curSpeed);
       delay(25);
     }
@@ -140,6 +185,24 @@ void printLog(){
   Serial.println(trimValue);
 }
 
+void XBeePrint(){
+  XBee.write("--------- Current Values ---------\n");
+  XBee.write("\nLeft Sensor: ");
+  XBee.write(sensorLeft);
+  XBee.write("\nRight Sensor: ");
+  XBee.write(sensorRight);
+  XBee.write("\nCenter Distance: ");
+  XBee.write(centerPoint);
+  XBee.write("\nFront Sensor: ");
+  XBee.write(sensorFront);
+  XBee.write("\nCurrent Speed: ");
+  XBee.write(curSpeed);
+  XBee.write("\nWheel Angle: ");
+  XBee.write(curWheelAngle);
+  XBee.write("\nTrim Angle: ");
+  XBee.write(trimValue);
+}
+
 void setTrim() {
   trimValue = analogRead(potPin);
   trimValue = map(trimValue, 0, 1018, -100, 100);
@@ -161,15 +224,28 @@ void getUltraSoundDistance() {
 
 }
 
-bool stopCorrect(long sensorFront) {
-  if ((sensorLeft < errDistance) && (sensorRight < errDistance)) {
-    Serial.println("Entered Stop Correct - SIDE SENSORS");
-    changeSpeed(stopped);
-    return true;
+void reverseCar(){
+  if( ((sensorLeft/sensorRight) > 2) || ((sensorLeft/sensorRight) < 0.5)){
+    Serial.println("Front object detected. Reversing.");
+    if(sensorLeft < sensorRight) //Go left
+    {
+      changeWheelAngle(maxWheelOffset - 5);
+      changeReverseSpeed(-15);
+    }
+    else{
+      changeWheelAngle(-maxWheelOffset + 5);
+      changeReverseSpeed(-15);
+    }
   }
-  else if ( sensorFront <= 35) { // front sensor
-    Serial.println("Entered Stop Correct - FRONT SENSOR");
+  delay(1000);
+  //changeReverseSpeed(stopped);
+}
+
+bool stopCorrect(long sensorFront) {
+  if ( (sensorFront <= haltDistance+20) || ((sensorLeft < haltDistance) && (sensorRight < haltDistance))) {
+    Serial.println("Entered Stop Correct - SENSOR");
     changeSpeed(stopped);
+    reverseCar();
     Serial.println("Front object detected. Stopping.");
     return true;
   }
@@ -251,6 +327,7 @@ void loop() {
   setTrim();
   
   printLog();
+  //XBeePrint();
   bool val = stopCorrect(sensorFront);
   if(!val)
     val = errorCorrect(sensorLeft,sensorRight);
