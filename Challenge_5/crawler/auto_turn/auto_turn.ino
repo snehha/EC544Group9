@@ -17,9 +17,9 @@ const float pi = 3.14;
 //Speed values
 int curSpeed = 0;
 const int errDistance = 110;
-const int haltDistance = 35;
 const int stopped = 0;
-const int fullSpeed = 15;
+const int fullSpeed = 20;
+const int haltDistance = fullSpeed + 20;
 
 //Wheel values
 float trimValue = 0;
@@ -226,18 +226,23 @@ void getUltraSoundDistance() {
 
 void reverseCar(){
   if( ((sensorLeft/sensorRight) > 2) || ((sensorLeft/sensorRight) < 0.5)){
+    int wheelChange;
     Serial.println("Front object detected. Reversing.");
     if(sensorLeft < sensorRight) //Go left
     {
-      changeWheelAngle(maxWheelOffset - 5);
+      wheelChange = maxWheelOffset - 5;
+      changeWheelAngle(wheelChange);
       changeReverseSpeed(-15);
     }
     else{
-      changeWheelAngle(-maxWheelOffset + 5);
+      wheelChange = -maxWheelOffset + 5;
+      changeWheelAngle(wheelChange);
       changeReverseSpeed(-15);
     }
+    delay(33*fullSpeed+500);
+    changeWheelAngle(-1*wheelChange);
   }
-  delay(1000);
+  
   //changeReverseSpeed(stopped);
 }
 
@@ -291,16 +296,18 @@ bool centerCorrect(int sensorLeft, int sensorRight){
   double wheelOffsetLeft = 0;
   double wheelOffsetRight = 0;
   double wheelOffset = 0;
+
+  int turnStrength = 5;
   
   //There is a big gap on the left side so stay to the right but in the center
   if(((sensorLeft - sensorRight)>maxGapOffset) && (sensorLeft > centerBuffer) /*&& (sensorRight > centerPoint)*/){
     Serial.println("Entered Center Correct - Gap Left");
-    wheelOffset = -1 * maxWheelOffset * cos(pi/2*(sensorRight/centerPoint));
+    wheelOffset = -1 * maxWheelOffset * cos(pi/2*(sensorRight/centerPoint))/turnStrength;
   }
   //There is a gap on the right side so stay to the left
   else if(((sensorRight - sensorLeft)>maxGapOffset) && (sensorRight > centerBuffer) /*&& (sensorLeft > centerPoint)*/){
     Serial.println("Entered Center Correct - Gap Right");
-    wheelOffset = maxWheelOffset * cos(pi/2*(sensorLeft/centerPoint));
+    wheelOffset = maxWheelOffset * cos(pi/2*(sensorLeft/centerPoint))/turnStrength;
   }
   
   //Center
@@ -308,12 +315,12 @@ bool centerCorrect(int sensorLeft, int sensorRight){
     //Move Right
     if(sensorLeft < centerPoint){
       Serial.println("Entered Center Correct - Center Right");
-      wheelOffsetRight = -1 * curWheelAngle * cos(pi/2*(sensorRight/centerPoint));
+      wheelOffsetRight = -1 * curWheelAngle * cos(pi/2*(sensorRight/centerPoint))/turnStrength;
     }
     //Move Left
     if(sensorRight < centerPoint){
       Serial.println("Entered Center Correct - Center Left");
-      wheelOffsetLeft = curWheelAngle * cos(pi/2*(sensorLeft/centerPoint));
+      wheelOffsetLeft = curWheelAngle * cos(pi/2*(sensorLeft/centerPoint))/turnStrength;
     }
     wheelOffset = wheelOffsetRight + wheelOffsetLeft;
   }
