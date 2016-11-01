@@ -27,7 +27,7 @@ double curWheelAngle;
 //Sensor Data
 int sensorLeft;
 int sensorRight;
-float sensorFront;
+long sensorFront;
 
 //Center distance on startup
 int centerPoint;
@@ -193,8 +193,9 @@ bool centerCorrect(int sensorLeft, int sensorRight){
 
 void loop() {  
   getSensorData(sensorLeft,sensorRight);
+  getUltraSoundDistance();
   
-  bool val = stopCorrect(sensorLeft,sensorRight);
+  bool val = stopCorrect(sensorFront);
   if(!val)
     val = errorCorrect(sensorLeft,sensorRight);
   if(!val)
