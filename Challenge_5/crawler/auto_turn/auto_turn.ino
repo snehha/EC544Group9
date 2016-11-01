@@ -9,7 +9,7 @@ int startupDelay = 1000; // time to pause at each calibration step
 double maxSpeedOffset = 45; // maximum speed magnitude, in servo 'degrees'
 double maxWheelOffset = 60; // maximum wheel turn magnitude, in servo 'degrees'
 
-int sensorPins[] = {2,3}; // Array of pins connected to the sensor Power Enable lines
+int sensorPins[] = {6,7}; // Array of pins connected to the sensor Power Enable lines
 unsigned char addresses[] = {0x66,0x68};
 const float pi = 3.14;
 
@@ -27,6 +27,7 @@ double curWheelAngle;
 //Sensor Data
 int sensorLeft;
 int sensorRight;
+float sensorFront;
 
 //Center distance on startup
 int centerPoint;
@@ -77,12 +78,56 @@ int getSensorData(int &sensor1, int &sensor2){
   sensor2 = mySensor2/10;
 }
 
-void changeSpeed(int desiredSpeed){
+//Change the speed of the rover up or down.
+void changeSpeed(int newSpeed){
+
+  //curSpeed = The actual speed of the rover at the moment
+  //fullSpeed = The full speed of the rover
+  // 90 - newSpeed >> get the real speed
+
+  //if the newSpeed is greater than the curSpeed then we are speeding up
+  // 20 > 0
+  if(newSpeed > curSpeed){
+    while(curSpeed != newSpeed)
+    {
+      curSpeed++;
+      esc.write(90-curSpeed);
+      delay(45);
+    }
+  }
+  //If the newSpeed is less than the curSpeed then we are slowing down
+  // 0 < 20
+  else if(newSpeed < curSpeed){
+    while(curSpeed != newSpeed)
+    {
+      curSpeed--;
+      esc.write(90-curSpeed);
+      delay(45);
+    }
+  }
+}
+
+//Change the wheel angle
+void changeWheelAngle(double newWheelAngle){
+  curWheelAngle = 90 + trimValue + newWheelAngle;
+  wheels.write(curWheelAngle);
   
 }
 
-void changeWheelAngle(double desiredAngle){
-  
+void printLog(){
+  Serial.println("--------- Current Values ---------");
+  Serial.print("Left Sensor: ");
+  Serial.println(sensorLeft);
+  Serial.print("Right Sensor: ");
+  Serial.println(sensorRight);
+  Serial.print("Front Sensor: ");
+  Serial.println(sensorFront);
+  Serial.print("Current Speed: ");
+  Serial.println(curSpeed);
+  Serial.print("Wheel Angle: ");
+  Serial.println(curWheelAngle);
+  Serial.print("Trim Angle: ");
+  Serial.println(trimValue);
 }
 
 bool stopCorrect(int sensor1, int sensor2){
@@ -113,7 +158,6 @@ bool errorCorrect(int sensorLeft, int sensorRight){
   }
   
   double wheelOffset = wheelOffsetRight + wheelOffsetLeft;
-  //esc.write(speed);
   changeWheelAngle(wheelOffset);
 }
 
