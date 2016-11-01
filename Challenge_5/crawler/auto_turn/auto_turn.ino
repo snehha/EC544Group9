@@ -14,15 +14,22 @@ unsigned char addresses[] = {0x66,0x68};
 const float pi = 3.14;
 
 //Speed values
-int curSpeed = 15;
+int curSpeed = 0;
 const int errDistance = 110;
 const int haltDistance = 50;
 const int stopped = 0;
 const int fullSpeed = 15;
 
 //Wheel values
-float trimValue;
+float trimValue = 0;
 double curWheelAngle;
+
+//Ultrasonic
+const int ultraPin = 0;
+const int potPin = 1;
+long analogVolt, inches;
+int sum = 0; //Create sum variable so it can be averaged
+int avgRange = 10; //Quantity of values to average (sample size)
 
 //Sensor Data
 int sensorLeft;
@@ -46,14 +53,15 @@ void setup() {
   myLidarLite.begin();
   myLidarLite.changeAddressMultiPwrEn(2,sensorPins,addresses,false);
 
-  //Set speed to max speed
-  changeSpeed(fullSpeed);
   //calibrateESC();
+  //Set speed to max speed
 
   //Record the current center
   getSensorData(sensorLeft,sensorRight);
   centerPoint = (sensorLeft+sensorRight)/2;
   centerBuffer = centerPoint+medGapOffset;
+
+  changeSpeed(fullSpeed);
 }
 
 /* Calibrate the ESC by sending a high signal, then a low, then middle.*/
@@ -80,7 +88,7 @@ int getSensorData(int &sensor1, int &sensor2){
 
 //Change the speed of the rover up or down.
 void changeSpeed(int newSpeed){
-
+  Serial.println("Entering changeSpeed");
   //curSpeed = The actual speed of the rover at the moment
   //fullSpeed = The full speed of the rover
   // 90 - newSpeed >> get the real speed
@@ -92,7 +100,7 @@ void changeSpeed(int newSpeed){
     {
       curSpeed++;
       esc.write(90-curSpeed);
-      delay(45);
+      delay(25);
     }
   }
   //If the newSpeed is less than the curSpeed then we are slowing down
@@ -102,7 +110,7 @@ void changeSpeed(int newSpeed){
     {
       curSpeed--;
       esc.write(90-curSpeed);
-      delay(45);
+      delay(25);
     }
   }
 }
@@ -120,6 +128,8 @@ void printLog(){
   Serial.println(sensorLeft);
   Serial.print("Right Sensor: ");
   Serial.println(sensorRight);
+  Serial.print("Center Distance: ");
+  Serial.println(centerPoint);
   Serial.print("Front Sensor: ");
   Serial.println(sensorFront);
   Serial.print("Current Speed: ");
@@ -130,35 +140,75 @@ void printLog(){
   Serial.println(trimValue);
 }
 
-bool stopCorrect(int sensor1, int sensor2){
-  //STOP CORRECT- Done by the ultra sonic sensor
-  if ((sensor1 < haltDistance) && (sensor2 < haltDistance))
+void setTrim() {
+  trimValue = analogRead(potPin);
+  trimValue = map(trimValue, 0, 1018, -100, 100);
+  trimValue /= 10;
+}
+
+void getUltraSoundDistance() {
+  //reset sample total
+  sum = 0;
+  for (int i = 0; i < avgRange ; i++) {
+
+    analogVolt = analogRead(ultraPin) / 2;
+    sum += analogVolt;
+    delay(10);
+  }
+
+  inches = sum / avgRange;
+  sensorFront = inches * 2.54;
+
+}
+
+bool stopCorrect(long sensorFront) {
+  if ((sensorLeft < errDistance) && (sensorRight < errDistance)) {
+    Serial.println("Entered Stop Correct - SIDE SENSORS");
     changeSpeed(stopped);
+    return true;
+  }
+  else if ( sensorFront <= 35) { // front sensor
+    Serial.println("Entered Stop Correct - FRONT SENSOR");
+    changeSpeed(stopped);
+    Serial.println("Front object detected. Stopping.");
+    return true;
+  }
+  else {
+    changeSpeed(fullSpeed);
+    return false;
+  }
 }
 
 bool errorCorrect(int sensorLeft, int sensorRight){
   double wheelOffsetLeft = 0;
   double wheelOffsetRight = 0;
+  double wheelOffset = 0;
   bool myCount = false;
   
   //Move Right
   if(sensorLeft < errDistance){
+    Serial.println("Entered Error Correct - Move Right");
     myCount = true;
     wheelOffsetRight = -1 * maxWheelOffset * cos((pi*sensorLeft)/2/errDistance);
   }
   //Move Left
   if(sensorRight < errDistance){
+    Serial.println("Entered Error Correct - Move Left");
     //newSpeed = 75;
     myCount = true;
     wheelOffsetLeft = maxWheelOffset * cos((pi*sensorRight)/2/errDistance);
   }
   //If not close to wall, go set max speed
   if(!myCount){
+    Serial.println("Entered Error Correct - Stay Course");
     changeSpeed(fullSpeed);
+    //changeWheelAngle(wheelOffset);
+    return false;
   }
   
-  double wheelOffset = wheelOffsetRight + wheelOffsetLeft;
+  wheelOffset = wheelOffsetRight + wheelOffsetLeft;
   changeWheelAngle(wheelOffset);
+  return true;
 }
 
 bool centerCorrect(int sensorLeft, int sensorRight){
@@ -168,10 +218,12 @@ bool centerCorrect(int sensorLeft, int sensorRight){
   
   //There is a big gap on the left side so stay to the right but in the center
   if(((sensorLeft - sensorRight)>maxGapOffset) && (sensorLeft > centerBuffer) /*&& (sensorRight > centerPoint)*/){
+    Serial.println("Entered Center Correct - Gap Left");
     wheelOffset = -1 * maxWheelOffset * cos(pi/2*(sensorRight/centerPoint));
   }
   //There is a gap on the right side so stay to the left
   else if(((sensorRight - sensorLeft)>maxGapOffset) && (sensorRight > centerBuffer) /*&& (sensorLeft > centerPoint)*/){
+    Serial.println("Entered Center Correct - Gap Right");
     wheelOffset = maxWheelOffset * cos(pi/2*(sensorLeft/centerPoint));
   }
   
@@ -179,11 +231,13 @@ bool centerCorrect(int sensorLeft, int sensorRight){
   else{
     //Move Right
     if(sensorLeft < centerPoint){
-      wheelOffsetRight = -1 * maxWheelOffset * cos(pi/2*(sensorRight/centerPoint));
+      Serial.println("Entered Center Correct - Center Right");
+      wheelOffsetRight = -1 * curWheelAngle * cos(pi/2*(sensorRight/centerPoint));
     }
     //Move Left
     if(sensorRight < centerPoint){
-      wheelOffsetLeft = maxWheelOffset * cos(pi/2*(sensorLeft/centerPoint));
+      Serial.println("Entered Center Correct - Center Left");
+      wheelOffsetLeft = curWheelAngle * cos(pi/2*(sensorLeft/centerPoint));
     }
     wheelOffset = wheelOffsetRight + wheelOffsetLeft;
   }
@@ -194,7 +248,9 @@ bool centerCorrect(int sensorLeft, int sensorRight){
 void loop() {  
   getSensorData(sensorLeft,sensorRight);
   getUltraSoundDistance();
+  setTrim();
   
+  printLog();
   bool val = stopCorrect(sensorFront);
   if(!val)
     val = errorCorrect(sensorLeft,sensorRight);
