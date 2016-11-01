@@ -1,5 +1,3 @@
-
-
 #include <Wire.h>
 #include <LIDARLite.h>
 #include <Servo.h>
@@ -15,8 +13,23 @@ int sensorPins[] = {2,3}; // Array of pins connected to the sensor Power Enable 
 unsigned char addresses[] = {0x66,0x68};
 const float pi = 3.14;
 
-double speed = 75;
+//Speed values
+int curSpeed = 15;
+const int errDistance = 110;
+const int haltDistance = 50;
+const int stopped = 0;
+const int fullSpeed = 15;
 
+//Sensor Data
+int sensorLeft;
+int sensorRight;
+
+//Center distance on startup
+int centerPoint;
+int maxGapOffset = 50;
+
+int medGapOffset = 30;
+int centerBuffer;
 
 LIDARLite myLidarLite;
 
@@ -29,23 +42,14 @@ void setup() {
   myLidarLite.begin();
   myLidarLite.changeAddressMultiPwrEn(2,sensorPins,addresses,false);
 
-  int i = 90;
-  while(i != speed)
-  {
-    delay(45);
-    esc.write(i--);
-  }
+  //Set speed to max speed
+  changeSpeed(fullSpeed);
   //calibrateESC();
-}
 
-/* Convert degree value to radians */
-double degToRad(double degrees){
-  return (degrees * 71) / 4068;
-}
-
-/* Convert radian value to degrees */
-double radToDeg(double radians){
-  return (radians * 4068) / 71;
+  //Record the current center
+  getSensorData(sensorLeft,sensorRight);
+  centerPoint = (sensorLeft+sensorRight)/2;
+  centerBuffer = centerPoint+medGapOffset;
 }
 
 /* Calibrate the ESC by sending a high signal, then a low, then middle.*/
@@ -59,102 +63,93 @@ void calibrateESC(){
     esc.write(90); // reset the ESC to neutral (non-moving) value
 }
 
-void loop() {
-  
-  double newSpeed = speed;
-  int sensor1 = 0;
-  int sensor2 = 0;
+int getSensorData(int &sensor1, int &sensor2){
+  int mySensor1 = 0;
+  int mySensor2 = 0;
   for(int i = 0; i < 10; i++){
-    sensor1 += myLidarLite.distance(true,true,0x66);
-    sensor2 += myLidarLite.distance(true,true,0x68);
+    mySensor1 += myLidarLite.distance(true,true,0x66);
+    mySensor2 += myLidarLite.distance(true,true,0x68);
   }
-  sensor1 = sensor1/10;
-  sensor2 = sensor2/10;
+  sensor1 = mySensor1/10;
+  sensor2 = mySensor2/10;
+}
 
-  Serial.println("About to print");
-  if ((sensor1 < 50) || (sensor2 < 50)){
-    //Serial.print(sensor1);
-    //Serial.print(" ");
-    //Serial.println(sensor2);
-    newSpeed = 90;
-    Serial.println("I WAS HERE");
-  }
-  else{
-    newSpeed = 75;
-  }
+void changeSpeed(int desiredSpeed){
+  
+}
 
+void changeWheelAngle(double desiredAngle){
+  
+}
+
+bool stopCorrect(int sensor1, int sensor2){
+  //STOP CORRECT- Done by the ultra sonic sensor
+  if ((sensor1 < haltDistance) && (sensor2 < haltDistance))
+    changeSpeed(stopped);
+}
+
+bool errorCorrect(int sensorLeft, int sensorRight){
   double wheelOffsetLeft = 0;
   double wheelOffsetRight = 0;
-
   bool myCount = false;
+  
   //Move Right
-  if(sensor1 < 110){
-    //Turn wheel X points
-    //newSpeed = 75;
+  if(sensorLeft < errDistance){
     myCount = true;
-    wheelOffsetRight = -1 * maxWheelOffset * cos((pi*sensor1)/220);
+    wheelOffsetRight = -1 * maxWheelOffset * cos((pi*sensorLeft)/2/errDistance);
   }
   //Move Left
-  if(sensor2 < 110){
+  if(sensorRight < errDistance){
     //newSpeed = 75;
     myCount = true;
-    wheelOffsetLeft = maxWheelOffset * cos((pi*sensor2)/220);
+    wheelOffsetLeft = maxWheelOffset * cos((pi*sensorRight)/2/errDistance);
   }
-  
-  
-//  //Control Speed
-//  int stoppingDistance = 30;
-//  if( (sensor1 < stoppingDistance) ) {
-//      //newSpeed = (-1/2)*(sensor1)+87;
-//      myCount = true;
-//      newSpeed = 90;
-//  }
-//  //Control Speed
-//  if( (sensor2 < stoppingDistance) ) {
-//      myCount = true;
-//      if (newSpeed < 90); //((-1/2)*(sensor2)+87))
-//        newSpeed = 90;
-//  }
+  //If not close to wall, go set max speed
   if(!myCount){
-    newSpeed = 70;
+    changeSpeed(fullSpeed);
   }
-
-  
   
   double wheelOffset = wheelOffsetRight + wheelOffsetLeft;
-
   //esc.write(speed);
-  wheels.write(90 + wheelOffset);
+  changeWheelAngle(wheelOffset);
+}
 
+bool centerCorrect(int sensorLeft, int sensorRight){
+  double wheelOffsetLeft = 0;
+  double wheelOffsetRight = 0;
+  double wheelOffset = 0;
   
-  //Speed Funtion
-  //Serial.print("Old Speed: ");
-  //Serial.println(speed);
-  if(newSpeed > speed){
-    while(newSpeed != speed)
-    {
-      delay(45);
-      speed++;
-      esc.write(speed);
-      //Serial.print("Slowing down: ");
-      //Serial.println(speed);
-    }
+  //There is a big gap on the left side so stay to the right but in the center
+  if(((sensorLeft - sensorRight)>maxGapOffset) && (sensorLeft > centerBuffer) /*&& (sensorRight > centerPoint)*/){
+    wheelOffset = -1 * maxWheelOffset * cos(pi/2*(sensorRight/centerPoint));
   }
-  //Serial.println("---------------");
-  if(newSpeed < speed){
-    while(newSpeed != speed)
-    {
-      delay(45);
-      speed--;
-      esc.write(speed);
-      //Serial.print("Speeding Up: ");
-      //Serial.println(speed);
-    }
+  //There is a gap on the right side so stay to the left
+  else if(((sensorRight - sensorLeft)>maxGapOffset) && (sensorRight > centerBuffer) /*&& (sensorLeft > centerPoint)*/){
+    wheelOffset = maxWheelOffset * cos(pi/2*(sensorLeft/centerPoint));
   }
   
+  //Center
+  else{
+    //Move Right
+    if(sensorLeft < centerPoint){
+      wheelOffsetRight = -1 * maxWheelOffset * cos(pi/2*(sensorRight/centerPoint));
+    }
+    //Move Left
+    if(sensorRight < centerPoint){
+      wheelOffsetLeft = maxWheelOffset * cos(pi/2*(sensorLeft/centerPoint));
+    }
+    wheelOffset = wheelOffsetRight + wheelOffsetLeft;
+  }
   
+  changeWheelAngle(wheelOffset);
+}
 
-  //Serial.print("Speed: ");
-  //Serial.println(speed);
-
+void loop() {  
+  getSensorData(sensorLeft,sensorRight);
+  
+  bool val = stopCorrect(sensorLeft,sensorRight);
+  if(!val)
+    val = errorCorrect(sensorLeft,sensorRight);
+  if(!val)
+    centerCorrect(sensorLeft,sensorRight);
 }
