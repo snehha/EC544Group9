@@ -20,6 +20,10 @@ const int haltDistance = 50;
 const int stopped = 0;
 const int fullSpeed = 15;
 
+//Wheel values
+float trimValue;
+double curWheelAngle;
+
 //Sensor Data
 int sensorLeft;
 int sensorRight;
@@ -27,7 +31,6 @@ int sensorRight;
 //Center distance on startup
 int centerPoint;
 int maxGapOffset = 50;
-
 int medGapOffset = 30;
 int centerBuffer;
 
