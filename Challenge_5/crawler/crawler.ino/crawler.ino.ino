@@ -10,13 +10,7 @@ double maxWheelOffset = 85; // maximum wheel turn magnitude, in servo 'degrees'
 const double MAXDISTANCE = 1000;
 double simulateLeftRAND = 500;
 double simulateRightRAND = 500;
-const int ultraPin = 0;
-
-long analogVolt, inches, cm;
-int sum = 0; //Create sum variable so it can be averaged
-int avgRange = 60; //Quantity of values to average (sample size)
-
-
+ 
 void setup()
 {
   Serial.begin(9600);
@@ -50,27 +44,23 @@ void calibrateESC(){
     esc.write(90); // reset the ESC to neutral (non-moving) value
 }
 
-long getUltraSoundDistance(){
-  //reset sample total
-  sum = 0;
-  for (int i = 0; i < avgrange ; i++) {
-    //Used to read in the analog voltage output that is being sent by the MaxSonar device.
-    //Scale factor is (Vcc/512) per inch. A 5V supply yields ~9.8mV/in
-    //Arduino analog pin goes from 0 to 1024, so the value has to be divided by 2 to get the actual inches
-    analogVolt = analogRead(ultraPin) / 2;
-    sum += analogVolt;
-    delay(10);
+/* Oscillate between various servo/ESC states, using a sine wave to gradually 
+ *  change speed and turn values.
+ */
+void oscillate(){
+  for (int i =0; i < 360; i++){
+    double rad = degToRad(i);
+    double speedOffset = sin(rad) * maxSpeedOffset;
+    double wheelOffset = sin(rad) * maxWheelOffset;
+    esc.write(90 + speedOffset);
+    wheels.write(90 + wheelOffset);
+    Serial.print("  ");
+    Serial.println(wheelOffset);
+    delay(50);
   }
-
-  inches = sum / avgRange;
-  cm = inches * 2.54;
-
-  Serial.print("Ultrasound values: ");
-  Serial.print(cm);
-  Serial.print("cm");
-  Serial.println();
-  
+  Serial.println(maxWheelOffset);
 }
+
 
 void simulate(){
   
@@ -101,9 +91,10 @@ void simulate(){
 
   Serial.print("Left: " + String(simulateLeftRAND));
   Serial.println(" Right: " + String(simulateRightRAND));
+  
+
+  
 }
-
-
  
 void loop()
 {
