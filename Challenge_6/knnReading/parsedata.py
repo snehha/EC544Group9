@@ -13,16 +13,18 @@ for file in glob.glob("*.txt"):
             if row:
                 regionName = file[:-4]
                 bssid = row[1]
+                if bssid is '03341138252243':
+                    pass
                 signal = row[2]
                 # BSSID not inside the dictionary
-                if (str(count) + regionName) not in allAccessPoints:
+                if (regionName + " " + str(count)) not in allAccessPoints:
                     #allAccessPoints[regionName] = {}
-                    allAccessPoints[str(count) + regionName] = [(bssid, signal)]
+                    allAccessPoints[regionName + " " + str(count)] = [(bssid, signal)]
                 else:
-                    if (str(count) + regionName) not in allAccessPoints:
-                        allAccessPoints[str(count) + regionName] = [(bssid, signal)]
+                    if (regionName + " " + str(count)) not in allAccessPoints:
+                        allAccessPoints[regionName + " " + str(count)] = [(bssid, signal)]
                     else:
-                        allAccessPoints[str(count) + regionName].append((bssid, signal))
+                        allAccessPoints[regionName + " " + str(count)].append((bssid, signal))
             else:
                 count += 1
 
@@ -35,12 +37,14 @@ for key in allAccessPoints:
 
 # print allAccessPoints
 counter = 0
-for key in allAccessPoints:
+for key in regionAccessPoints:
     counter += 1
-    print str(key) + ": ",
-    print allAccessPoints[key]
+    print regionAccessPoints[key] + ': ',
+    print str(key)
 
-print counter
+
+
+
 
 
 
