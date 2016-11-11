@@ -33,7 +33,7 @@ def parseData():
     for key in allAccessPoints:
         rssidlist = tuple(allAccessPoints[key])
         regionName = key
-        regionAccessPoints[rssidlist] = regionName
+        regionAccessPoints[rssidlist] = regionName.split(' ')[0]
 
     # print allAccessPoints
     # counter = 0

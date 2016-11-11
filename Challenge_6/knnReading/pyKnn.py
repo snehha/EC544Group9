@@ -11,13 +11,17 @@ trainingSet = dict(maxSet)
 pruneSet = dict(trainingSet)
 
 for x in maxSet:
-	if random.randrange(1,1000) > 100:
+	if random.randrange(1,1000) > 200:
 		del pruneSet[x]
 	else:
 		del trainingSet[x]
 
-print len(trainingSet)
 print len(pruneSet)
+print len(trainingSet)
+print len(maxSet)
+
+print all(item in list(maxSet.keys()) for item in list(pruneSet.keys()))
+print all(item in list(maxSet.keys()) for item in list(trainingSet.keys()))
 
 #Have to change so accepts tuple of tuples
 def euclideanDistance(instance1, instance2, length):
@@ -61,9 +65,14 @@ def testAccuracy():
 	count = 0;
 	for tester in pruneSet: 
 		most = getResponse(getNeighbors(tester,5))
-		print most
-		if(most == maxSet[tester]):
+		print most,
+		print ":",
+		print maxSet[tester]
+		#print type(most)
+		#print type(str(maxSet[tester]))
+		if(most == str(maxSet[tester])):
 	 		count+=1 
+	print float(count)/sizeTrainingSet
 	# ok = []
 	# for tester in pruneSet: 
 	# 	ok = getNeighbors(tester,5)
