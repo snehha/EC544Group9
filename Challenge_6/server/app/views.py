@@ -1,6 +1,7 @@
 #from app import app
 from flask import Flask, send_file, request, Response, render_template
 from flask_socketio import SocketIO,  send, emit
+from pyKnn import *
 
 app = Flask(__name__)
 
@@ -36,7 +37,7 @@ def testCoordinates():
 def sendMessage():
 	#global region
 	#print ('got refresh')
-	emit('location_event', region)
+	emit('location_event', getPrediction)
 	#testCoordinates()
 
 if __name__ == '__main__':
