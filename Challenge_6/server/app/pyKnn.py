@@ -31,7 +31,7 @@ def getPrediction():
     # if(counter == 5):
     #     print prediction
     #     counter = 0
-    return prediction
+    return int(prediction[6:])
     #threading.Timer(1,myTimer).start()
 
 # Have to change so accepts tuple of tuples
