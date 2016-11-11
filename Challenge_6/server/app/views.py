@@ -34,10 +34,10 @@ def testCoordinates():
 
 @socketio.on('refresh')
 def sendMessage():
-	global region
-	print ('got refresh')
+	#global region
+	#print ('got refresh')
 	emit('location_event', region)
-	testCoordinates()
+	#testCoordinates()
 
 if __name__ == '__main__':
 	socketio.run(app)

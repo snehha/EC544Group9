@@ -23,6 +23,8 @@ counter = 0
 L = []
 def myTimer():
     sample = getPhotonWifi()
+    #for tup in sample:
+    #    print tup
     prediction = predict(sample,5)
     # L.append(prediction)
     # counter += 1
@@ -30,7 +32,7 @@ def myTimer():
     #     print prediction
     #     counter = 0
     print prediction
-    threading.Timer(2,myTimer).start()
+    threading.Timer(1,myTimer).start()
 
 # Have to change so accepts tuple of tuples
 def euclideanDistance(instance1, instance2, length):
@@ -38,13 +40,17 @@ def euclideanDistance(instance1, instance2, length):
     count = 0;
     n = len(instance1) / 2
     for x in instance1:
+        myCount = 0;
         for y in instance2:
             if (x[0] == y[0]):
                 count += 1
+                myCount+=1
                 distance += pow((int(x[1]) - int(y[1])), 2)
+        if(myCount==0):
+            distance+=100
                 # print x[0]
-    if (count < n):
-        distance = 0
+    #if (count < n):
+    #    distance += 200
     # print distance
     return math.sqrt(distance)
 
@@ -61,6 +67,7 @@ def getNeighbors(testInstance, k):
     neighbors = []
     for x in range(k):
         neighbors.append(distances[x][0])
+        #print distances[x]
     # print neighbors
     return neighbors
 
@@ -74,7 +81,7 @@ def getResponse(neighbors):
         else:
             classVotes[response] = 1
     sortedVotes = sorted(classVotes.iteritems(), key=operator.itemgetter(1), reverse=True)
-    # print sortedVotes
+    print sortedVotes
     return sortedVotes[0][0]
 
 def predict(sample,k):
@@ -105,4 +112,4 @@ def predict(sample,k):
 # #print no
 # #print count/sizeTrainingSet
 
-myTimer()
+print(myTimer())
