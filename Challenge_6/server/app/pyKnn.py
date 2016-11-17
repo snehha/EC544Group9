@@ -25,7 +25,7 @@ def getPrediction():
     sample = getPhotonWifi()
     #for tup in sample:
     #    print tup
-    prediction = predict(sample,5)
+    prediction = predict(sample,7)
     # L.append(prediction)
     # counter += 1
     # if(counter == 5):
