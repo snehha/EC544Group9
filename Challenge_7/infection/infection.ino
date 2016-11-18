@@ -137,10 +137,12 @@ uint16_t readXBee() {
     if(messageRead[3] == 1) {
       clearReceived();
       sendClearInfection();
+      Serial.println("Clear infection message received");
     }
     else if(messageRead[3] == 2) {
       infectionReceived();
       spreadInfection();
+      Serial.println("Send infection Message received.");
     }
   
     return 0; // not sure what to return here
