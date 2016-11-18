@@ -97,6 +97,7 @@ void clearReceived() {
   // non leader receives a clear infection message
   infected = false;
   lightLED();
+  delay(2000); // cannot be infected 2 seconds after clear
 }
 
 // detects input of button with debouncing
