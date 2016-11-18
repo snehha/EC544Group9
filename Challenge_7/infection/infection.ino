@@ -5,17 +5,24 @@
 #define blueLED 6   // leader
 #define button 8 
 
+#define MAX_UID_SIZE 65535
+
 SoftwareSerial XBee(2, 3); // RX, TX
 
-bool leader = true;
+bool leader = false;
 bool infected = false;
 
 uint16_t uid;
 uint16_t leader_uid;
-byte *message = malloc(2);
+byte *message = malloc(4);
 int leaderCheckCount = 0;
 bool leaderAlive = true;
 
+void printMessage() {
+  for(int i = 0; i < 4; i++)
+    Serial.print(message[i]);
+   Serial.println();
+}
 void uidArray(byte *message, uint16_t uid, int infectionMsg, int isLeaderAlive){
   message[0] = (byte)(uid >> 8);
   message[1] = (byte)uid; 
@@ -35,6 +42,7 @@ void setup() {
   pinMode(greenLED, OUTPUT);
   pinMode(blueLED, OUTPUT);
   pinMode(button, INPUT);
+  uid = random(1, MAX_UID_SIZE);
   lightLED();
 }
 
@@ -70,8 +78,11 @@ void sendClearInfection() {
 
 // non-leader sends an infection message
 void spreadInfection() {
+  if(leader) return;  // leader cannot send infection message
   uidArray(message, uid, 2, leaderAlive);
   XBee.write((char*)message);
+  Serial.print("Sending infection message: ");
+  printMessage();
 }
 
 // non-leader receives an infection message
@@ -134,10 +145,13 @@ uint16_t readXBee() {
     }
   }
   if(xbeeAvailable) {
+    Serial.println("Message received: "); 
+    printMessage();
     if(messageRead[3] == 1) {
       clearReceived();
       sendClearInfection();
-      Serial.println("Clear infection message received");
+      Serial.println("Clear infection message received.");
+
     }
     else if(messageRead[3] == 2) {
       infectionReceived();
@@ -154,4 +168,5 @@ uint16_t readXBee() {
 
 void loop() {
   checkButtonInput();
+  readXBee();
 }
