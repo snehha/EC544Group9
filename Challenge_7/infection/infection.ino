@@ -1,17 +1,35 @@
+#include <SoftwareSerial.h>
+
 #define redLED 4    // infected
 #define greenLED 5  // not infected
 #define blueLED 6   // leader
 #define button 8 
 
+SoftwareSerial XBee(2, 3); // RX, TX
+
 bool leader = true;
 bool infected = false;
 
-int buttonState = LOW;      // current reading of button
+uint16_t uid;
+uint16_t leader_uid;
+byte *message = malloc(2);
+int leaderCheckCount = 0;
+bool leaderAlive = true;
+
+void uidArray(byte *message, uint16_t uid, int infectionMsg, int isLeaderAlive){
+  message[0] = (byte)(uid >> 8);
+  message[1] = (byte)uid; 
+  message[2] = (byte)infectionMsg;
+  message[3] = (byte)isLeaderAlive;
+}
+
+int buttonState;            // current reading of button
 int lastButtonState = LOW;  // the previous reading from the input pin
 long lastDebounceTime = 0;  // the last time button was toggled
 long debounceDelay = 50;    // the debounce time, increase if output flickers
 
 void setup() {
+  XBee.begin(9600);
   Serial.begin(9600);
   pinMode(redLED, OUTPUT);
   pinMode(greenLED, OUTPUT);
@@ -45,13 +63,15 @@ void lightLED() {
 }
 
 // The leader sends a clear infection message
-void clearInfection() {
-  if(!leader) return; // non-leaders cannot send clear infection message
+void sendClearInfection() {
+  uidArray(message, uid, 1, leaderAlive);
+  XBee.write((char*)message);
 }
 
 // non-leader sends an infection message
 void spreadInfection() {
-  if(leader) return;  // leaders cannot spread infection
+  uidArray(message, uid, 2, leaderAlive);
+  XBee.write((char*)message);
 }
 
 // non-leader receives an infection message
@@ -86,7 +106,7 @@ void checkButtonInput() {
       // button press was detected with debouncing taken into account
       if (buttonState == LOW) {
         Serial.println("button pressed");
-        if(leader) clearInfection();  // leader sends clear infection message
+        if(leader) sendClearInfection();  // leader sends clear infection message
         else {                        
           infected = true;            // non-leader is infected
           spreadInfection();          // non-leader sends infection message
@@ -97,6 +117,37 @@ void checkButtonInput() {
     }
   }
   lastButtonState = reading;
+}
+
+uint16_t readXBee() {
+  int counter = 0;
+  char messageRead[4];
+
+  bool xbeeAvailable = false;
+
+  while(XBee.available()) {
+    xbeeAvailable = true;
+    // message: uid doNothing(0)/clear(1)/send(2)Infection
+    messageRead[counter] = XBee.read();
+    if(counter++ == 3) {
+      break;
+    }
+  }
+  if(xbeeAvailable) {
+    if(messageRead[3] == 1) {
+      clearReceived();
+      sendClearInfection();
+    }
+    else if(messageRead[3] == 2) {
+      infectionReceived();
+      spreadInfection();
+    }
+  
+    return 0; // not sure what to return here
+  }
+  else {
+    return 0;
+  }
 }
 
 void loop() {
