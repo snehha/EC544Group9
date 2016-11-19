@@ -15,7 +15,7 @@ bool infected = false;
 uint16_t uid;
 uint16_t leader_uid;
 byte *message = (byte*) malloc(4);
-int leaderAlive = 1;
+char leaderAlive = '1';
 
 void printMessage() {
   for(int i = 0; i < 4; i++) {
@@ -24,7 +24,7 @@ void printMessage() {
   }
    Serial.println();
 }
-void uidArray(byte *message, uint16_t uid, int infectionMsg, int isLeaderAlive){
+void uidArray(byte *message, uint16_t uid, char infectionMsg, char isLeaderAlive){
   message[0] = (byte)(uid >> 8);
   message[1] = (byte)uid; 
   message[2] = (byte)infectionMsg;
@@ -73,14 +73,15 @@ void lightLED() {
 
 // The leader sends a clear infection message
 void sendClearInfection() {
-  uidArray(message, uid, 1, leaderAlive);
+   
+  uidArray(message, uid, '1', leaderAlive);
   XBee.write((char*)message);
 }
 
 // non-leader sends an infection message
 void spreadInfection() {
   if(leader) return;  // leader cannot send infection message
-  uidArray(message, uid, 2, leaderAlive);
+  uidArray(message, uid, '2', leaderAlive);
   XBee.write((char*)message);
   Serial.print("Sending infection message: ");
   printMessage();
@@ -119,9 +120,13 @@ void checkButtonInput() {
       // button press was detected with debouncing taken into account
       if (buttonState == LOW) {
         Serial.println("button pressed");
-        if(leader) sendClearInfection();  // leader sends clear infection message
+        if(leader) {
+          Serial.println("Sending clear.");
+          sendClearInfection();  // leader sends clear infection message
+        }
         else {                        
           infected = true;            // non-leader is infected
+          Serial.println("Sending infection.");
           spreadInfection();          // non-leader sends infection message
         }
 
@@ -150,14 +155,16 @@ uint16_t readXBee() {
     Serial.println("Message received: "); 
     printMessage();
     if(messageRead[2] == 1) {
+      if(!infected) return 0;
       clearReceived();
       sendClearInfection();
       Serial.println("Clear infection message received.");
 
     }
     else if(messageRead[2] == 2) {
+      if(infected) return 0;
       infectionReceived();
-      spreadInfection();
+      //spreadInfection();
       Serial.println("Send infection Message received.");
     }
   
