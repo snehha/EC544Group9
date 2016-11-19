@@ -37,7 +37,7 @@ void loop() {
     startElection();
   }
   else{
-    listenLeader();
+    listenOthers();
   }
 
 }
@@ -69,14 +69,16 @@ uint16_t readXBee(){
   }
   
 }
-void listenLeader(){
-
+void listenOthers(){
+ 
   if(leaderCheckCount == LEADER_CHECK){
     leader_uid = 0;
   }
 
-  afds// adsfadsgs!~@@@@## readXBee();
-  
+  int receivedData = readXBee();
+  if((uint16_t)(receivedData>>8) == leader)
+    leaderCheckCount++;
+  else if((byte)receivedID==0)
 }
 
 void readElection(){
