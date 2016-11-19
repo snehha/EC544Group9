@@ -15,12 +15,13 @@ bool infected = false;
 uint16_t uid;
 uint16_t leader_uid;
 byte *message = malloc(4);
-int leaderCheckCount = 0;
-bool leaderAlive = true;
+int leaderAlive = 1;
 
 void printMessage() {
-  for(int i = 0; i < 4; i++)
+  for(int i = 0; i < 4; i++) {
     Serial.print(message[i]);
+    Serial.print(" ");
+  }
    Serial.println();
 }
 void uidArray(byte *message, uint16_t uid, int infectionMsg, int isLeaderAlive){
