@@ -14,7 +14,7 @@ bool infected = false;
 
 uint16_t uid;
 uint16_t leader_uid;
-byte *message = malloc(4);
+byte *message = (byte*) malloc(4);
 int leaderAlive = 1;
 
 void printMessage() {
@@ -149,13 +149,13 @@ uint16_t readXBee() {
   if(xbeeAvailable) {
     Serial.println("Message received: "); 
     printMessage();
-    if(messageRead[3] == 1) {
+    if(messageRead[2] == 1) {
       clearReceived();
       sendClearInfection();
       Serial.println("Clear infection message received.");
 
     }
-    else if(messageRead[3] == 2) {
+    else if(messageRead[2] == 2) {
       infectionReceived();
       spreadInfection();
       Serial.println("Send infection Message received.");
