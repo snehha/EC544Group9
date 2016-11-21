@@ -124,8 +124,10 @@ void checkButtonInput() {
           Serial.println("Sending clear.");
           sendClearInfection();  // leader sends clear infection message
         }
-        else {                        
+        else {   
+          //if(infected) return;        // if already infected, cannot send another infection                     
           infected = true;            // non-leader is infected
+          lightLED();
           Serial.println("Sending infection.");
           spreadInfection();          // non-leader sends infection message
         }
@@ -144,28 +146,31 @@ uint16_t readXBee() {
   bool xbeeAvailable = false;
 
   while(XBee.available()) {
+    if(counter == 4) break;
     xbeeAvailable = true;
     // message: uid doNothing(0)/clear(1)/send(2)Infection
     messageRead[counter] = XBee.read();
-    if(counter++ == 3) {
-      break;
-    }
+    Serial.print("Reading Message at counter ");
+    Serial.print(counter);
+    Serial.print(": ");
+    Serial.println((int)messageRead[counter]);
+    counter++;
   }
   if(xbeeAvailable) {
     Serial.println("Message received: "); 
     printMessage();
+    Serial.println((byte)messageRead[0]);
     if(messageRead[2] == 1) {
       if(!infected) return 0;
       clearReceived();
       sendClearInfection();
       Serial.println("Clear infection message received.");
-
     }
     else if(messageRead[2] == 2) {
-      if(infected) return 0;
+      if(infected) return 0;    // cannot get infected again
       infectionReceived();
+      Serial.println("Infection message received.");
       //spreadInfection();
-      Serial.println("Send infection Message received.");
     }
   
     return 0; // not sure what to return here
