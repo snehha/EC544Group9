@@ -96,21 +96,27 @@ void statusTimer(){
    *  on the loop, it will read all messages but everytime it seems the
    *  correct leader, it will flip/keep the leaderAlive bool bit true.
    ***/
+
+  Serial.print("statusTimer:\t");
   if(leader_set){
+    Serial.print("Leader is set\t");
     lightLED();
     //Run if this Arduino is the leader
     if(leader){
       //Sent status
-      Serial.println("I'm the leader");
-      writeXBee(message_send,uid,1,1);
+      Serial.print("leader bit\t");
+      //writeXBee(message_send,uid,1,1);
     }
     //Run if this is a client node Arduino
     else{
+      Serial.print("follower bit\t");
       //If the leader is still false, count up to the LEADER_CHECK_COUNT
       if(!leader_alive){
+        Serial.print("Leader Check Count: ");
         //if the LEADER_CHECK_COUNT == leader timer check run, leader dead, set the leader_set to false
         if(++leader_check_count == LEADER_CHECK_COUNT)
           leader_set = false;
+        Serial.print(leader_check_count);
       }
       leader_alive = false;
     }
@@ -181,8 +187,7 @@ void readXBee(){
 
   //ASSUMING packet is recieved with 8 bytes together.
   while(XBee.available()){
-    Serial.print("Counter XBEE:");
-    Serial.println(xbee_avail_counter++); 
+    Serial.println("####################### Read Data #########################"); 
     char readByte = XBee.read();
     //Serial.print(int(readByte));
     //Serial.println(" ");
@@ -314,8 +319,7 @@ int listenOthers(){
     byte received_leader = message_receive[2];
     byte received_cmd = message_receive[3];
   
-    if(!received_uid){
-      Serial.println("xxxxxxxxxxxxxxxxxxxxx It's lonely in here xxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+    if(!received_uid){      
       break;
     }    
     //Received Leader data
