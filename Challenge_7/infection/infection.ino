@@ -154,6 +154,30 @@ void printReceivedMessage(char* messageRead) {
     }
 }
 
+void readMessage(char* messageRead) {
+   if(messageRead[2] == '0') return; // do nothing command
+   if(messageRead[2] == '1') {
+      Serial.println("------------------------------clear------------------------------");
+      if(!infected){
+        return;
+      }
+      Serial.println("Clear infection message received.");
+      clearReceived();
+      sendClearInfection();
+      Serial.println("------------------------------------------------------------");
+   }
+   else if(messageRead[2] == '2') {
+      Serial.println("------------------------------infection------------------------------");
+      if(infected){ // cannot get infected again
+        return;
+      }
+      Serial.println("Infection message received.");
+      infectionReceived();
+      spreadInfection();
+      Serial.println("------------------------------------------------------------");
+   }
+}
+
 unsigned int readXBee() {
   int counter = 0;
   char messageRead[4];
@@ -176,26 +200,7 @@ unsigned int readXBee() {
   if(xbeeAvailable) {
     printReceivedMessage(messageRead);
     Serial.println();
-    if((messageRead[2] == '1') && (messageRead[3] == '1')) {
-      Serial.println("------------------------------clear------------------------------");
-      if(!infected){
-        return 0;
-      }
-      Serial.println("Clear infection message received.");
-      clearReceived();
-      sendClearInfection();
-      Serial.println("------------------------------------------------------------");
-    }
-    else if(messageRead[2] == '2') {
-      Serial.println("------------------------------infection------------------------------");
-      if(infected){ // cannot get infected again
-        return 0;
-      }
-      Serial.println("Infection message received.");
-      infectionReceived();
-      spreadInfection();
-      Serial.println("------------------------------------------------------------");
-    }
+    readMessage(messageRead);
     return 0; // not sure what to return here
   }
   else {
