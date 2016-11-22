@@ -8,7 +8,7 @@
 #define button 8 
 
 #define ELECTION_TIMEOUT 3
-#define LEADER_CHECK_COUNT 5
+#define LEADER_CHECK_COUNT 15
 #define LEADER_CHECK_TIME 2000
 #define MAX_UID_SIZE 65535
 //Append UID to the election_start/end
@@ -25,6 +25,7 @@ byte *message_send = malloc(8);
 byte *message_receive = malloc(4);
 int leader_check_count = 0;
 int election_count = 0;
+int xbee_avail_counter = 0;
 Timer t;
 
 void setup() {
@@ -52,6 +53,9 @@ void setup() {
   pinMode(greenLED, OUTPUT);
   pinMode(blueLED, OUTPUT);
   pinMode(button, INPUT);
+
+  while(XBee.available())
+    char dont_care = XBee.read();
   
 }
 
@@ -61,13 +65,13 @@ void lightLED() {
     digitalWrite(blueLED, HIGH);
     digitalWrite(greenLED, LOW);
     digitalWrite(redLED, LOW);
-    Serial.println("Leader");
+    Serial.println("Leader Light");
   }
   if(!leader) {
     digitalWrite(blueLED, LOW);
     digitalWrite(greenLED, HIGH);
     digitalWrite(redLED, LOW);
-    Serial.println("Not Leader");
+    Serial.println("Not Leader Light");
   }
 }
 
@@ -97,7 +101,7 @@ void statusTimer(){
     //Run if this Arduino is the leader
     if(leader){
       //Sent status
-      //Serial.println("I'm the leader");
+      Serial.println("I'm the leader");
       writeXBee(message_send,uid,1,1);
     }
     //Run if this is a client node Arduino
@@ -150,20 +154,22 @@ void preamMes(byte *message, uint16_t uid, byte infectionStatus, byte leaderStat
 
 void clearArray(byte* message, int count){
   for(int i = 0; i < count; i++)
-    message[count] = '\0';
+    message[i] = 0;
 }
 
 
 void writeXBee(byte* message,uint16_t uid, byte infectionStatus, byte leaderStatus){
   preamMes(message, uid, infectionStatus, leaderStatus);
   XBee.write((char*)message);
-  Serial.println("+++++++ Sending Data Log +++++++");
+  delay(10);
+  Serial.print("+++++++ Sending Data Log +++++++            ");
   printMessage(message,8);
 }
 
 
-unsigned int readXBee(){
+void readXBee(){
   clearArray(message_receive,4);
+  printMessage(message_receive,4);
 
   //Count four bytes and set xbeeAvailable to true
   int counter = 0;
@@ -173,12 +179,14 @@ unsigned int readXBee(){
   int count_ones = 0;
   bool data_clean = false;
 
-  //ASSUMING packet is recieved with four bytes together.
+  //ASSUMING packet is recieved with 8 bytes together.
   while(XBee.available()){
+    Serial.print("Counter XBEE:");
+    Serial.println(xbee_avail_counter++); 
     char readByte = XBee.read();
-    Serial.print(int(readByte));
-    Serial.print(" ");
-    if ((readByte == -1) && !data_clean){
+    //Serial.print(int(readByte));
+    //Serial.println(" ");
+    if (((byte)readByte == 255) && !data_clean){
       count_ones++;
       if(count_ones == 4){
         data_clean = true;
@@ -188,32 +196,22 @@ unsigned int readXBee(){
         continue;
     }
     else{
-      if(counter < 4){
+      if(counter < 3){
         message_receive[counter++] = readByte;
       }
       else{
         xbeeAvailable = true;
         data_clean = false;
-        Serial.println("Printing");
         break;
       }
     }
   }
   if (xbeeAvailable) {
-    Serial.println("****** Received Data Log ********");
+    Serial.print("****** Received Data Log ********                 ");
     printMessage(message_receive,4);
-    unsigned int receivedData = (byte)(message_receive[0]);
-    receivedData <<= 8;
-    receivedData |= (int)message_receive[1];
-    receivedData <<= 8;
-    receivedData |= (int)message_receive[2];
-    receivedData <<= 8;
-    receivedData |= (int)message_receive[3];
-    return receivedData;
   }
   else{
-    //Serial.println("No data received");
-    return 0;
+    clearArray(message_receive,4);
   }
 }
 
@@ -222,13 +220,11 @@ unsigned int readXBee(){
 void runElection(){
   
     Serial.println("Running Election");
-    //Change to four bytes
-    if(!leader_set)
-      leader_uid = 0;
     if(leader_uid < uid){
-      Serial.print("I'm running for prez with: ");
-      Serial.println(uid);
-      //Change to four bytes
+      //Serial.print("I'm running for prez with: ");
+      //Serial.println(uid);
+      Serial.print("Leader uid is: ");
+      Serial.println(leader_uid);
       writeXBee(message_send,uid,1,1);
       previous_uid = uid;
     }
@@ -241,20 +237,25 @@ void readElection(){
   //if read higher id stay silent, otherwise broadcast "leader"
 
   while(1){
-    Serial.println("---------Reading 8 bytes if available---------");
-    unsigned int receivedData = readXBee();
-    uint16_t received_uid = (uint16_t)(receivedData >> 16);
-    byte received_leader = (byte)(receivedData >> 8);
-    byte received_cmd = (byte)receivedData;
+    readXBee();
+    uint16_t received_uid = ((((uint16_t)message_receive[0]) << 8) | (uint16_t)message_receive[1]);
+    byte received_leader = message_receive[2];
+    byte received_cmd = message_receive[3];
 
-    if(!receivedData){
+    Serial.print("Uint16_t uid: ");
+    Serial.println(received_uid);
+
+    if(!received_uid){
       if(previous_uid == uid){
         Serial.print("No read and alone -- UID: ");
         Serial.println(previous_uid);
         if(++election_count == ELECTION_TIMEOUT){
           leader_set = true;
+          leader = true;
+          break;
         }
       }
+      previous_uid = uid;
       break;
     }
     //****** IF receivedID is ZERO don't do this below **********//
@@ -264,12 +265,20 @@ void readElection(){
       Serial.print("Im still in it: ");
       Serial.println(uid);
       //Change to four bytes
+      election_count++;
       writeXBee(message_send,uid,1,1);
     }
-    else if(received_uid > leader_uid){
+    if(received_uid > uid){
+      leader = false;
       leader_uid = received_uid;
-      election_count = 0;
-      Serial.print("Lost. Received Highest uid: ");
+      leader_set = true;
+      Serial.println("Lost");
+    }
+    if(received_uid > leader_uid){
+      leader_uid = received_uid;
+      election_count++;
+      leader_set = true;
+      Serial.print("Received Highest uid: ");
       Serial.println(leader_uid);
     }
     if(previous_uid == received_uid){
@@ -277,11 +286,15 @@ void readElection(){
       Serial.println(previous_uid);
       if(++election_count == ELECTION_TIMEOUT){
         leader_set = true;
+        leader = true;
+        Serial.println("Leader Decided");
+        break;
       }
     }
     
     previous_uid = received_uid;
   }
+  
 }
 /****************************************/
 
@@ -292,17 +305,22 @@ void readElection(){
 int listenOthers(){
 
   while(1){
+    if(leader){
+      writeXBee(message_send,uid,1,1);
+    }
     //4 bytes received with 2 bytes ID, 1 byte leader, 1 byte cmd
-    int receivedData = readXBee();
-    uint16_t received_uid = (uint16_t)(receivedData >> 16);
-    byte received_leader = (byte)(receivedData >> 8);
-    byte received_cmd = (byte)receivedData;
+    readXBee();
+    uint16_t received_uid = ((((uint16_t)message_receive[0]) << 8) | (uint16_t)message_receive[1]);
+    byte received_leader = message_receive[2];
+    byte received_cmd = message_receive[3];
   
-    if(!receivedData){
+    if(!received_uid){
+      Serial.println("xxxxxxxxxxxxxxxxxxxxx It's lonely in here xxxxxxxxxxxxxxxxxxxxxxxxxxxx");
       break;
     }    
     //Received Leader data
-    if(received_uid == leader){
+    if(received_uid == leader_uid){
+      Serial.println("----------------------------------I HEARD THE LEARDEAR----------------------------------");
       //Make sure it is leader for debugging by getting ID
       if(received_leader == 1){
         leader_check_count = 0;
