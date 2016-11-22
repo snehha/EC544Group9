@@ -20,9 +20,11 @@ int electionCount = 0;
 int electionCountMax = 4;
 Timer t;
 
-void uidArray(byte *message, uint16_t uid){
+void uidArray(byte *message, uint16_t uid, byte infectionStatus, byte leaderStatus){
   message[0] = (byte)(uid >> 8);
-  message[1] = (byte)uid;
+  message[1] = (byte)uid; 
+  message[2] = infectionStatus;
+  message[3] = leaderStatus;
 }
 
 void setup() {
