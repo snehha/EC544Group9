@@ -98,7 +98,7 @@ void statusTimer(){
     if(leader){
       //Sent status
       //Serial.println("I'm the leader");
-      writeXBee(message_send,uid,0,1);
+      writeXBee(message_send,uid,1,1);
     }
     //Run if this is a client node Arduino
     else{
@@ -115,15 +115,25 @@ void statusTimer(){
     runElection();
 }
 
-void printMessage(byte* message){
-  //Serial.print("Preamble: ");
-  //Serial.print((int)(message[0] & message[1] & message[2] & message[3]));
-  Serial.print("\tUID: ");
-  Serial.print((((uint16_t)(message[4])) << 8) | (uint16_t)(message[5]));
-  Serial.print("\tCommand: ");
-  Serial.print((uint16_t)message[6]);
-  Serial.print("\tStatus: ");
-  Serial.println((uint16_t)message[7]);
+void printMessage(byte* message,int count){
+  if(count == 8){
+    Serial.print("Preamble: ");
+    Serial.print((int)(message[0] & message[1] & message[2] & message[3]));
+    Serial.print("\tUID: ");
+    Serial.print((((uint16_t)(message[4])) << 8) | (uint16_t)(message[5]));
+    Serial.print("\tCommand: ");
+    Serial.print((uint16_t)message[6]);
+    Serial.print("\tStatus: ");
+    Serial.println((uint16_t)message[7]);
+  }
+  else{
+    Serial.print("\tUID: ");
+    Serial.print((((uint16_t)(message[0])) << 8) | (uint16_t)(message[1]));
+    Serial.print("\tCommand: ");
+    Serial.print((uint16_t)message[2]);
+    Serial.print("\tStatus: ");
+    Serial.println((uint16_t)message[3]);
+  }
 }
 
 
@@ -148,7 +158,7 @@ void writeXBee(byte* message,uint16_t uid, byte infectionStatus, byte leaderStat
   preamMes(message, uid, infectionStatus, leaderStatus);
   XBee.write((char*)message);
   Serial.println("+++++++ Sending Data Log +++++++");
-  printMessage(message);
+  printMessage(message,8);
 }
 
 
@@ -166,7 +176,8 @@ unsigned int readXBee(){
   //ASSUMING packet is recieved with four bytes together.
   while(XBee.available()){
     char readByte = XBee.read();
-    //Serial.print(int(readByte));
+    Serial.print(int(readByte));
+    Serial.print(" ");
     if ((readByte == -1) && !data_clean){
       count_ones++;
       if(count_ones == 4){
@@ -177,20 +188,20 @@ unsigned int readXBee(){
         continue;
     }
     else{
-      Serial.print(int(readByte));
-      Serial.print(" ");
       if(counter < 4){
         message_receive[counter++] = readByte;
       }
       else{
+        xbeeAvailable = true;
+        data_clean = false;
+        Serial.println("Printing");
         break;
       }
     }
   }
-
   if (xbeeAvailable) {
     Serial.println("****** Received Data Log ********");
-    printMessage(message_receive);
+    printMessage(message_receive,4);
     unsigned int receivedData = (byte)(message_receive[0]);
     receivedData <<= 8;
     receivedData |= (int)message_receive[1];
@@ -204,7 +215,6 @@ unsigned int readXBee(){
     //Serial.println("No data received");
     return 0;
   }
-  
 }
 
 
@@ -219,7 +229,7 @@ void runElection(){
       Serial.print("I'm running for prez with: ");
       Serial.println(uid);
       //Change to four bytes
-      writeXBee(message_send,uid,0,0);
+      writeXBee(message_send,uid,1,1);
       previous_uid = uid;
     }
 
@@ -231,6 +241,7 @@ void readElection(){
   //if read higher id stay silent, otherwise broadcast "leader"
 
   while(1){
+    Serial.println("---------Reading 8 bytes if available---------");
     unsigned int receivedData = readXBee();
     uint16_t received_uid = (uint16_t)(receivedData >> 16);
     byte received_leader = (byte)(receivedData >> 8);
@@ -253,7 +264,7 @@ void readElection(){
       Serial.print("Im still in it: ");
       Serial.println(uid);
       //Change to four bytes
-      writeXBee(message_send,uid,0,0);
+      writeXBee(message_send,uid,1,1);
     }
     else if(received_uid > leader_uid){
       leader_uid = received_uid;
