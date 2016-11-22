@@ -116,8 +116,8 @@ void statusTimer(){
 }
 
 void printMessage(byte* message){
-  Serial.print("Preamble: ");
-  Serial.print((int)(message[0] & message[1] & message[2] & message[3]));
+  //Serial.print("Preamble: ");
+  //Serial.print((int)(message[0] & message[1] & message[2] & message[3]));
   Serial.print("\tUID: ");
   Serial.print((((uint16_t)(message[4])) << 8) | (uint16_t)(message[5]));
   Serial.print("\tCommand: ");
@@ -127,7 +127,7 @@ void printMessage(byte* message){
 }
 
 
-void uidArray(byte *message, uint16_t uid, byte infectionStatus, byte leaderStatus){
+void preamMes(byte *message, uint16_t uid, byte infectionStatus, byte leaderStatus){
   message[0] = 255;
   message[1] = 255;
   message[2] = 255;
@@ -144,8 +144,8 @@ void clearArray(byte* message, int count){
 }
 
 
-void writeXBee(char* message,uint16_t uid, byte infectionStatus, byte leaderStatus){
-  uidArray(message, uid, infectionStatus, leaderStatus);
+void writeXBee(byte* message,uint16_t uid, byte infectionStatus, byte leaderStatus){
+  preamMes(message, uid, infectionStatus, leaderStatus);
   XBee.write((char*)message);
   Serial.println("+++++++ Sending Data Log +++++++");
   printMessage(message);
@@ -154,19 +154,23 @@ void writeXBee(char* message,uint16_t uid, byte infectionStatus, byte leaderStat
 
 unsigned int readXBee(){
   clearArray(message_receive,4);
+
+  //Count four bytes and set xbeeAvailable to true
   int counter = 0;
   bool xbeeAvailable = false;
-  bool temp = false;
+
+  //Count four -1 and set data_clean to true
   int count_ones = 0;
+  bool data_clean = false;
 
   //ASSUMING packet is recieved with four bytes together.
   while(XBee.available()){
     char readByte = XBee.read();
     //Serial.print(int(readByte));
-    if ((readByte == -1) && !temp){
+    if ((readByte == -1) && !data_clean){
       count_ones++;
       if(count_ones == 4){
-        temp = true;
+        data_clean = true;
         counter = 0;
       }
       else
@@ -176,12 +180,10 @@ unsigned int readXBee(){
       Serial.print(int(readByte));
       Serial.print(" ");
       if(counter < 4){
-        message_receive[counter] = readByte;
-        counter++;
+        message_receive[counter++] = readByte;
       }
       else{
-        temp = false;
-        count_ones = 0;
+        break;
       }
     }
   }
@@ -189,12 +191,13 @@ unsigned int readXBee(){
   if (xbeeAvailable) {
     Serial.println("****** Received Data Log ********");
     printMessage(message_receive);
-    unsigned int receivedData = (byte)(message_receive[4]);
+    unsigned int receivedData = (byte)(message_receive[0]);
     receivedData <<= 8;
-    receivedData |= (int)message_receive[5];
+    receivedData |= (int)message_receive[1];
     receivedData <<= 8;
-    receivedData |= (int)message_receive[6];
+    receivedData |= (int)message_receive[2];
     receivedData <<= 8;
+    receivedData |= (int)message_receive[3];
     return receivedData;
   }
   else{
