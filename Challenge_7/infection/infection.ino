@@ -1,8 +1,8 @@
 #include <SoftwareSerial.h>
 
 #define redLED 4    // infected
-#define greenLED 5  // not infected
-#define blueLED 6   // leader
+#define greenLED 6  // not infected
+#define blueLED 5   // leader
 #define button 8 
 
 #define MAX_UID_SIZE 65535
@@ -125,7 +125,7 @@ void checkButtonInput() {
           sendClearInfection();  // leader sends clear infection message
         }
         else {   
-          //if(infected) return;        // if already infected, cannot send another infection                     
+          //if(infected) return;        // if already infected, cannot get another infection                     
           infected = true;            // non-leader is infected
           lightLED();
           Serial.println("Sending infection.");
