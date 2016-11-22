@@ -146,10 +146,17 @@ void checkButtonInput() {
   lastButtonState = reading;
 }
 
-void readXBee() {
+void printReceivedMessage(char* messageRead) {
+  Serial.println("Message received: "); 
+    for(int i = 0; i < 4; i++) {
+      Serial.print((int)messageRead[i]);
+      Serial.print(" ");
+    }
+}
+
+unsigned int readXBee() {
   int counter = 0;
   char messageRead[4];
-  //int read_flag = 0;
   bool xbeeAvailable = false;
 
   while(XBee.available()) {
@@ -167,16 +174,12 @@ void readXBee() {
     counter++;
   }
   if(xbeeAvailable) {
-    Serial.println("Message received: "); 
-    for(int i = 0; i < 4; i++) {
-      Serial.print((int)messageRead[i]);
-      Serial.print(" ");
-    }
+    printReceivedMessage(messageRead);
     Serial.println();
     if((messageRead[2] == '1') && (messageRead[3] == '1')) {
       Serial.println("------------------------------clear------------------------------");
       if(!infected){
-        return;
+        return 0;
       }
       Serial.println("Clear infection message received.");
       clearReceived();
@@ -186,17 +189,17 @@ void readXBee() {
     else if(messageRead[2] == '2') {
       Serial.println("------------------------------infection------------------------------");
       if(infected){ // cannot get infected again
-        return;
+        return 0;
       }
       Serial.println("Infection message received.");
       infectionReceived();
       spreadInfection();
       Serial.println("------------------------------------------------------------");
     }
-    return; // not sure what to return here
+    return 0; // not sure what to return here
   }
   else {
-    return;
+    return 0;
   }
 }
 
