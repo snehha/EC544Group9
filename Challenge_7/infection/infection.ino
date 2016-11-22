@@ -11,6 +11,7 @@ SoftwareSerial XBee(2, 3); // RX, TX
 
 bool leader = false;
 bool infected = false;
+bool immune = false;
 
 uint16_t uid;
 uint16_t leader_uid;
@@ -74,8 +75,8 @@ void lightLED() {
 // The leader sends a clear infection message
 void sendClearInfection() {
    
-  uidArray(message, uid, '1', leaderAlive);
-  Serial.print("Sending clear message");
+  uidArray(message, (uint16_t)65535, '1', leaderAlive);
+  Serial.print("Sending clear message: ");
   printMessage();
   XBee.write((char*)message);
 }
@@ -87,7 +88,7 @@ void spreadInfection() {
   }
   Serial.print("Sending infection message: ");
   printMessage();
-  uidArray(message, uid, '2', leaderAlive);
+  uidArray(message, (uint16_t)65535, '2', leaderAlive);
   XBee.write((char*)message);
 }
 
@@ -104,7 +105,8 @@ void clearReceived() {
   // non leader receives a clear infection message
   infected = false;
   lightLED();
-  delay(2000); // cannot be infected 2 seconds after clear
+  //delay(2000); // cannot be infected 2 seconds after clear
+  immune = true;
 }
 
 // detects input of button with debouncing
@@ -166,13 +168,12 @@ void readXBee() {
   }
   if(xbeeAvailable) {
     Serial.println("Message received: "); 
-    //printMessage();
     for(int i = 0; i < 4; i++) {
       Serial.print((int)messageRead[i]);
       Serial.print(" ");
     }
     Serial.println();
-    if((messageRead[2] == '1') && (messageRead[2] == '1')) {
+    if((messageRead[2] == '1') && (messageRead[3] == '1')) {
       Serial.println("------------------------------clear------------------------------");
       if(!infected){
         return;
@@ -184,12 +185,12 @@ void readXBee() {
     }
     else if(messageRead[2] == '2') {
       Serial.println("------------------------------infection------------------------------");
-      if(infected){
-        return;    // cannot get infected again
+      if(infected){ // cannot get infected again
+        return;
       }
       Serial.println("Infection message received.");
       infectionReceived();
-      //spreadInfection();
+      spreadInfection();
       Serial.println("------------------------------------------------------------");
     }
     return; // not sure what to return here
@@ -200,6 +201,12 @@ void readXBee() {
 }
 
 void loop() {
-  checkButtonInput();
+  if(!immune){
+    checkButtonInput();
+  }
+  else {
+    delay(2000);
+    immune = false;
+  }
   readXBee();
 }
