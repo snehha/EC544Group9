@@ -151,7 +151,8 @@ void printReceivedMessage(char* messageRead) {
     for(int i = 0; i < 4; i++) {
       Serial.print((int)messageRead[i]);
       Serial.print(" ");
-    }
+  }
+  Serial.println();
 }
 
 void readMessage(char* messageRead) {
@@ -199,7 +200,6 @@ unsigned int readXBee() {
   }
   if(xbeeAvailable) {
     printReceivedMessage(messageRead);
-    Serial.println();
     readMessage(messageRead);
     return 0; // not sure what to return here
   }
