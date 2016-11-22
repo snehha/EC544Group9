@@ -75,6 +75,8 @@ void lightLED() {
 void sendClearInfection() {
    
   uidArray(message, uid, '1', leaderAlive);
+  Serial.print("Sending clear message");
+  printMessage();
   XBee.write((char*)message);
 }
 
@@ -82,15 +84,16 @@ void sendClearInfection() {
 void spreadInfection() {
   if(leader) return;  // leader cannot send infection message
   uidArray(message, uid, '2', leaderAlive);
-  XBee.write((char*)message);
   Serial.print("Sending infection message: ");
   printMessage();
+  XBee.write((char*)message);
+  
+  
 }
 
 // non-leader receives an infection message
 void infectionReceived() {
   if(leader) return;  // leaders cannot get infected
-  
   infected = true;
   lightLED();
 }
@@ -131,7 +134,6 @@ void checkButtonInput() {
           Serial.println("Sending infection.");
           spreadInfection();          // non-leader sends infection message
         }
-
         lightLED(); // change state of LEDs accordingly
       }
     }
@@ -160,19 +162,18 @@ uint16_t readXBee() {
     Serial.println("Message received: "); 
     printMessage();
     Serial.println((byte)messageRead[0]);
-    if(messageRead[2] == 1) {
+    if(messageRead[2] == '1') {
       if(!infected) return 0;
       clearReceived();
       sendClearInfection();
       Serial.println("Clear infection message received.");
     }
-    else if(messageRead[2] == 2) {
+    else if(messageRead[2] == '2') {
       if(infected) return 0;    // cannot get infected again
       infectionReceived();
       Serial.println("Infection message received.");
       //spreadInfection();
     }
-  
     return 0; // not sure what to return here
   }
   else {
