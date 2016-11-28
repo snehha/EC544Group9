@@ -18,6 +18,8 @@ SoftwareSerial XBee(2, 3); // RX, TX
 bool leader_set;  //Leader has been determined
 bool leader;  //I am the leader
 bool leader_alive;  //Received msg from leader after previous timeout check
+bool infected;
+bool immune;
 
 uint16_t uid; //My uid
 uint16_t leader_uid;  //Leader uid
@@ -34,6 +36,10 @@ int election_count = 0;
 int xbee_avail_counter = 0;
 
 
+int buttonState;            // current reading of button
+int lastButtonState = LOW;  // the previous reading from the input pin
+long lastDebounceTime = 0;  // the last time button was toggled
+long debounceDelay = 50;    // the debounce time, increase if output flickers
 
 //Timer to send and receive
 Timer t;
@@ -52,6 +58,8 @@ void setup() {
   leader = true;
   leader_set = false;
   leader_alive = false;
+  infected = false;
+  immune = false;
   leader_uid = uid;
   previous_leader = uid;
   clearArray(message_send,send_size);
@@ -82,19 +90,103 @@ void lightLED() {
       digitalWrite(blueLED, HIGH);
       digitalWrite(greenLED, LOW);
       digitalWrite(redLED, LOW);
+      Serial.println("Leader");
     }
-    if(!leader) {
-      digitalWrite(blueLED, LOW);
+  
+    if(!leader && !infected) {
       digitalWrite(greenLED, HIGH);
+      digitalWrite(blueLED, LOW);
       digitalWrite(redLED, LOW);
+      Serial.println("not infected");
+    }
+  
+    if(!leader && infected) {
+      digitalWrite(redLED, HIGH);
+      digitalWrite(blueLED, LOW);
+      digitalWrite(greenLED, LOW);
+      Serial.println("infected");
     }
   }
+}
+
+// The leader sends a clear infection message
+void sendClearInfection() {
+   
+  writeXBee(message_send, (uint16_t)uid, 1, 1);
+  Serial.print("Sending clear message: ");
+}
+
+// non-leader sends an infection message
+void spreadInfection() {
+  if(leader) {
+    return;  // leader cannot send infection message
+  }
+  Serial.print("Sending infection message: ");
+  writeXBee(message_send, (uint16_t)uid,2,2);
+}
+
+// non-leader receives an infection message
+void infectionReceived() {
+  if(leader){
+    return;  // leaders cannot get infected
+  }
+  infected = true;
+  lightLED();
+}
+
+void clearReceived() {
+  // non leader receives a clear infection message
+  infected = false;
+  lightLED();
+  //delay(2000); // cannot be infected 2 seconds after clear
+  immune = true;
+}
+
+// detects input of button with debouncing
+void checkButtonInput() {
+  int reading = digitalRead(button);  // current reading of button, debouncing
+
+  // switch changed due to noise or pressing
+  if (reading != lastButtonState) {
+    lastDebounceTime = millis();      // reset the debouncing timer
+  }
+
+  // delay time for debouncing has been reached
+  if ((millis() - lastDebounceTime) > debounceDelay) {
+
+    if (reading != buttonState) {     // button state changed
+      buttonState = reading;
+
+      // button press was detected with debouncing taken into account
+      if (buttonState == LOW) {
+        Serial.println("button pressed");
+        if(leader) {
+          Serial.println("Sending clear.");
+          sendClearInfection();  // leader sends clear infection message
+        }
+        else {   
+          //if(infected) return;        // if already infected, cannot get another infection                     
+          infected = true;            // non-leader is infected
+          lightLED();
+          Serial.println("Sending infection.");
+          spreadInfection();          // non-leader sends infection message
+          return;
+        }
+        lightLED(); // change state of LEDs accordingly
+      }
+    }
+  }
+  lastButtonState = reading;
 }
 
 void loop() {
   //Leader_set will only be set true after runElection
   if(leader_set)
     listenOthers();
+
+  if(!immune){
+    checkButtonInput();
+  }
     
   //Update Timer
   t.update();
@@ -223,7 +315,7 @@ void runElection(){
     if(leader_uid == uid){
       Serial.print("I'm running for prez with: ");
       Serial.println(uid);
-      writeXBee(message_send,uid,1,1);
+      writeXBee(message_send,uid,1,3);
       previous_leader = uid;
     }
 
@@ -259,7 +351,7 @@ void readElection(){
     printMessage(message_receive,4);
 
     //Still in it so listen
-    if(received_uid < uid && leader){
+    if(received_uid <= uid && leader){
       previous_leader = uid;
       Serial.println("Received lower uid.Still Leader");
       //election_count++;
@@ -314,9 +406,9 @@ void listenOthers(){
         leader_check_count = 0;
         leader_alive = true;
         //Command from leader
-        if(received_cmd==1)
-          //RUN CODE FOR CLEAR
-          continue;
+        if(received_cmd==1){
+          clearReceived();
+        }
       }
      }
     //Someone else thinks they are leader
@@ -330,9 +422,10 @@ void listenOthers(){
       }
     }
     //Node wants to infect
-    else if(received_cmd==2)
-      //RUN CODE FOR INFECTION
+    else if(received_cmd==2){
+      infectionReceived();
       continue;
+    }
   }
 }
 /******************************************/
@@ -358,15 +451,23 @@ void statusTimer(){
     if(leader){
       //Sent status
       Serial.println("I'm the leader");
-      writeXBee(message_send,uid,1,1);
+      writeXBee(message_send,uid,1,3);
     }
     //Run if this is a client node Arduino
     else{
+      if(immune)
+        immune = false;
+      else if(infected)
+        spreadInfection();
       //If the leader is still false, count up to the LEADER_CHECK_COUNT
       if(!leader_alive){
         //if the LEADER_CHECK_COUNT == leader timer check run, leader dead, set the leader_set to false
-        if(++leader_check_count == LEADER_CHECK_COUNT)
+        if(++leader_check_count == LEADER_CHECK_COUNT){
+          leader_uid = 0;
+          previous_leader = uid;
           leader_set = false;
+          leader = true;
+        }
       }
       leader_alive = false;
     }
