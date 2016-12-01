@@ -23,7 +23,8 @@ void setup() {
 }
 
 void loop() {
-  if(!digitalRead(3)){
+  //if(!digitalRead(3)){
+    Serial.print("Printing some stuff: ");
     Serial.println(myLidarLite.distanceContinuous());
-  }
+  //}
 }

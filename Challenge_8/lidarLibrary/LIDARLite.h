@@ -34,9 +34,11 @@ class LIDARLite
   public:
       LIDARLite();
       void begin(int = 0, bool = false, char = LIDARLITE_ADDR_DEFAULT);
+      void beginContinuous(bool = true, char = 0x04, char = 0xff, char = 0x62);
       void configure(int = 0, char = LIDARLITE_ADDR_DEFAULT);
       void reset(char = LIDARLITE_ADDR_DEFAULT);
       int distance(bool = true, char = LIDARLITE_ADDR_DEFAULT);
+      int distanceContinuous(char = 0x62);
       void write(char, char, char = LIDARLITE_ADDR_DEFAULT);
       void read(char, int, byte*, bool, char);
       void correlationRecordToSerial(char = '\n', int = 256, char = LIDARLITE_ADDR_DEFAULT);
