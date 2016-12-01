@@ -23,10 +23,13 @@
 
 ------------------------------------------------------------------------------*/
 
-#include <Arduino.h>
-#include <Wire.h>
+#include <Particle.h>
+//#include <Wire.h>
 #include <stdarg.h>
 #include "LIDARLite.h"
+
+#define TWBR 72
+#define F_CPU 16000000
 
 /*------------------------------------------------------------------------------
   Constructor
@@ -56,7 +59,7 @@ void LIDARLite::begin(int configuration, bool fasti2c, char lidarliteAddress)
     #if ARDUINO >= 157
       Wire.setClock(400000UL); // Set I2C frequency to 400kHz, for Arduino Due
     #else
-      TWBR = ((F_CPU / 400000UL) - 16) / 2; // Set I2C frequency to 400kHz
+      long TWBR = ((F_CPU / 400000UL) - 16) / 2; // Set I2C frequency to 400kHz
     #endif
   }
   configure(configuration, lidarliteAddress); // Configuration settings

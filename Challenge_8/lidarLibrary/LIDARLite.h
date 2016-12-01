@@ -27,7 +27,7 @@
 
 #define LIDARLITE_ADDR_DEFAULT 0x62
 
-#include <Arduino.h>
+#include <Particle.h>
 
 class LIDARLite
 {
