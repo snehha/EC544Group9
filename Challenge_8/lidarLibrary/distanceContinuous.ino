@@ -26,5 +26,7 @@ void loop() {
   //if(!digitalRead(3)){
     Serial.print("Printing some stuff: ");
     Serial.println(myLidarLite.distanceContinuous());
+
+    delay(1000);
   //}
 }
