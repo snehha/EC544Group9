@@ -87,9 +87,9 @@ void setup() {
 
     setupCrawler();
 
-    wifiThread = new Thread("sample", scanWifi);
+    //wifiThread = new Thread("sample", scanWifi);
     servoThread = new Thread("sample", moveServo);
-    crawlerThread = new Thread("sample", crawler);
+    //crawlerThread = new Thread("sample", crawler);
 
     ignoreWifiName = WiFi.SSID();
 }
