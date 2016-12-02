@@ -85,13 +85,13 @@ void setup() {
 
     lidarServo.attach(D3);
 
+    setupCrawler();
+
     wifiThread = new Thread("sample", scanWifi);
     servoThread = new Thread("sample", moveServo);
     crawlerThread = new Thread("sample", crawler);
 
     ignoreWifiName = WiFi.SSID();
-
-    setupCrawler();
 }
 
 
