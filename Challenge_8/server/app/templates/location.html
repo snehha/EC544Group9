@@ -135,16 +135,28 @@
 
    var refreshTimer = setInterval(triggerRefresh, 1000);
 
+   // Particle Functions
+
+   var deviceID    = "<< device id >>";
+   var accessToken = "<< access token >>";
+
    function moveCar(command) {
       // moves car
-      socket.emit('moveCar',command);
+      //socket.emit('moveCar',command);
+
+      // particle.function
+      var requestURL = "https://api.spark.io/v1/devices/" + deviceID + "/" + 'moveCar' + "/";
+        $.post( requestURL, { params: command, access_token: accessToken });
    }
 
    var start = true;
 
    function startCar() {
       // send command to start/stop car
-      socket.emit('startCar',start);
+      //socket.emit('startCar',start);
+      // particle.function
+      var requestURL = "https://api.spark.io/v1/devices/" + deviceID + "/" + 'startCar' + "/";
+        $.post( requestURL, { params: start, access_token: accessToken });
 
       // toggles button for start and stop car
       start = !start;
