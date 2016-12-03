@@ -32,7 +32,8 @@
       <img src="{{ url_for('video_feed') }}">
     </div>
     <div id="controlArrows">
-    <h1 style="position: absolute; top: 100px; left: 930px">Remote Control</h1>
+      <h1 style="position: absolute; top: 100px; left: 835px">Remote Control</h1>
+      <input id="autopilotButton" type="button" value = "Turn autopilot on" onclick="return autopilot();" style="position: absolute; top: 127px; left: 1120px"/>
       <input type="image" src="/static/uparrow.png" id="upArrow" onclick="return moveCar('up');" style="position: absolute; top: 200px; left: 975px"/>
       <input type="image" src="/static/downarrow.png" id="downArrow" onclick="return moveCar('down');" style="position: absolute; top: 550px; left: 975px"/>
       <input type="image" src="/static/leftarrow.png" id="leftArrow" onclick="return moveCar('left');" style="position: absolute; top: 350px; left: 825px"/>
@@ -173,6 +174,25 @@
         document.getElementById('gobutton').src='/static/gobutton.png';
       } else {
         document.getElementById('gobutton').src='/static/stopbutton.png';
+      }
+   }
+
+   var auto = true;
+
+   function autopilot() {
+      // send autopilot command
+      socket.emit('autopilot',auto);
+      console.log("Autopilot: ");
+      console.log(auto);
+
+      auto = !auto;
+
+      if(auto) {
+        document.getElementById('autopilotButton').value = "Turn autopilot on";
+      }
+      else
+      {
+        document.getElementById('autopilotButton').value = "Turn autopilot off";
       }
    }
 

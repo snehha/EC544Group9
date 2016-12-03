@@ -92,6 +92,11 @@ def moveCar(command):
     print ("start car: ")
     print(command)
 
+@socketio.on('autopilot')
+def autopilotToggle(command):
+    print ("Autopilot: ")
+    print(command)
+
 
 # testCoordinates()
 
