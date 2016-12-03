@@ -23,14 +23,21 @@
     <br />
 
     <div id="fourthfloor">
-      <img src="/static/fourthfloor.png" style="position: absolute; top: 120px; left: 10px">
+      <img src="/static/fourthfloor.png" style="position: absolute; top: 720px; left: 210px">
       <div id="tracker" style="color: red; position: absolute; top: -100px; left:-100px;"><font size="6">&#9673;</font></div>
-      <h1 style="position: absolute; top: 200px; left: 930px">Remote Control</h1>
-      <input type="image" src="/static/uparrow.png" id="upArrow" onclick="return moveCar(0);" style="position: absolute; top: 300px; left: 975px"/>
-      <input type="image" src="/static/downarrow.png" id="downArrow" onclick="return moveCar(1);" style="position: absolute; top: 650px; left: 975px"/>
-      <input type="image" src="/static/leftarrow.png" id="leftArrow" onclick="return moveCar(2);" style="position: absolute; top: 450px; left: 825px"/>
-      <input type="image" src="/static/rightarrow.png" id="rightArrow" onclick="return moveCar(4);" style="position: absolute; top: 450px; left: 1200px"/>
-      <input type="image" src="/static/gobutton.png" id="gobutton" onclick="return startCar();" style="position: absolute; top: 490px; left: 1015px"/>
+    </div>
+    <div id="camera" style="position: absolute; top: 100px; left: 100px">
+      <h1>Video Streaming</h1> <br>
+      <!-- camera code -->
+      <img src="{{ url_for('video_feed') }}">
+    </div>
+    <div id="controlArrows">
+    <h1 style="position: absolute; top: 100px; left: 930px">Remote Control</h1>
+      <input type="image" src="/static/uparrow.png" id="upArrow" onclick="return moveCar('up');" style="position: absolute; top: 200px; left: 975px"/>
+      <input type="image" src="/static/downarrow.png" id="downArrow" onclick="return moveCar('down');" style="position: absolute; top: 550px; left: 975px"/>
+      <input type="image" src="/static/leftarrow.png" id="leftArrow" onclick="return moveCar('left');" style="position: absolute; top: 350px; left: 825px"/>
+      <input type="image" src="/static/rightarrow.png" id="rightArrow" onclick="return moveCar('right');" style="position: absolute; top: 350px; left: 1200px"/>
+      <input type="image" src="/static/gobutton.png" id="gobutton" onclick="return startCar();" style="position: absolute; top: 390px; left: 1015px"/>
     </div>
 
   <footer style="text-align: center; padding-top: 1900px;">
@@ -48,8 +55,8 @@
       var bottomLeftRegion = 36;
       var bottomRightRegion = 15;
       var elevatorRegion = 52;
-      var originX = 310; // region 27 x location
-      var originY = 330; // region 27 y location
+      var originX = 510; // region 27 x location
+      var originY = 930; // region 27 y location
       var trackerDot = document.getElementById('tracker');
       var gridSizeX = 69; // x size of each region
       var gridSizeY = 68; // y size of each region
@@ -104,8 +111,8 @@
         var y = yCoord + "px"
         trackerDot.style.setProperty("left", x);
         trackerDot.style.setProperty("top", y);
-        console.log(x);
-        console.log(y);
+        //console.log(x);
+        //console.log(y);
       }
 
       /*
@@ -142,21 +149,23 @@
 
    function moveCar(command) {
       // moves car
-      //socket.emit('moveCar',command);
-
+      socket.emit('moveCar',command);
+      console.log("Command: ");
+      console.log(command);
+/*
       // particle.function
       var requestURL = "https://api.spark.io/v1/devices/" + deviceID + "/" + 'moveCar' + "/";
-        $.post( requestURL, { params: command, access_token: accessToken });
+        $.post( requestURL, { params: command, access_token: accessToken });*/
    }
 
    var start = true;
 
    function startCar() {
       // send command to start/stop car
-      //socket.emit('startCar',start);
+      socket.emit('startCar',start);
+      console.log("Start car: ");
+      console.log(start);
       // particle.function
-      var requestURL = "https://api.spark.io/v1/devices/" + deviceID + "/" + 'startCar' + "/";
-        $.post( requestURL, { params: start, access_token: accessToken });
 
       // toggles button for start and stop car
       start = !start;
@@ -166,6 +175,33 @@
         document.getElementById('gobutton').src='/static/stopbutton.png';
       }
    }
+
+   $(document).keyup(function(e) {
+    switch(e.which) {
+        case 32: // spacebar
+        startCar();
+        break;
+
+        case 37: // left
+        moveCar('left');
+        break;
+
+        case 38: // up
+        moveCar('up');
+        break;
+
+        case 39: // right
+        moveCar('right');
+        break;
+
+        case 40: // down
+        moveCar('down');
+        break;
+
+        default: return; // exit this handler for other keys
+    }
+    e.preventDefault(); // prevent the default action (scroll / move caret)
+  });
 
 </script>
   </body>
