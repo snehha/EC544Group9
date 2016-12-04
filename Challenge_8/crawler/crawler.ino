@@ -10,6 +10,7 @@ String BSSID = "";
 Thread* wifiThread;
 Thread* servoThread;
 Thread* crawlerThread;
+Thread* oscillateThread;
 
 Servo lidarServo;
 int pos = 0;
@@ -60,11 +61,11 @@ int centerBuffer;
 LIDARLite myLidarLite;
 
 void setupCrawler() {
-    wheels.attach(8); // initialize wheel servo to Digital IO Pin #8
-    esc.attach(9);    // initialize ESC to Digital IO Pin #9
+    wheels.attach(D0); // initialize wheel servo to Digital IO Pin #8
+    esc.attach(D1);    // initialize ESC to Digital IO Pin #9
 
     myLidarLite.begin();
-    myLidarLite.changeAddressMultiPwrEn(2,sensorPins,addresses,false);
+    //myLidarLite.changeAddressMultiPwrEn(2,sensorPins,addresses,false);
 
     //Record the current center
     getSensorData(sensorLeft,sensorRight);
@@ -80,16 +81,18 @@ void setup() {
     Particle.variable("wifiData", &wifiData, STRING);
 
     // Website controls
-    Particle.function("moveCar", moveCar);
-    Particle.function("startCar", startCar);
+    //Particle.function("moveCar", moveCar);
+    //Particle.function("startCar", startCar);
 
     lidarServo.attach(D3);
 
     setupCrawler();
+    calibrateESC();
 
     //wifiThread = new Thread("sample", scanWifi);
     servoThread = new Thread("sample", moveServo);
-    //crawlerThread = new Thread("sample", crawler);
+    crawlerThread = new Thread("sample", crawler);
+    //oscillateThread = new Thread("sample", oscillate);
 
     ignoreWifiName = WiFi.SSID();
 }
@@ -114,6 +117,18 @@ void calibrateESC(){
     esc.write(90); // neutral
     delay(startupDelay);
     esc.write(90); // reset the ESC to neutral (non-moving) value
+}
+
+void oscillate(){
+  //esc.write(70);
+  for (int i =0; i < 360; i++){
+    double rad = degToRad(i);
+    double speedOffset = sin(rad) * maxSpeedOffset;
+    double wheelOffset = sin(rad) * maxWheelOffset;
+    esc.write(90 + speedOffset);
+    wheels.write(90 + wheelOffset);
+    delay(50);
+  }
 }
 
 void getSensorData(int &sensor1, int &sensor2){
@@ -348,17 +363,19 @@ void printLog(){
 }
 
 void crawler() {
-  getSensorData(sensorLeft,sensorRight);
-  getUltraSoundDistance();
-  setTrim();
+  while(true) {
+    getSensorData(sensorLeft,sensorRight);
+    getUltraSoundDistance();
+    setTrim();
 
-  printLog();
-  //XBeePrint();
-  bool val = stopCorrect(sensorFront);
-  if(!val)
-    val = errorCorrect(sensorLeft,sensorRight);
-  if(!val)
-    centerCorrect(sensorLeft,sensorRight);
+    printLog();
+    //XBeePrint();
+    bool val = stopCorrect(sensorFront);
+    if(!val)
+      val = errorCorrect(sensorLeft,sensorRight);
+    if(!val)
+      centerCorrect(sensorLeft,sensorRight);
+  }
 }
 /****************************/
 
@@ -399,9 +416,23 @@ void scanWifi() {
             }
         }
         wifiData = data;
+        Serial.println(wifiData);
         delay(1500);
     }
 }
 
+
+/* Convert degree value to radians */
+double degToRad(double degrees){
+  return (degrees * 71) / 4068;
+}
+
+/* Convert radian value to degrees */
+double radToDeg(double radians){
+  return (radians * 4068) / 71;
+}
+
+
 void loop() {
+  //oscillate();
 }
