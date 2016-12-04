@@ -1,6 +1,6 @@
 // This #include statement was automatically added by the Particle IDE.
-#include <LIDARLite.h>
-#include "math.h"
+//#include "lidar_lite_v2_photon/lidar_lite_v2_photon.h"
+#include "LIDARLite.h"
 
 String SSID;
 String wifiData;
@@ -27,11 +27,6 @@ double maxWheelOffset = 60; // maximum wheel turn magnitude, in servo 'degrees'
 int sensorPins[] = {6,7}; // Array of pins connected to the sensor Power Enable lines
 unsigned char addresses[] = {0x66,0x68};
 const float pi = 3.14;
-
-int disTurn = 10;
-int disSpeed = 10;
-int turnDir = 0;
-int moveDir = 0;
 
 //Speed values
 int curSpeed = 0;
@@ -62,8 +57,6 @@ int maxGapOffset = 100;
 int medGapOffset = 30;
 int centerBuffer;
 
-LIDARLite myLidarLite;
-
 void setupCrawler() {
     wheels.attach(8); // initialize wheel servo to Digital IO Pin #8
     esc.attach(9);    // initialize ESC to Digital IO Pin #9
@@ -90,25 +83,24 @@ void setup() {
 
     lidarServo.attach(D3);
 
-    setupCrawler();
-
     wifiThread = new Thread("sample", scanWifi);
     servoThread = new Thread("sample", moveServo);
     crawlerThread = new Thread("sample", crawler);
 
     ignoreWifiName = WiFi.SSID();
+
+    setupCrawler();
 }
 
 
 /***** website controls *****/
-int moveCar(String direction) {
+void moveCar(int direction) {
     // controls car
 }
 
-int startCar(String start) {
+void startCar(bool start) {
     // controls car
 }
-
 /************ Crawler Code ************/
 /* Calibrate the ESC by sending a high signal, then a low, then middle.*/
 void calibrateESC(){
@@ -125,65 +117,11 @@ void getSensorData(int &sensor1, int &sensor2){
   int mySensor1 = 0;
   int mySensor2 = 0;
   for(int i = 0; i < 10; i++){
-    //mySensor1 += myLidarLite.distance(true,true,0x66);
-    //mySensor2 += myLidarLite.distance(true,true,0x68);
-    mySensor1 += myLidarLite.distanceContinuous();
-    mySensor2 += myLidarLite.distanceContinuous();
+    mySensor1 += myLidarLite.distance(true,true,0x66);
+    mySensor2 += myLidarLite.distance(true,true,0x68);
   }
   sensor1 = mySensor1/10;
   sensor2 = mySensor2/10;
-}
-
-void rLeft(){
-  //Not turned left so make straight
-  if(turnDir > 0){
-    turnDir = 0;
-  }
-  //Turn more left
-  else{
-    turnDir -= disTurn;
-  }
-  changeWheelAngle(turnDir);
-}
-
-void rRight(){
-  //Not turned right so make straight
-  if(turnDir < 0){
-    turnDir = 0;
-  }
-  //Turn more right
-  else{
-    turnDir += disTurn;
-  }
-  changeWheelAngle(turnDir);
-}
-
-void rForward(){
-  //Moving backwards so stop
-  if(moveDir < 0){
-    moveDir = 0;
-  }
-  //Move faster
-  else{
-    moveDir += disSpeed;
-  }
-  changeSpeed(moveDir);
-}
-
-void rBackwards(){
-  //Moving forwards so stop
-  if(moveDir > 0){
-    moveDir = 0;
-  }
-  //Move faster
-  else{
-    moveDir -= disSpeed;
-  }
-  changeReverseSpeed(moveDir);
-}
-
-void halt(){
-  changeSpeed(0);
 }
 
 //Change the speed of the rover up or down.
@@ -384,24 +322,6 @@ bool centerCorrect(int sensorLeft, int sensorRight){
   }
 
   changeWheelAngle(wheelOffset);
-}
-
-void printLog(){
-  Serial.println("--------- Current Values ---------");
-  Serial.print("Left Sensor: ");
-  Serial.println(sensorLeft);
-  Serial.print("Right Sensor: ");
-  Serial.println(sensorRight);
-  Serial.print("Center Distance: ");
-  Serial.println(centerPoint);
-  Serial.print("Front Sensor: ");
-  Serial.println(sensorFront);
-  Serial.print("Current Speed: ");
-  Serial.println(curSpeed);
-  Serial.print("Wheel Angle: ");
-  Serial.println(curWheelAngle);
-  Serial.print("Trim Angle: ");
-  Serial.println(trimValue);
 }
 
 void crawler() {
