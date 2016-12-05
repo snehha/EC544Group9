@@ -16,11 +16,17 @@ Servo myservo;  // create servo object to control a servo
 
 int pos = 0;    // variable to store the servo position
 
+
+int sensorPins[] = {6}; // Array of pins connected to the sensor Power Enable lines
+unsigned char addresses[] = {0x62};
+
 void setup() {
   Serial.begin(9800);
   myLidarLite.begin();
-  myLidarLite.beginContinuous();
-  pinMode(3, INPUT);
+  //myLidarLite.beginContinuous();
+  //myLidarLite.beginContinuous( true,0x04,0xff, addresses[0]);
+  myLidarLite.changeAddressMultiPwrEn(1,sensorPins,addresses,false);
+  //pinMode(3, INPUT);
 
   myservo.attach(A4);  // attaches the servo on pin 9 to the servo object
 }
@@ -36,8 +42,9 @@ void moveServo() {
     delay(7);                       // waits 15ms for the servo to reach the position
   }
   Serial.print("Lidar distance: ");
-  Serial.println(myLidarLite.distanceContinuous());
-  //Serial.println(myLidarLite.distance(true,true,0x66));
+  //Serial.println(myLidarLite.distanceContinuous());
+  //Serial.println(myLidarLite.distanceContinuous(addresses[0]));
+  Serial.println(myLidarLite.distance(true,true,addresses[0]));
 }
 
 void loop() {
