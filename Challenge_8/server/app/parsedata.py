@@ -6,7 +6,7 @@ def parseData():
     allAccessPoints = {}
     rawSample = {}
 
-    for file in glob.glob("*.txt"):
+    for file in glob.glob("regions/*.txt"):
         os.system("cat " + file + " | grep -v '\(G\|g\)roup' > " + file + "_cpy.txt")
         os.system("mv " + file + "_cpy.txt " + file)
         os.system("cat " + file + " | grep -v '^,' > " + file + "_cpy.txt")
