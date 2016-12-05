@@ -1,0 +1,15 @@
+{
+  "_id": "v1J/XH/16lSOgEvRO2B4HDduykW12DVz",
+  "username": "client@group9.com",
+  "password_hash": "QS2KA6HuKIZk8CHl0KZG77q+PFRrhrypbIWxdP4ZX0VVCr2XptjsXPfbEsot+OYt9UniW1UdL3QsMXUiXsNTJw==",
+  "salt": "X60CWX6RQX4sGOepX3j8UONbB045orLSYMBdCZtHRtNaP6VRDFsNVMDJ4TufdP3fKUvpRvOG2/iGy4L0GL4cWQ==",
+  "access_tokens": [
+    {
+      "user_id": "v1J/XH/16lSOgEvRO2B4HDduykW12DVz",
+      "client_id": "CLI2",
+      "token": "2699d58936311c445635d6684b59e9431af14c6e",
+      "expires": "2017-03-03T02:53:18.390Z",
+      "_id": "2699d58936311c445635d6684b59e9431af14c6e"
+    }
+  ]
+}
