@@ -10,7 +10,6 @@ String BSSID = "";
 Thread* wifiThread;
 Thread* servoThread;
 Thread* crawlerThread;
-Thread* oscillateThread;
 
 Servo lidarServo;
 int pos = 0;
@@ -23,7 +22,7 @@ Servo esc; // not actually a servo, but controlled like one!
 bool startup = true; // used to ensure startup only happens once
 int startupDelay = 1000; // time to pause at each calibration step
 double maxSpeedOffset = 45; // maximum speed magnitude, in servo 'degrees'
-double maxWheelOffset = 60; // maximum wheel turn magnitude, in servo 'degrees'
+double maxWheelOffset = 40; // maximum wheel turn magnitude, in servo 'degrees'
 
 int sensorPins[] = {6,7}; // Array of pins connected to the sensor Power Enable lines
 unsigned char addresses[] = {0x66,0x68};
@@ -61,11 +60,11 @@ int centerBuffer;
 LIDARLite myLidarLite;
 
 void setupCrawler() {
-    wheels.attach(D0); // initialize wheel servo to Digital IO Pin #8
-    esc.attach(D1);    // initialize ESC to Digital IO Pin #9
+    wheels.attach(D2); // initialize wheel servo to Digital IO Pin #8
+    esc.attach(D3);    // initialize ESC to Digital IO Pin #9
 
     myLidarLite.begin();
-    //myLidarLite.changeAddressMultiPwrEn(2,sensorPins,addresses,false);
+    myLidarLite.changeAddressMultiPwrEn(2,sensorPins,addresses,false);
 
     //Record the current center
     getSensorData(sensorLeft,sensorRight);
@@ -84,14 +83,14 @@ void setup() {
     //Particle.function("moveCar", moveCar);
     //Particle.function("startCar", startCar);
 
-    lidarServo.attach(D3);
+    lidarServo.attach(A4);
 
-    setupCrawler();
-    calibrateESC();
+    //setupCrawler();
+    //calibrateESC();
 
     //wifiThread = new Thread("sample", scanWifi);
     servoThread = new Thread("sample", moveServo);
-    crawlerThread = new Thread("sample", crawler);
+    //crawlerThread = new Thread("sample", crawler);
     //oscillateThread = new Thread("sample", oscillate);
 
     ignoreWifiName = WiFi.SSID();
@@ -119,26 +118,14 @@ void calibrateESC(){
     esc.write(90); // reset the ESC to neutral (non-moving) value
 }
 
-void oscillate(){
-  //esc.write(70);
-  for (int i =0; i < 360; i++){
-    double rad = degToRad(i);
-    double speedOffset = sin(rad) * maxSpeedOffset;
-    double wheelOffset = sin(rad) * maxWheelOffset;
-    esc.write(90 + speedOffset);
-    wheels.write(90 + wheelOffset);
-    delay(50);
-  }
-}
-
 void getSensorData(int &sensor1, int &sensor2){
   int mySensor1 = 0;
   int mySensor2 = 0;
   for(int i = 0; i < 10; i++){
-    //mySensor1 += myLidarLite.distance(true,true,0x66);
-    //mySensor2 += myLidarLite.distance(true,true,0x68);
-    mySensor1 += myLidarLite.distanceContinuous();
-    mySensor2 += myLidarLite.distanceContinuous();
+    mySensor1 += myLidarLite.distance(true,true,0x66);
+    mySensor2 += myLidarLite.distance(true,true,0x68);
+    //mySensor1 += myLidarLite.distanceContinuous();
+    //mySensor2 += myLidarLite.distanceContinuous();
   }
   sensor1 = mySensor1/10;
   sensor2 = mySensor2/10;
@@ -229,7 +216,6 @@ void getUltraSoundDistance() {
   //reset sample total
   sum = 0;
   for (int i = 0; i < avgRange ; i++) {
-
     analogVolt = analogRead(ultraPin) / 2;
     sum += analogVolt;
     delay(10);
@@ -381,16 +367,17 @@ void crawler() {
 
 void moveServo() {
     while(true) {
-        for (pos = 0; pos <= 180; pos += 1) { // goes from 0 degrees to 180 degrees
+        for (pos = 0; pos <= 180; pos += 5) { // goes from 0 degrees to 180 degrees
             // in steps of 1 degree
             lidarServo.write(pos);               // tell servo to go to position in variable 'pos'
             delay(7);                         // waits 15ms for the servo to reach the position
         }
         delay(7);
-        for (pos = 180; pos >= 0; pos -= 1) { // goes from 180 degrees to 0 degrees
+        for (pos = 180; pos >= 0; pos -= 5) { // goes from 180 degrees to 0 degrees
             lidarServo.write(pos);               // tell servo to go to position in variable 'pos'
             delay(7);                         // waits 7ms for the servo to reach the position
         }
+        Serial.println("Blah");
     }
 }
 
