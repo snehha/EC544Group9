@@ -8,11 +8,9 @@ String wifiData;
 String BSSID = "";
 
 Thread* wifiThread;
-Thread* servoThread;
 Thread* crawlerThread;
 
 Servo lidarServo;
-int pos = 0;
 
 String ignoreWifiName = "Group9";
 
@@ -22,10 +20,13 @@ Servo esc; // not actually a servo, but controlled like one!
 bool startup = true; // used to ensure startup only happens once
 int startupDelay = 1000; // time to pause at each calibration step
 double maxSpeedOffset = 45; // maximum speed magnitude, in servo 'degrees'
-double maxWheelOffset = 40; // maximum wheel turn magnitude, in servo 'degrees'
+double maxWheelOffset = 35; // maximum wheel turn magnitude, in servo 'degrees'
 
-int sensorPins[] = {6,7}; // Array of pins connected to the sensor Power Enable lines
-unsigned char addresses[] = {0x66,0x68};
+int sensorPins[] = {4,5}; // Array of pins connected to the sensor Power Enable lines
+unsigned char addresses[] = {0x66,0x64};
+int frontLidar = 0;
+int backLider = 1;
+
 const float pi = 3.14;
 
 int disTurn = 10;
@@ -39,6 +40,9 @@ const int errDistance = 110;
 const int stopped = 0;
 const int fullSpeed = 20;
 const int haltDistance = fullSpeed + 20;
+
+//Spinning Servo values
+bool clockwise = true;
 
 //Wheel values
 float trimValue = 0;
@@ -54,7 +58,8 @@ int avgRange = 10; //Quantity of values to average (sample size)
 //Sensor Data
 int sensorLeft;
 int sensorRight;
-long sensorFront;
+long frontUltrasound;
+int backLidar;
 
 //Center distance on startup
 int centerPoint;
@@ -69,10 +74,11 @@ void setupCrawler() {
     esc.attach(D3);    // initialize ESC to Digital IO Pin #9
 
     myLidarLite.begin();
-    myLidarLite.changeAddressMultiPwrEn(2,sensorPins,addresses,false);
+    //myLidarLite.beginContinuous(true, 0x04, 0xff, addresses[frontLidar]);
+    setAddress();
 
     //Record the current center
-    getSensorData(sensorLeft,sensorRight);
+    getSensorData(frontLidar);                  //Stored globally in sensorLeft, sensorRight
     centerPoint = (sensorLeft+sensorRight)/2;
     centerBuffer = centerPoint+medGapOffset;
 
@@ -80,7 +86,8 @@ void setupCrawler() {
 }
 /**************************************************/
 
-
+//#define WIFISTUFF
+//TODO Uncomment wifiThread
 void setup() {
     Particle.variable("wifiData", &wifiData, STRING);
 
@@ -89,16 +96,36 @@ void setup() {
     //Particle.function("startCar", startCar);
 
     lidarServo.attach(A4);
+    delay(50);
+    setupCrawler();
+    calibrateESC();
 
-    //setupCrawler();
-    //calibrateESC();
-
-    //wifiThread = new Thread("sample", scanWifi);
-    servoThread = new Thread("sample", moveServo);
-    //crawlerThread = new Thread("sample", crawler);
-    //oscillateThread = new Thread("sample", oscillate);
-
+    #ifdef WIFISTUFF
+    wifiThread = new Thread("sample", scanWifi);
     ignoreWifiName = WiFi.SSID();
+    #endif
+
+    crawlerThread = new Thread("sample", crawler);
+
+
+}
+
+void printLog(){
+  Serial.println("--------- Current Values ---------");
+  Serial.print("Left Sensor: ");
+  Serial.println(sensorLeft);
+  Serial.print("Right Sensor: ");
+  Serial.println(sensorRight);
+  Serial.print("Center Distance: ");
+  Serial.println(centerPoint);
+  Serial.print("Front Sensor: ");
+  Serial.println(frontUltrasound);
+  Serial.print("Current Speed: ");
+  Serial.println(curSpeed);
+  Serial.print("Wheel Angle: ");
+  Serial.println(curWheelAngle);
+  Serial.print("Trim Angle: ");
+  Serial.println(trimValue);
 }
 
 
@@ -112,6 +139,21 @@ int startCar(String start) {
 }
 
 /************ Crawler Code ************/
+
+void setAddress() {
+  Serial.println("Establishing I2C connection...");
+  String test, test2;
+  do {
+    myLidarLite.changeAddressMultiPwrEn(2,sensorPins,addresses,false);
+    test = myLidarLite.distance(true,true,addresses[0]);
+    test2 = myLidarLite.distance(true,true,addresses[1]);
+    Serial.println(test);
+    Serial.println(test2);
+  } while ( test == "> nack"  ||  test2 == "> nack" );
+
+  Serial.println("connection established.");
+}
+
 /* Calibrate the ESC by sending a high signal, then a low, then middle.*/
 void calibrateESC(){
     esc.write(180); // full backwards
@@ -123,17 +165,63 @@ void calibrateESC(){
     esc.write(90); // reset the ESC to neutral (non-moving) value
 }
 
-void getSensorData(int &sensor1, int &sensor2){
-  int mySensor1 = 0;
-  int mySensor2 = 0;
-  for(int i = 0; i < 10; i++){
-    mySensor1 += myLidarLite.distance(true,true,0x66);
-    mySensor2 += myLidarLite.distance(true,true,0x68);
-    //mySensor1 += myLidarLite.distanceContinuous();
-    //mySensor2 += myLidarLite.distanceContinuous();
+int sampleLidar(int sensorID) {
+  int mySensor = 0;
+  //for(int i = 0; i < 10; i++){
+    mySensor = myLidarLite.distance(false,false,addresses[sensorID]);
+    //mySensor = myLidarLite.distanceContinuous(addresses[sensorID]);
+  //}
+  return mySensor; ///10;
+}
+
+//TODO add halt threshold
+void getSensorData(int sensorID){
+  int pos, incr, end;
+  if(clockwise){
+      pos = 0;
+      incr = 10;
+      end = 180;
   }
-  sensor1 = mySensor1/10;
-  sensor2 = mySensor2/10;
+  else{
+      pos = 180;
+      incr = -10;
+      end = 0;
+  }
+
+  sensorLeft = 0;
+  sensorRight = 0;
+
+  lidarServo.write(180);
+  delay(3000);
+  sensorLeft = sampleLidar(sensorID);
+  delay(10);
+  Serial.println("Left reading: " + String(sensorLeft));
+
+  lidarServo.write(0);
+  delay(3000);
+  sensorRight = sampleLidar(sensorID);
+  delay(10);
+  Serial.println("Right reading: " + String(sensorRight));
+
+
+  /*for (;pos != end; pos += incr) { // goes from 0 degrees to 90 degrees (Read left side)
+      // in steps of 1 degree
+      lidarServo.write(pos);               // tell servo to go to position in variable 'pos'
+      delay(100);                        // waits 15ms for the servo to reach the position
+      if(pos < 45){
+        sensorRight += sampleLidar(sensorID);
+      }
+      else if (pos > 135){                           //IF greater than 90 reada as other side
+        sensorLeft += sampleLidar(sensorID);
+      }
+
+  }*/
+
+  //sensorLeft = sensorLeft/4;
+  //sensorRight = sensorRight/4;
+
+
+  clockwise = !clockwise;
 }
 
 void rLeft(){
@@ -263,12 +351,14 @@ void changeWheelAngle(double newWheelAngle){
   wheels.write(curWheelAngle);
 }
 
+//TODO ADD TO THE BREADBOARD
 void setTrim() {
   trimValue = analogRead(potPin);
   trimValue = map(trimValue, 0, 1018, -100, 100);
   trimValue /= 10;
 }
 
+//TODO IMPLEMENT
 void getUltraSoundDistance() {
   //reset sample total
   sum = 0;
@@ -279,11 +369,21 @@ void getUltraSoundDistance() {
   }
 
   inches = sum / avgRange;
-  sensorFront = inches * 2.54;
+  frontUltrasound = inches * 2.54;
 
 }
 
+//TODO Add reverse Sensor LIDAR readings here
 void reverseCar(){
+
+  /***
+  * compare left and right. termerung pick the greater amount and
+  * turn wheels opposite to that furthest direction.
+  * back it up, back it up, back it up
+  * watch out for back obstacles with backLidar....
+  * set wheels back to oppsite direction ard and return to main
+  ***/
+
   if( ((sensorLeft/sensorRight) > 2) || ((sensorLeft/sensorRight) < 0.5)){
     int wheelChange;
     Serial.println("Front object detected. Reversing.");
@@ -298,18 +398,21 @@ void reverseCar(){
       changeWheelAngle(wheelChange);
       changeReverseSpeed(-15);
     }
-    delay(33*fullSpeed+500);
+    int backTimers = 33*fullSpeed+600;
+    while(backTimers != 0 || backLidar <= haltDistance + 20){
+      backTimers--;
+    }
     changeWheelAngle(-1*wheelChange);
   }
 
   //changeReverseSpeed(stopped);
 }
-
-bool stopCorrect(long sensorFront) {
-  if ( (sensorFront <= haltDistance+20) || ((sensorLeft < haltDistance) && (sensorRight < haltDistance))) {
+//TODO reverseCar
+bool stopCorrect() {
+  if ( (frontUltrasound <= haltDistance+20) || ((sensorLeft < haltDistance) && (sensorRight < haltDistance))) {
     Serial.println("Entered Stop Correct - SENSOR");
     changeSpeed(stopped);
-    reverseCar();
+    //reverseCar();
     Serial.println("Front object detected. Stopping.");
     return true;
   }
@@ -387,55 +490,28 @@ bool centerCorrect(int sensorLeft, int sensorRight){
   changeWheelAngle(wheelOffset);
 }
 
-void printLog(){
-  Serial.println("--------- Current Values ---------");
-  Serial.print("Left Sensor: ");
-  Serial.println(sensorLeft);
-  Serial.print("Right Sensor: ");
-  Serial.println(sensorRight);
-  Serial.print("Center Distance: ");
-  Serial.println(centerPoint);
-  Serial.print("Front Sensor: ");
-  Serial.println(sensorFront);
-  Serial.print("Current Speed: ");
-  Serial.println(curSpeed);
-  Serial.print("Wheel Angle: ");
-  Serial.println(curWheelAngle);
-  Serial.print("Trim Angle: ");
-  Serial.println(trimValue);
-}
-
+//TODO looping crawler code, setTrim
 void crawler() {
   while(true) {
-    getSensorData(sensorLeft,sensorRight);
-    getUltraSoundDistance();
-    setTrim();
+    //TODO getUltraSoundDistance();
+    getSensorData(frontLidar);
+    delay(300);
+    //setTrim();
 
-    printLog();
-    //XBeePrint();
-    bool val = stopCorrect(sensorFront);
+    //printLog();
+
+    /*bool val = stopCorrect();
     if(!val)
       val = errorCorrect(sensorLeft,sensorRight);
     if(!val)
-      centerCorrect(sensorLeft,sensorRight);
+      centerCorrect(sensorLeft,sensorRight);*/
   }
 }
 /****************************/
 
-void moveServo() {
-    while(true) {
-        for (pos = 0; pos <= 180; pos += 5) { // goes from 0 degrees to 180 degrees
-            // in steps of 1 degree
-            lidarServo.write(pos);               // tell servo to go to position in variable 'pos'
-            delay(7);                         // waits 15ms for the servo to reach the position
-        }
-        delay(7);
-        for (pos = 180; pos >= 0; pos -= 5) { // goes from 180 degrees to 0 degrees
-            lidarServo.write(pos);               // tell servo to go to position in variable 'pos'
-            delay(7);                         // waits 7ms for the servo to reach the position
-        }
-        Serial.println("Blah");
-    }
+
+void moveServo(){
+    //MAYBE REMOVE ME
 }
 
 void scanWifi() {
@@ -478,5 +554,4 @@ double radToDeg(double radians){
 
 
 void loop() {
-  //oscillate();
 }

@@ -523,6 +523,8 @@ unsigned char LIDARLite::changeAddress(char newI2cAddress,  bool disablePrimaryA
   unsigned char serialNumber[2];
   unsigned char newI2cAddressArray[1];
 
+  Serial.print(currentLidarLiteAddress, HEX);
+
   //  Read two bytes from 0x96 to get the serial number
   read(0x96,2,serialNumber,false,currentLidarLiteAddress);
   //  Write the low byte of the serial number to 0x18

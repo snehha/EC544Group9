@@ -25,20 +25,23 @@ int lidarPins[] = {4};
 void setup() {
   Serial.begin(9800);
   myLidarLite.begin();
-  myLidarLite.changeAddressMultiPwrEn(2,sensorPins,addresses,false);
+  setAddress();
 
   myservo.attach(A4);  // attaches the servo on pin 9 to the servo object
 }
 
-void readLidars() {
-  lidarPins[0] = 4;
-  myLidarLite.changeAddressMultiPwrEn(1,lidarPins,addresses,false);
-  Serial.print("Lidar 1 distance: ");
-  Serial.println(myLidarLite.distance(true,true,addresses[0]));
-  lidarPins[0] = 5;
-  myLidarLite.changeAddressMultiPwrEn(1,lidarPins,addresses,false);
-  Serial.print("Lidar 2 distance: ");
-  Serial.println(myLidarLite.distance(true,true,addresses[0]));
+void setAddress() {
+  Serial.println("Establishing I2C connection...");
+  String test, test2;
+  do {
+    myLidarLite.changeAddressMultiPwrEn(2,sensorPins,addresses,false);
+    test = myLidarLite.distance(true,true,addresses[0]);
+    test2 = myLidarLite.distance(true,true,addresses[1]);
+    Serial.println(test);
+    Serial.println(test2);
+  } while ( test == "> nack"  ||  test2 == "> nack" );
+
+  Serial.println("connection established.");
 }
 
 void moveServo() {
