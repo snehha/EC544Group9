@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en" style="height: 100%">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>Location </title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body style="color: #2c3e50; background: linear-gradient(white, #b8d2fc); height: 100%; background-repeat: no-repeat; background-attachment: fixed;">
+    <h1 style="text-align: center;">Photonics 4th Floor Location Tracker</h1>
+    <br />
+    <br />
+
+    <div id="fourthfloor">
+      <img src="/static/fourthfloor.png" style="position: absolute; top: 720px; left: 210px">
+      <div id="tracker" style="color: red; position: absolute; top: -100px; left:-100px;"><font size="6">&#9673;</font></div>
+    </div>
+    <div id="camera" style="position: absolute; top: 100px; left: 100px">
+      <h1>Video Streaming</h1> <br>
+      <!-- camera code -->
+      <img id="streamimage" src="http://192.168.1.150:8090/?action=stream">
+    </div>
+    <div id="controlArrows">
+      <h1 style="position: absolute; top: 100px; left: 835px">Remote Control</h1>
+      <input id="autopilotButton" type="button" value = "Turn autopilot on" onclick="return autopilot();" style="position: absolute; top: 127px; left: 1120px"/>
+      <input type="image" src="/static/uparrow.png" id="upArrow" onclick="return moveCar('up');" style="position: absolute; top: 200px; left: 975px"/>
+      <input type="image" src="/static/downarrow.png" id="downArrow" onclick="return moveCar('down');" style="position: absolute; top: 550px; left: 975px"/>
+      <input type="image" src="/static/leftarrow.png" id="leftArrow" onclick="return moveCar('left');" style="position: absolute; top: 350px; left: 825px"/>
+      <input type="image" src="/static/rightarrow.png" id="rightArrow" onclick="return moveCar('right');" style="position: absolute; top: 350px; left: 1200px"/>
+      <input type="image" src="/static/gobutton.png" id="gobutton" onclick="return startCar();" style="position: absolute; top: 390px; left: 1015px"/>
+    </div>
+
+  <footer style="text-align: center; padding-top: 1900px;">
+    <p>Designed and Made by Group 9</p>
+  </footer>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+
+    <script>
+      var topLeftRegion = 27;
+      var topRightRegion = 24;
+      var bottomLeftRegion = 36;
+      var bottomRightRegion = 15;
+      var elevatorRegion = 52;
+      var originX = 510; // region 27 x location
+      var originY = 930; // region 27 y location
+      var trackerDot = document.getElementById('tracker');
+      var gridSizeX = 69; // x size of each region
+      var gridSizeY = 68; // y size of each region
+
+      // calculates difference in x of tracker from the origin
+      function calculateXCoordinate(regionID) {
+        var x;
+        if( regionID >= topLeftRegion && regionID < elevatorRegion)  // Left side regions
+          return 0; 
+
+        if( regionID <= topLeftRegion && regionID >= topRightRegion) { // Top side regions
+          x = topLeftRegion - regionID;
+          return x * gridSizeX;
+        }
+
+        if( regionID > elevatorRegion ) { // elevator regions
+          x = regionID - elevatorRegion;
+          return x * gridSizeX;
+        }
+
+        if( regionID < topRightRegion) // Right side regions
+          return 205; 
+      }
+
+      // calculates difference in y of tracker from the origin
+      function calculateYCoordinate(regionID) {
+        var y;
+        if( regionID <= topLeftRegion && regionID >= topRightRegion)  // Top regions
+          return 0;
+
+        if( regionID > topLeftRegion && regionID <= bottomLeftRegion) { // Left side regions
+          y = regionID - topLeftRegion;
+          return y * gridSizeY;
+        }
+
+        if( regionID < topRightRegion) {  // Right side regions
+          y = topRightRegion - regionID;
+          return y * gridSizeY;
+        }
+
+        if( regionID > elevatorRegion ) { // elevator regions
+          y = bottomLeftRegion - topLeftRegion;
+          return y * gridSizeY;
+        }
+      }
+
+      // changes coordinate of tracker
+      function updateCoordinate(regionID) {
+        var xCoord = originX + calculateXCoordinate(regionID)
+        var yCoord = originY + calculateYCoordinate(regionID)
+        var x = xCoord + "px"
+        var y = yCoord + "px"
+        trackerDot.style.setProperty("left", x);
+        trackerDot.style.setProperty("top", y);
+        //console.log(x);
+        //console.log(y);
+      }
+
+      /*
+       * Test code to cycle through valid regions
+       */
+      var region = 27;
+      function testCoordinates(){
+        if(region == bottomLeftRegion + 1) region = 53;
+        if( region == 55 ) region = bottomRightRegion;
+        updateCoordinate(region);
+        region++;
+      }
+
+      //var myTimer = setInterval(testCoordinates, 1000);
+    </script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
+    <script type="text/javascript" charset="utf-8">
+    var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+    socket.on('location_event', function(msg) {
+      updateCoordinate(msg);
+    });
+
+   function triggerRefresh() {
+      socket.emit('refresh');
+   } 
+
+   var refreshTimer = setInterval(triggerRefresh, 1000);
+
+   // Particle Functions
+
+   var deviceID    = "<< device id >>";
+   var accessToken = "<< access token >>";
+
+   function moveCar(command) {
+      // moves car
+      socket.emit('moveCar',command);
+      console.log("Command: ");
+      console.log(command);
+/*
+      // particle.function
+      var requestURL = "https://api.spark.io/v1/devices/" + deviceID + "/" + 'moveCar' + "/";
+        $.post( requestURL, { params: command, access_token: accessToken });*/
+   }
+
+   var start = true;
+
+   function startCar() {
+      // send command to start/stop car
+      socket.emit('startCar',start);
+      console.log("Start car: ");
+      console.log(start);
+      // particle.function
+
+      // toggles button for start and stop car
+      start = !start;
+      if(start) {
+        document.getElementById('gobutton').src='/static/gobutton.png';
+      } else {
+        document.getElementById('gobutton').src='/static/stopbutton.png';
+      }
+   }
+
+   var auto = true;
+
+   function autopilot() {
+      // send autopilot command
+      socket.emit('autopilot',auto);
+      console.log("Autopilot: ");
+      console.log(auto);
+
+      auto = !auto;
+
+      if(auto) {
+        document.getElementById('autopilotButton').value = "Turn autopilot on";
+      }
+      else
+      {
+        document.getElementById('autopilotButton').value = "Turn autopilot off";
+      }
+   }
+
+   $(document).keyup(function(e) {
+    switch(e.which) {
+        case 32: // spacebar
+        startCar();
+        break;
+
+        case 37: // left
+        moveCar('left');
+        break;
+
+        case 38: // up
+        moveCar('up');
+        break;
+
+        case 39: // right
+        moveCar('right');
+        break;
+
+        case 40: // down
+        moveCar('down');
+        break;
+
+        default: return; // exit this handler for other keys
+    }
+    e.preventDefault(); // prevent the default action (scroll / move caret)
+  });
+
+  // disable keyboard scrolling
+  var ar=new Array(32,37,38,39,40);
+  $(document).keydown(function(e) {
+       var key = e.which;
+        //console.log(key);
+        //if(key==35 || key == 36 || key == 37 || key == 39)
+        if($.inArray(key,ar) > -1) {
+            e.preventDefault();
+            return false;
+        }
+        return true;
+  });
+
+</script>
+  </body>
+</html>
