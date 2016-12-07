@@ -99,7 +99,6 @@ void setup() {
     // Website controls
     #ifdef WEBSITECONTROL
     Particle.function("moveCar", moveCar);
-    Particle.function("startCar", startCar);
     #endif
 
     lidarServo.attach(A4);
@@ -136,13 +135,20 @@ void printLog(){
 }
 
 
-/***** website controls *****/
+/***** website control *****/
 int moveCar(String direction) {
-    // controls car
-}
-
-int startCar(String start) {
-    // controls car
+    // receives command from photon
+    switch(direction) {
+      case "up": break;
+      case "down": break;
+      case "left": break;
+      case "right": break;
+      case "start": break;
+      case "stop": break;
+      case "autopilotOn": break;
+      case "autopilotOff": break;
+      default: break;
+    }
 }
 
 /************ Crawler Code ************/
@@ -195,6 +201,7 @@ void getSensorData(int sensorID){
   sensorNE = 0;
   sensorWest = 0;
   sensorEast = 0;
+  sensorNorth = 0;
 
   if(clockwise){
       pos = 0;
@@ -207,22 +214,23 @@ void getSensorData(int sensorID){
 
   bool leftObjectDetected = false;
   bool rightObjectDetected = false;
+  bool northObjectDetected = false;
   int sensorValue = 0;
   int ne = 1;
   int nw = 1;
   int w = 1;
   int e = 1;
+  int n = 1;
 
   for (;(pos >= 0 && pos <=180); pos += incr) { // goes from 0 degrees to 90 degrees (Read left side)
-      // in steps of 1 degree
-      lidarServo.write(pos);               // tell servo to go to position in variable 'pos'
-      delay(30);                        // waits 15ms for the servo to reach the position
+      lidarServo.write(pos);                    // tell servo to go to position in variable 'pos'
+      delay(30);                                // waits 15ms for the servo to reach the position
       sensorValue = myLidarLite.distanceContinuous();
 
       if((pos >= degreeE) && (pos <= degreeNE)){  // North East
         ne++;
         if(!rightObjectDetected) {
-          if(sensorValue < haltDistance) {
+          if(sensorValue < haltDistance) {        // if object is detected, do not take average
             sensorNE = sensorValue;
             rightObjectDetected = true;
             Serial.println("---Right object detected: ");
@@ -238,7 +246,7 @@ void getSensorData(int sensorID){
       else if ((pos >= degreeNW) && (pos <= degreeW)){  // North West
         nw++;
         if(!leftObjectDetected) {
-          if(sensorValue < haltDistance) {
+          if(sensorValue < haltDistance) {    // if object is detected, do not take average
             sensorNW = sensorValue;
             leftObjectDetected = true;
             Serial.println("---Left object detected: ");
@@ -247,19 +255,33 @@ void getSensorData(int sensorID){
           }
         }
       }
-      else if(pos >= degreeW) {
+      else if(pos >= degreeW) { // West
         w++;
         sensorWest += sensorValue;
       }
+      else if((pos >= degreeNE) && (pos <= degreeNW)){  // North
+        n++;
+        if(!northObjectDetected) {
+          if(sensorValue < haltDistance) {  // if object is detected, do not take average
+            sensorNorth = sensorValue;
+            northObjectDetected = true;
+            Serial.println("---North object detected: ");
+          } else {
+            sensorNorth += sensorValue;
+          }
+        }
+      }
 
   }
-  Serial.println("E: " + String(e) + " NE: " + String(ne) + " NW: " + String(nw) + " w: " + String(w));
+  Serial.println("E: " + String(e) + " NE: " + String(ne) + " N: " + String(n) + " NW: " + String(nw) + " w: " + String(w));
   if(!leftObjectDetected) sensorNW = sensorNW / nw;
   if(!rightObjectDetected) sensorNE = sensorNE / ne;
+  if(!northObjectDetected) sensorNorth = sensorNorth / n;
   sensorEast = sensorEast / e;
   sensorWest = sensorWest / w;
   Serial.println("West reading: " + String(sensorWest));
   Serial.println("NW reading: " + String(sensorNW));
+  Serial.println("North reading: " + String(sensorNorth));
   Serial.println("NE reading: " + String(sensorNE));
   Serial.println("East reading: " + String(sensorEast));
 
@@ -553,11 +575,6 @@ void crawler() {
 }
 /****************************/
 
-
-void moveServo(){
-    //MAYBE REMOVE ME
-}
-
 void scanWifi() {
     while(true) {
         wifiData = "";
@@ -584,18 +601,6 @@ void scanWifi() {
         delay(1500);
     }
 }
-
-
-/* Convert degree value to radians */
-double degToRad(double degrees){
-  return (degrees * 71) / 4068;
-}
-
-/* Convert radian value to degrees */
-double radToDeg(double radians){
-  return (radians * 4068) / 71;
-}
-
 
 void loop() {
 }
