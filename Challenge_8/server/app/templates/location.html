@@ -61,8 +61,8 @@
     var gridSizeX = 69; // x size of each region
     var gridSizeY = 68; // y size of each region
 
-    var auto = true;
-    var start = true;
+    var auto = "autopilotOn";
+    var start = "start";
 
     // calculates difference in x of tracker from the origin
     function calculateXCoordinate(regionID) {
@@ -159,6 +159,7 @@
         socket.emit('moveCar', command);
         console.log("Command: ");
         console.log(command);
+        functionParams = command;
 
         // particle.function
         // var requestURL = "https://api.spark.io/v1/devices/" + deviceID + "/" + 'moveCar' + "/";
@@ -186,15 +187,18 @@
         socket.emit('startCar', start);
         console.log("Start car inside location.html: ");
         console.log(start);
-        // particle.function
+        
+        moveCar(start); // particle.function
 
         // toggles button for start and stop car
-        start = !start;
-        if (start) {
+        if (start == "start") {
+            start == "stop";
             document.getElementById('gobutton').src = '/static/gobutton.png';
-        } else {
+        } 
+        else if (start == "stop"){
+            start == "start";
             document.getElementById('gobutton').src = '/static/stopbutton.png';
-        }
+        }/*
         // particle.function
         // var requestURL = "https://api.spark.io/v1/devices/" + deviceID + "/" + 'moveCar' + "/";
         //   $.post( requestURL, { params: command, access_token: accessToken });
@@ -212,7 +216,7 @@
         },
         function(error, response, body) {
             console.log(error, response, body);
-        });
+        });*/
     }
 
     function autopilot() {
@@ -220,14 +224,16 @@
         socket.emit('autopilot', auto);
         console.log("Autopilot: ");
         console.log(auto);
+        moveCar(auto);  // particle function
 
-        auto = !auto;
-
-        if (auto) {
+        // toggle autopilot button
+        if (auto == "autopilotOn") {
+            auto = "autopilotOff"
             document.getElementById('autopilotButton').value = "Turn autopilot on";
-        } else {
+        } else  if (auto == "autopilotOff") {
+            auto = "autopilotOn"
             document.getElementById('autopilotButton').value = "Turn autopilot off";
-        }
+        }/*
         // particle.function
         // var requestURL = "https://api.spark.io/v1/devices/" + deviceID + "/" + 'moveCar' + "/";
         // $.post(requestURL, {
@@ -248,7 +254,7 @@
         },
         function(error, response, body) {
             console.log(error, response, body);
-        });
+        });*/
     }
 
     $(document).keyup(function(e) {
