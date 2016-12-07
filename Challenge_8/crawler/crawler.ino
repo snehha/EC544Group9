@@ -600,13 +600,13 @@ double radToDeg(double radians){
 }
 
 /*****************KNN***************/
-/*bool regCorner = Particle.function("corner", corner);
+bool regCorner = Particle.function("corner", corner);
 int corner(String turn){
   if(turn == "left")
     cornerDir = -1;
   else if(turn == "right")
     cornerDir = 1;
-}*/
+}
 /***********************************/
 
 

@@ -1,7 +1,7 @@
 # from app import app
 from flask import Flask, send_file, request, Response, render_template
 from flask_socketio import SocketIO, send, emit
-from camera import Camera
+#from camera import Camera
 #from pyKnn import *
 
 app = Flask(__name__)
