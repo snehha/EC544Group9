@@ -34,6 +34,8 @@ int disSpeed = 10;
 int turnDir = 0;
 int moveDir = 0;
 
+bool autopilot = true;
+
 //Speed values
 int curSpeed = 0;
 const int errDistance = 110;
@@ -138,16 +140,29 @@ void printLog(){
 /***** website control *****/
 int moveCar(String direction) {
     // receives command from photon
-    switch(direction) {
-      case "up": break;
-      case "down": break;
-      case "left": break;
-      case "right": break;
-      case "start": break;
-      case "stop": break;
-      case "autopilotOn": break;
-      case "autopilotOff": break;
-      default: break;
+    if(direction == "up") {
+      // moves crawler forward
+    }
+    else if (direction == "down") {
+      // moves crawler backwards
+    }
+    else if (direction == "left") {
+      // turns crawler left
+    }
+    else if (direction == "right") {
+      // turns crawler right
+    }
+    else if (direction == "start") {
+      changeSpeed(fullSpeed);
+    }
+    else if (direction == "stop") {
+      changeSpeed(stopped);
+    }
+    else if (direction == "autopilotOn") {
+      autopilot = true;
+    }
+    else if (direction == "autopilotOff") {
+      autopilot = false;
     }
 }
 
@@ -222,7 +237,7 @@ void getSensorData(int sensorID){
   int e = 1;
   int n = 1;
 
-  for (;(pos >= 0 && pos <=180); pos += incr) { // goes from 0 degrees to 90 degrees (Read left side)
+  for (; (pos >= 0 && pos <=180); pos += incr) { // goes from 0 degrees to 90 degrees (Read left side)
       lidarServo.write(pos);                    // tell servo to go to position in variable 'pos'
       delay(30);                                // waits 15ms for the servo to reach the position
       sensorValue = myLidarLite.distanceContinuous();
@@ -559,18 +574,20 @@ bool centerCorrect(int sensorNW, int sensorNE){
 //TODO looping crawler code, setTrim
 void crawler() {
   while(true) {
-    //TODO getUltraSoundDistance();
-    getSensorData(frontLidar);
-    delay(300);
-    //setTrim();
+    if(autopilot) {
+      //TODO getUltraSoundDistance();
+      getSensorData(frontLidar);
+      delay(300);
+      //setTrim();
 
-    //printLog();
+      //printLog();
 
-    /*bool val = stopCorrect();
-    if(!val)
-      val = errorCorrect(sensorNW,sensorNE);
-    if(!val)
-      centerCorrect(sensorNW,sensorNE);*/
+      /*bool val = stopCorrect();
+      if(!val)
+        val = errorCorrect(sensorNW,sensorNE);
+      if(!val)
+        centerCorrect(sensorNW,sensorNE);*/
+    }
   }
 }
 /****************************/
