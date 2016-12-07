@@ -12,21 +12,23 @@
 
 //#include <Wire.h>
 #include <LIDARLite.h>
+#include "application.h"
 
 LIDARLite myLidarLite;
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9800);
+  Wire.begin();
+
   myLidarLite.begin();
+  //myLidarLite.changeAddress(0x62, false, 0x64);
   myLidarLite.beginContinuous();
-  pinMode(4, INPUT);
+
+  pinMode(5, INPUT);
 }
 
 void loop() {
-  //if(!digitalRead(3)){
     Serial.print("Lidar Reading: ");
     Serial.println(myLidarLite.distanceContinuous());
 
-    delay(1000);
-  //}
 }

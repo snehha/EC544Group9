@@ -29,9 +29,9 @@
 
 #include "application.h"
 
-#include <LIDARLite.h>
+//#include <LIDARLite.h>
 
-LIDARLite myLidarLite;
+//LIDARLite myLidarLite;
 
 int lidarPins[] = {4};
 unsigned char addresses[] = {0x66,0x64};
@@ -52,10 +52,15 @@ void setup()
 
 
   Wire.begin();
-  myLidarLite.begin();
-  myLidarLite.changeAddressMultiPwrEn(2,sensorPins,addresses,false);
+  /*myLidarLite.begin();
+  myLidarLite.changeAddress(0x62, false, 0x64);
+  myLidarLite.beginContinuous();
+  pinMode(sensorPins[0], INPUT);
+*/
+  //myLidarLite.changeAddressMultiPwrEn(2,sensorPins,addresses,false);
 
   Serial.begin(9600);
+  Serial.println("test");
   while (!Serial);             // Leonardo: wait for serial monitor
   Serial.println("\nI2C Scanner");
 }
@@ -85,12 +90,13 @@ void loop()
       Serial.print(address,HEX);
       Serial.println("  !");
 
-      Serial.print("Lidar 0 distance: ");
-      Serial.println(myLidarLite.distance(true,true,addresses[0]));
-      delay(10);
+      //Serial.print("Lidar 0 distance: ");
+      //Serial.println(myLidarLite.distance(true,true,addresses[0]));
+    //  Serial.println(myLidarLite.distanceContinuous());
+/*      delay(10);
       Serial.print("Lidar 2 distance: ");
       Serial.println(myLidarLite.distance(true,true,addresses[1]));
-
+*/
       nDevices++;
     }
     else if (error==4)
