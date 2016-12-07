@@ -26,12 +26,13 @@ def getPrediction():
     #for tup in sample:
     #    print tup
     prediction = predict(sample,7)
+    print("PREDICTION IS: ",prediction)
     # L.append(prediction)
     # counter += 1
     # if(counter == 5):
     #     print prediction
     #     counter = 0
-    return int(prediction[6:])
+    return int(prediction[14:])
     #threading.Timer(1,myTimer).start()
 
 # Have to change so accepts tuple of tuples
@@ -81,7 +82,7 @@ def getResponse(neighbors):
         else:
             classVotes[response] = 1
     sortedVotes = sorted(classVotes.iteritems(), key=operator.itemgetter(1), reverse=True)
-    print sortedVotes
+    #print sortedVotes
     return sortedVotes[0][0]
 
 def predict(sample,k):
@@ -111,5 +112,3 @@ def predict(sample,k):
 # no = getResponse(ok)
 # #print no
 # #print count/sizeTrainingSet
-
-print(getPrediction())

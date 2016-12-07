@@ -93,7 +93,7 @@ void setupCrawler() {
 }
 /**************************************************/
 
-//#define WIFISTUFF
+#define WIFISTUFF
 //#define WEBSITECONTROL
 //TODO Uncomment wifiThread
 void setup() {
@@ -583,7 +583,7 @@ void scanWifi() {
             }
         }
         wifiData = data;
-        Serial.println(wifiData);
+        //Serial.println(wifiData);
         delay(1500);
     }
 }

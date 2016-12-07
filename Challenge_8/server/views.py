@@ -2,7 +2,8 @@
 from flask import Flask, send_file, request, Response, render_template
 from flask_socketio import SocketIO, send, emit
 #from camera import Camera
-#from pyKnn import *
+from pyKnn import *
+from reqRSS import sendPrediction
 
 app = Flask(__name__)
 
@@ -78,8 +79,9 @@ def testCoordinates():
 @socketio.on('refresh')
 def sendMessage():
     global region
-    # print ('got refresh')
-    emit('location_event', getPrediction())
+    currentLoc = getPrediction()
+    emit('location_event', currentLoc)
+    sendPrediction(currentLoc)
     #emit('location_event', region);
 
 @socketio.on('moveCar')

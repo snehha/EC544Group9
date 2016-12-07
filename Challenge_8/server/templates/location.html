@@ -137,14 +137,15 @@
 
     socket.on('location_event', function(msg) {
       updateCoordinate(msg);
-      knnSend(msg[6:0]);
+      sendKnn(msg);
     });
 
    function triggerRefresh() {
       socket.emit('refresh');
+      console.log("Emitting refresh js");
    } 
 
-   var refreshTimer = setInterval(triggerRefresh, 1000);
+   var refreshTimer = setInterval(triggerRefresh, 2000);
 
    // Particle Functions
 
@@ -239,74 +240,6 @@
         return true;
   });
 
-</script>
-<script type="text/javascript">
-  var Particle = require('particle-api-js');
-  var particle = new Particle();
-
-  var uName = 'phosho9@gmail.com';
-  var pWord = 'ilikepie9';
-
-  var listDev;
-  var myToken;
-
-  var token = particle.login({username:uName,password:pWord}).then(
-  //Success
-  function(data){
-    console.log("API call completed on promise resolve:",data.body.access_token);
-
-    //Get list of devices once logged in
-    myToken = data.body.access_token;
-
-    //Get list of devices currently on
-    var devicesPr = particle.listDevices({ auth: myToken });
-    devicesPr.then(
-      function(devices){
-        listDev = devices.body;
-      },
-      function(err) {
-        console.log('List devices call failed: ', err);
-      }
-    );
-
-  },
-  //Failure
-  function(err){
-    console.log("API call completed on promise fail: ",err)
-  });
-
-  function sendKnn(prediction){
-    //********IF IN CORNER CALL PARTICLE FUNCTION********//
-    //Put this in if statement
-    //Only 1 photon
-    var keys = Object.keys(listDev);
-    var fnPr = particle.callFunction({ deviceId: listDev[keys[0]].id, name: 'corner', argument: 'prediction:'+prediction, auth: myToken });
-
-    fnPr.then(
-      function(data) {
-        console.log('Knn called succesfully:', data);
-      }, function(err) {
-        console.log('An error occurred:', err);
-      });
-    /*
-    //console.log("-------------------------------------");
-    for(var i = 0; i < listDev.length; i++){
-      let id = listDev[i].id;
-      let name = listDev[i].name;
-      particle.getVariable({ deviceId: id, name: 'temperature', auth: myToken }).then(function(data) {
-        //console.log('Device variable retrieved successfully from id:',id,'with data:',data);
-        sendTemp(name,data);
-        saveTemp(id,data);
-      }, function(err) {
-        console.log('An error occurred while getting attrs from device with id:',id);
-        if(name in temp_dict) {
-        delete temp_dict[name];
-            console.log("Removing ", name);
-          }
-      });
-    }
-    //console.log("-------------------------------------");*/
-  }
 </script>
   </body>
 </html>
