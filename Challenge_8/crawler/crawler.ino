@@ -67,6 +67,9 @@ int maxGapOffset = 100;
 int medGapOffset = 30;
 int centerBuffer;
 
+//Knn variables
+int cornerDir;
+
 LIDARLite myLidarLite;
 
 void setupCrawler() {
@@ -551,6 +554,16 @@ double degToRad(double degrees){
 double radToDeg(double radians){
   return (radians * 4068) / 71;
 }
+
+/*****************KNN***************/
+/*bool regCorner = Particle.function("corner", corner);
+int corner(String turn){
+  if(turn == "left")
+    cornerDir = -1;
+  else if(turn == "right")
+    cornerDir = 1;
+}*/
+/***********************************/
 
 
 void loop() {

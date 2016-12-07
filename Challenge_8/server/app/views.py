@@ -79,8 +79,8 @@ def testCoordinates():
 def sendMessage():
     global region
     # print ('got refresh')
-    #emit('location_event', getPrediction())
-    emit('location_event', region);
+    emit('location_event', getPrediction())
+    #emit('location_event', region);
 
 @socketio.on('moveCar')
 def moveCar(command):
