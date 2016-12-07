@@ -21,28 +21,28 @@
     <h1 style="text-align: center;">Photonics 4th Floor Location Tracker</h1>
     <br />
     <br />
-    <div id="fourthfloor">
-        <img src="/static/fourthfloor.png" style="position: absolute; top: 720px; left: 210px">
-        <div id="tracker" style="color: red; position: absolute; top: -100px; left:-100px;">
+    <div id="fourthfloor" style="transform: scale(.35);">
+        <img id= "floorplan" src="/static/fourthfloor.png" style="position: absolute; left: 1610px;">
+        <div id="tracker" style="color: red; position: absolute; top: -1000px; left:-1000px;">
             <font size="6">&#9673;</font>
         </div>
     </div>
-    <div id="camera" style="position: absolute; top: 100px; left: 100px">
+    <div id="camera" style="position: absolute; top: 100px; left: 50px">
         <h1>Video Streaming</h1>
         <br>
         <!-- camera code -->
         <img id="streamimage" src="http://192.168.1.150:8090/?action=stream">
     </div>
-    <div id="controlArrows">
-        <h1 style="position: absolute; top: 100px; left: 835px">Remote Control</h1>
-        <input id="autopilotButton" type="button" value="Turn autopilot on" onclick="return autopilot();" style="position: absolute; top: 127px; left: 1120px" />
-        <input type="image" src="/static/uparrow.png" id="upArrow" onclick="return moveCar('up');" style="position: absolute; top: 200px; left: 975px" />
-        <input type="image" src="/static/downarrow.png" id="downArrow" onclick="return moveCar('down');" style="position: absolute; top: 550px; left: 975px" />
-        <input type="image" src="/static/leftarrow.png" id="leftArrow" onclick="return moveCar('left');" style="position: absolute; top: 350px; left: 825px" />
-        <input type="image" src="/static/rightarrow.png" id="rightArrow" onclick="return moveCar('right');" style="position: absolute; top: 350px; left: 1200px" />
-        <input type="image" src="/static/gobutton.png" id="gobutton" onclick="return startCar();" style="position: absolute; top: 390px; left: 1015px" />
+    <div id="controlArrows" style="transform: scale(.6);">
+        <h1 style="position: absolute; left: 835px">Remote Control </h1>
+        <input id="autopilotButton" type="button" value="Turn autopilot on" onclick="return autopilot();" style="position: absolute; top: 77px; left: 900px" />
+        <input type="image" src="/static/uparrow.png" id="upArrow" onclick="return moveCar('up');" style="position: absolute; top: 150px; left: 875px" />
+        <input type="image" src="/static/downarrow.png" id="downArrow" onclick="return moveCar('down');" style="position: absolute; top: 500px; left: 875px" />
+        <input type="image" src="/static/leftarrow.png" id="leftArrow" onclick="return moveCar('left');" style="position: absolute; top: 300px; left: 725px" />
+        <input type="image" src="/static/rightarrow.png" id="rightArrow" onclick="return moveCar('right');" style="position: absolute; top: 300px; left: 1100px" />
+        <input type="image" src="/static/gobutton.png" id="gobutton" onclick="return startCar();" style="position: absolute; top: 340px; left: 915px" />
     </div>
-    <footer style="text-align: center; padding-top: 1900px;">
+    <footer style="text-align: center; padding-top: 620px;">
         <p>Designed and Made by Group 9</p>
     </footer>
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
@@ -55,11 +55,14 @@
     var bottomLeftRegion = 36;
     var bottomRightRegion = 15;
     var elevatorRegion = 52;
-    var originX = 510; // region 27 x location
-    var originY = 930; // region 27 y location
+    var originX = 1910; // region 27 x location
+    var originY = 210; // region 27 y location
     var trackerDot = document.getElementById('tracker');
     var gridSizeX = 69; // x size of each region
     var gridSizeY = 68; // y size of each region
+
+    var auto = true;
+    var start = true;
 
     // calculates difference in x of tracker from the origin
     function calculateXCoordinate(regionID) {
@@ -178,8 +181,6 @@
             });
     }
 
-    var start = true;
-
     function startCar() {
         // send command to start/stop car
         socket.emit('startCar', start);
@@ -213,9 +214,6 @@
             console.log(error, response, body);
         });
     }
-
-
-    var auto = true;
 
     function autopilot() {
         // send autopilot command
