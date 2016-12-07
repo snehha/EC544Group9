@@ -602,10 +602,17 @@ double radToDeg(double radians){
 /*****************KNN***************/
 bool regCorner = Particle.function("corner", corner);
 int corner(String turn){
-  if(turn == "left")
+  if(turn == "left"){
     cornerDir = -1;
-  else if(turn == "right")
+    Serial.print("left");
+  }
+  else if(turn == "right"){
     cornerDir = 1;
+    Serial.print("right");
+  }
+  else{
+    Serial.print("cases mismatch");
+  }
 }
 /***********************************/
 
