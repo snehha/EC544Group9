@@ -50,23 +50,6 @@
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
     <script>
-<<<<<<< HEAD:Challenge_8/server/templates/location.html
-      var topLeftRegion = 27;
-      var topRightRegion = 24;
-      var bottomLeftRegion = 36;
-      var bottomRightRegion = 15;
-      var elevatorRegion = 52;
-      var originX = 510; // region 27 x location
-      var originY = 930; // region 27 y location
-      var trackerDot = document.getElementById('tracker');
-      var gridSizeX = 69; // x size of each region
-      var gridSizeY = 68; // y size of each region
-
-      var corners = []
-
-      // calculates difference in x of tracker from the origin
-      function calculateXCoordinate(regionID) {
-=======
     var topLeftRegion = 27;
     var topRightRegion = 24;
     var bottomLeftRegion = 36;
@@ -83,7 +66,6 @@
 
     // calculates difference in x of tracker from the origin
     function calculateXCoordinate(regionID) {
->>>>>>> origin/website_control:Challenge_8/server/app/templates/location.html
         var x;
         if (regionID >= topLeftRegion && regionID < elevatorRegion) // Left side regions
             return 0;
@@ -155,95 +137,6 @@
     var socket = io.connect('http://' + document.domain + ':' + location.port);
 
     socket.on('location_event', function(msg) {
-<<<<<<< HEAD:Challenge_8/server/templates/location.html
-      updateCoordinate(msg);
-      sendKnn(msg);
-    });
-
-   function triggerRefresh() {
-      socket.emit('refresh');
-      console.log("Emitting refresh js");
-   } 
-
-   var refreshTimer = setInterval(triggerRefresh, 2000);
-
-   // Particle Functions
-
-   var deviceID    = "<< device id >>";
-   var accessToken = "<< access token >>";
-
-   function moveCar(command) {
-      // moves car
-      socket.emit('moveCar',command);
-      console.log("Command: ");
-      console.log(command);
-/*
-      // particle.function
-      var requestURL = "https://api.spark.io/v1/devices/" + deviceID + "/" + 'moveCar' + "/";
-        $.post( requestURL, { params: command, access_token: accessToken });*/
-   }
-
-   var start = true;
-
-   function startCar() {
-      // send command to start/stop car
-      socket.emit('startCar',start);
-      console.log("Start car: ");
-      console.log(start);
-      // particle.function
-
-      // toggles button for start and stop car
-      start = !start;
-      if(start) {
-        document.getElementById('gobutton').src='/static/gobutton.png';
-      } else {
-        document.getElementById('gobutton').src='/static/stopbutton.png';
-      }
-   }
-
-   var auto = true;
-
-   function autopilot() {
-      // send autopilot command
-      socket.emit('autopilot',auto);
-      console.log("Autopilot: ");
-      console.log(auto);
-
-      auto = !auto;
-
-      if(auto) {
-        document.getElementById('autopilotButton').value = "Turn autopilot on";
-      }
-      else
-      {
-        document.getElementById('autopilotButton').value = "Turn autopilot off";
-      }
-   }
-
-   $(document).keyup(function(e) {
-    switch(e.which) {
-        case 32: // spacebar
-        startCar();
-        break;
-
-        case 37: // left
-        moveCar('left');
-        break;
-
-        case 38: // up
-        moveCar('up');
-        break;
-
-        case 39: // right
-        moveCar('right');
-        break;
-
-        case 40: // down
-        moveCar('down');
-        break;
-
-        default: return; // exit this handler for other keys
-=======
         updateCoordinate(msg);
     });
 
@@ -362,7 +255,6 @@
         function(error, response, body) {
             console.log(error, response, body);
         });*/
->>>>>>> origin/website_control:Challenge_8/server/app/templates/location.html
     }
 
     $(document).keyup(function(e) {
