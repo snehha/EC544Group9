@@ -23,21 +23,18 @@ def getPhotonWifi():
     return tuple(tempList)
 
 def sendPrediction(prediction):
-    result = ''
-    while not result:
-        payload = {'args':str(prediction),'access_token':'6cd8c58e6cad516b135d7dd70762d897a7f6a04d'}
-        try:
-            r = requests.post('http://192.168.1.150:8080/v1/devices/290041001947353236343033/corner', data=payload)
-        except:
-            pass
+    payload = {'args':str(prediction),'access_token':'6cd8c58e6cad516b135d7dd70762d897a7f6a04d'}
+    try:
+        r = requests.post('http://192.168.1.150:8080/v1/devices/290041001947353236343033/corner', data=payload)
+    except:
+        print("not ok")
     print(r.status_code)
 
 def sendCommand(command):
-    result = ''
-    while not result:
-        payload = {'args':command,'access_token':'6cd8c58e6cad516b135d7dd70762d897a7f6a04d'}
-        try:
-            r = requests.post('http://192.168.1.150:8080/v1/devices/290041001947353236343033/commandCar', data=payload)
-        except:
-            pass
+    payload = {'args':command,'access_token':'6cd8c58e6cad516b135d7dd70762d897a7f6a04d'}
+    try:
+        r = requests.post('http://192.168.1.150:8080/v1/devices/290041001947353236343033/moveCar', data=payload)
+    except:
+        print("not ok")
     print(r.status_code)
+

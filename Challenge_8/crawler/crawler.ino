@@ -73,6 +73,7 @@ int centerBuffer;
 
 //Knn variables
 int cornerDir;
+String recentPred;
 
 LIDARLite myLidarLite;
 
@@ -132,12 +133,16 @@ void printLog(){
   Serial.println(curWheelAngle);
   Serial.print("Trim Angle: ");
   Serial.println(trimValue);
+  Serial.print("KNN Reading: ");
+  Serial.println(trimValue);
+
 }
 
 
 /***** website control *****/
 int moveCar(String direction) {
     // receives command from photon
+    Serial.println("Keyboard command received: "+direction);
     if(direction == "up") {
       rForward();
     }
@@ -293,11 +298,11 @@ void getSensorData(int sensorID){
   if(!northObjectDetected) sensorNorth = sensorNorth / n;
   sensorEast = sensorEast / e;
   sensorWest = sensorWest / w;
-  Serial.println("West reading: " + String(sensorWest));
+  /*Serial.println("West reading: " + String(sensorWest));
   Serial.println("NW reading: " + String(sensorNW));
   Serial.println("North reading: " + String(sensorNorth));
   Serial.println("NE reading: " + String(sensorNE));
-  Serial.println("East reading: " + String(sensorEast));
+  Serial.println("East reading: " + String(sensorEast));*/
 
   delay(10);
 
@@ -561,6 +566,7 @@ void scanWifi() {
             }
         }
         wifiData = data;
+        Particle.publish("wifiDataHook", wifiData);
         //Serial.println(wifiData);
         delay(1500);
     }
@@ -617,17 +623,18 @@ void rBackward(){
 /************************************/
 
 /*****************KNN***************/
-int corner(String turn){
-  if(turn == "left"){
+int corner(String knnPred){
+  recentPred = knnPred;
+  if(knnPred == "left"){
     cornerDir = -1;
-    Serial.print("left");
+    Serial.print("Received command left");
   }
-  else if(turn == "right"){
+  else if(knnPred == "right"){
     cornerDir = 1;
-    Serial.print("right");
+    Serial.print("Received command right");
   }
   else{
-    Serial.print("cases mismatch");
+    Serial.print(recentPred);
   }
 }
 /***********************************/

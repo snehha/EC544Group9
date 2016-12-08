@@ -6,6 +6,7 @@ from reqRSS import getPhotonWifi
 
 trainingSet, fullSet = parseData()
 pruneSet = dict(fullSet)
+print("Parsed Data Correctly")
 
 # for x in fullSet:
 #     if random.randrange(1, 1000) > 100:
@@ -21,12 +22,11 @@ pruneSet = dict(fullSet)
 
 counter = 0
 L = []
-def getPrediction():
-    sample = getPhotonWifi()
+def getPrediction(sample):
+    #sample = getPhotonWifi()
     #for tup in sample:
     #    print tup
     prediction = predict(sample,7)
-    print("PREDICTION IS: ",prediction)
     # L.append(prediction)
     # counter += 1
     # if(counter == 5):
@@ -56,7 +56,7 @@ def euclideanDistance(instance1, instance2, length):
     return math.sqrt(distance)
 
 
-# Example test instance [(12314124,-75),(4124324,-25)]
+# Example test instance [(12314124,-75),(4124324,-25),.....]
 # Return value is the keys of the k nearest neighbors- iterate and grab labels
 def getNeighbors(testInstance, k):
     distances = []

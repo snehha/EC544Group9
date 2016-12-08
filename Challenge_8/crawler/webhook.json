@@ -1,0 +1,7 @@
+{
+    "event": "wifiDataHook",
+    "url": "http://192.168.1.120:5000/getSSIDs",
+    "requestType": "POST",
+    "deviceID": "290041001947353236343033",
+    "mydevices": true
+}

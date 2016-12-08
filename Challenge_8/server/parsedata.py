@@ -87,7 +87,7 @@ def parseData():
     #     print str(key)
     return regionAccessPoints, rawSample
 
-print len(parseData())
+#print len(parseData())
 
 
 #print globalCounter

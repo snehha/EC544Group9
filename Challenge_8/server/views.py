@@ -1,112 +1,128 @@
-# from app import app
-from flask import Flask, send_file, request, Response, render_template
-from flask_socketio import SocketIO, send, emit
-#from camera import Camera
+from flask import Flask
+from flask_socketio import SocketIO
+import ast
+
+from flask import send_file, request, Response, render_template
+from flask_socketio import send, emit
+import threading
 from pyKnn import *
 from reqRSS import *
 
-app = Flask(__name__)
+currentLoc = ''
+knnRefresh = 2.0
 
 
-@app.route('/')
-@app.route('/index')
+server = Flask(__name__)
+socketio = SocketIO(server)
+
+@server.route('/')
+@server.route('/index')
 def index():
     return render_template('location.html')
 
 
-@app.route('/static/fourthfloor.png')
+@server.route('/static/fourthfloor.png')
 def image():
     return send_file('static//img//fourthfloor.png', mimetype='image/png')
 
-@app.route('/static/uparrow.png')
+@server.route('/static/uparrow.png')
 def upArrowImage():
     return send_file('static//img//uparrow.png', mimetype='image/png')
 
-@app.route('/static/downarrow.png')
+@server.route('/static/downarrow.png')
 def downArrowImage():
     return send_file('static//img//downarrow.png', mimetype='image/png')
 
-@app.route('/static/leftarrow.png')
+@server.route('/static/leftarrow.png')
 def leftArrowImage():
     return send_file('static//img//leftarrow.png', mimetype='image/png')
 
-@app.route('/static/rightarrow.png')
+@server.route('/static/rightarrow.png')
 def rightArrowImage():
     return send_file('static//img//rightarrow.png', mimetype='image/png')
 
-@app.route('/static/gobutton.png')
+@server.route('/static/gobutton.png')
 def goButtonImage():
     return send_file('static//img//gobutton.png', mimetype='image/png')
 
-@app.route('/static/stopbutton.png')
+@server.route('/static/stopbutton.png')
 def stopButtonImage():
     return send_file('static//img//stopbutton.png', mimetype='image/png')
 
-def gen(camera):
-    while True:
-        frame = camera.get_frame()
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+@server.route('/ssid', methods=['GET','POST'])
+def getSSIDs():
+    global currentLoc
+    #Logic to get ssid from photon via webhook
+    dataReceivedFromUpdate = request.data
+    dataReceivedFromUpdate = tuple([tuple(group.split(',')) for group in ast.literal_eval(dataReceivedFromUpdate)])
+    print dataReceivedFromUpdate
+    
 
-@app.route('/video_feed')
-def video_feed():
-    return Response(gen(Camera()),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
-
-
-socketio = SocketIO(app)
-
+    # print("*****************: " + dataReceivedFromUpdate)
+    if dataReceivedFromUpdate:
+        # PHTON --> LOCAL ClOUD -> WEBHOOK -> THIS FUNCTION
+        print("Got SSIDs from Photon")
+        if (dataReceivedFromUpdate):
+            newLoc = getPrediction(dataReceivedFromUpdate)
+            if (currentLoc is newLoc):
+                return 'acknowledge but same'
+            else:
+                currentLoc = newLoc
+                sendPrediction(currentLoc)
+                return 'status 200'
+        else:
+            return 'error 500'
+    else:
+        return 'error 500'
+    return 'error 500'
 
 def send_location(location):
     socketio.emit('location_event', location)
     index()
 
-
-region = 27
-bottomRightRegion = 15;
-limit = 37
-
-
-def testCoordinates():
-    global region
-    region = region + 1
-    if region is limit:
-        region = 53
-    if region is 55:
-        region = bottomRightRegion
-
-
 @socketio.on('refresh')
 def sendMessage():
-    global region
-    currentLoc = getPrediction()
+    # global region
     emit('location_event', currentLoc)
-    sendPrediction(currentLoc)
-    #emit('location_event', region);
+    # emit('location_event', region);
 
 @socketio.on('moveCar')
 def moveCar(command):
-    print('moving car: ')
+    print('Sending Command: ')
     print (command)
-    commandCar(command)
+    sendCommand(command)
 
-@socketio.on('startCar')
-def moveCar(command):
-    print ("start car: ")
-    print(command)
-    commandCar(command)
+# region = 27
+# bottomRightRegion = 15;
+# limit = 37
 
-@socketio.on('autopilot')
-def autopilotToggle(command):
-    print ("Autopilot: ")
-    print(command)
-    commandCar(command)
+
+# def testCoordinates():
+#     global region
+#     region = region + 1
+#     if region is limit:
+#         region = 53
+#     if region is 55:
+#         region = bottomRightRegion
+
+
+
 
 
 # testCoordinates()
 
-if __name__ == '__main__':
-    socketio.run(app)
-    app.run(host='0.0.0.0')
+# def sendKnn():
+#     try:
+#         threading.Timer(knnRefresh,sendKnn).start()
+#     except(KeyboardInterrupt):
+#         thread.__stop()
 
-#app.run(host='0.0.0.0', debug=True)
+#     if(currentLoc):
+#         sendPrediction(currentLoc)
+#     print("Sending Prediction ",currentLoc)
+
+# sendKnn()
+
+if __name__ == '__main__':
+    print("Starting socketIO app")
+    socketio.run(server, debug=True, host='0.0.0.0')

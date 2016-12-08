@@ -35,7 +35,7 @@
     </div>
     <div id="controlArrows" style="transform: scale(.6);">
         <h1 style="position: absolute; left: 835px">Remote Control </h1>
-        <input id="autopilotButton" type="button" value="Turn autopilot on" onclick="return autopilot();" style="position: absolute; top: 77px; left: 900px" />
+        <input id="autopilotButton" type="button" value="Turn autopilot off" onclick="return autopilot();" style="position: absolute; top: 77px; left: 900px" />
         <input type="image" src="/static/uparrow.png" id="upArrow" onclick="return moveCar('up');" style="position: absolute; top: 150px; left: 875px" />
         <input type="image" src="/static/downarrow.png" id="downArrow" onclick="return moveCar('down');" style="position: absolute; top: 500px; left: 875px" />
         <input type="image" src="/static/leftarrow.png" id="leftArrow" onclick="return moveCar('left');" style="position: absolute; top: 300px; left: 725px" />
@@ -61,7 +61,7 @@
     var gridSizeX = 69; // x size of each region
     var gridSizeY = 68; // y size of each region
 
-    var auto = "autopilotOn";
+    var auto = "autopilotOff";
     var start = "start";
 
     // calculates difference in x of tracker from the origin
