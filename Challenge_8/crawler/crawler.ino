@@ -34,6 +34,8 @@ int disSpeed = 10;
 int turnDir = 0;
 int moveDir = 0;
 
+bool autopilot = true;
+
 //Speed values
 int curSpeed = 0;
 const int errDistance = 110;
@@ -94,16 +96,12 @@ void setupCrawler() {
 /**************************************************/
 
 #define WIFISTUFF
-//#define WEBSITECONTROL
 //TODO Uncomment wifiThread
 void setup() {
     Particle.variable("wifiData", &wifiData, STRING);
     Particle.function("corner", corner);
     // Website controls
-    #ifdef WEBSITECONTROL
     Particle.function("moveCar", moveCar);
-    Particle.function("startCar", startCar);
-    #endif
 
     lidarServo.attach(A4);
     delay(50);
@@ -137,13 +135,34 @@ void printLog(){
 }
 
 
-/***** website controls *****/
+/***** website control *****/
 int moveCar(String direction) {
-    // controls car
-}
+    // receives command from photon
+    if(direction == "up") {
+      rForward();
+    }
+    else if (direction == "down") {
+      rBackward();
 
-int startCar(String start) {
-    // controls car
+    }
+    else if (direction == "left") {
+      rLeft();
+    }
+    else if (direction == "right") {
+      rRight();
+    }
+    else if (direction == "start") {
+      //changeSpeed(fullSpeed);
+    }
+    else if (direction == "stop") {
+      changeSpeed(stopped);
+    }
+    else if (direction == "autopilotOn") {
+      autopilot = true;
+    }
+    else if (direction == "autopilotOff") {
+      autopilot = false;
+    }
 }
 
 /************ Crawler Code ************/
@@ -189,13 +208,14 @@ int degreeW = 150;
 int degreeNE = 60;
 int degreeE = 30;
 
-//TODO add halt threshold
+// TODO add halt threshold
 void getSensorData(int sensorID){
   int pos, incr;
   sensorNW = 0;
   sensorNE = 0;
   sensorWest = 0;
   sensorEast = 0;
+  sensorNorth = 0;
 
   if(clockwise){
       pos = 0;
@@ -208,22 +228,23 @@ void getSensorData(int sensorID){
 
   bool leftObjectDetected = false;
   bool rightObjectDetected = false;
+  bool northObjectDetected = false;
   int sensorValue = 0;
   int ne = 1;
   int nw = 1;
   int w = 1;
   int e = 1;
+  int n = 1;
 
-  for (;(pos >= 0 && pos <=180); pos += incr) { // goes from 0 degrees to 90 degrees (Read left side)
-      // in steps of 1 degree
-      lidarServo.write(pos);               // tell servo to go to position in variable 'pos'
-      delay(30);                        // waits 15ms for the servo to reach the position
+  for (; (pos >= 0 && pos <=180); pos += incr) { // goes from 0 degrees to 90 degrees (Read left side)
+      lidarServo.write(pos);                    // tell servo to go to position in variable 'pos'
+      delay(30);                                // waits 15ms for the servo to reach the position
       sensorValue = myLidarLite.distanceContinuous();
 
       if((pos >= degreeE) && (pos <= degreeNE)){  // North East
         ne++;
         if(!rightObjectDetected) {
-          if(sensorValue < haltDistance) {
+          if(sensorValue < haltDistance) {        // if object is detected, do not take average
             sensorNE = sensorValue;
             rightObjectDetected = true;
             Serial.println("---Right object detected: ");
@@ -239,7 +260,7 @@ void getSensorData(int sensorID){
       else if ((pos >= degreeNW) && (pos <= degreeW)){  // North West
         nw++;
         if(!leftObjectDetected) {
-          if(sensorValue < haltDistance) {
+          if(sensorValue < haltDistance) {    // if object is detected, do not take average
             sensorNW = sensorValue;
             leftObjectDetected = true;
             Serial.println("---Left object detected: ");
@@ -248,19 +269,33 @@ void getSensorData(int sensorID){
           }
         }
       }
-      else if(pos >= degreeW) {
+      else if(pos >= degreeW) { // West
         w++;
         sensorWest += sensorValue;
       }
+      else if((pos >= degreeNE) && (pos <= degreeNW)){  // North
+        n++;
+        if(!northObjectDetected) {
+          if(sensorValue < haltDistance) {  // if object is detected, do not take average
+            sensorNorth = sensorValue;
+            northObjectDetected = true;
+            Serial.println("---North object detected: ");
+          } else {
+            sensorNorth += sensorValue;
+          }
+        }
+      }
 
   }
-  Serial.println("E: " + String(e) + " NE: " + String(ne) + " NW: " + String(nw) + " w: " + String(w));
+  Serial.println("E: " + String(e) + " NE: " + String(ne) + " N: " + String(n) + " NW: " + String(nw) + " w: " + String(w));
   if(!leftObjectDetected) sensorNW = sensorNW / nw;
   if(!rightObjectDetected) sensorNE = sensorNE / ne;
+  if(!northObjectDetected) sensorNorth = sensorNorth / n;
   sensorEast = sensorEast / e;
   sensorWest = sensorWest / w;
   Serial.println("West reading: " + String(sensorWest));
   Serial.println("NW reading: " + String(sensorNW));
+  Serial.println("North reading: " + String(sensorNorth));
   Serial.println("NE reading: " + String(sensorNE));
   Serial.println("East reading: " + String(sensorEast));
 
@@ -344,14 +379,14 @@ void changeWheelAngle(double newWheelAngle){
   wheels.write(curWheelAngle);
 }
 
-//TODO ADD TO THE BREADBOARD
+// TODO ADD TO THE BREADBOARD
 void setTrim() {
   trimValue = analogRead(potPin);
   trimValue = map(trimValue, 0, 1018, -100, 100);
   trimValue /= 10;
 }
 
-//TODO IMPLEMENT
+// TODO IMPLEMENT
 void getUltraSoundDistance() {
   //reset sample total
   sum = 0;
@@ -366,7 +401,7 @@ void getUltraSoundDistance() {
 
 }
 
-//TODO Add reverse Sensor LIDAR readings here
+// TODO Add reverse Sensor LIDAR readings here
 void reverseCar(){
 
   /***
@@ -400,7 +435,7 @@ void reverseCar(){
 
   //changeReverseSpeed(stopped);
 }
-//TODO reverseCar
+// TODO reverseCar
 bool stopCorrect() {
   if ( (frontUltrasound <= haltDistance+20) || ((sensorNW < haltDistance) && (sensorNE < haltDistance))) {
     Serial.println("Entered Stop Correct - SENSOR");
@@ -483,29 +518,26 @@ bool centerCorrect(int sensorNW, int sensorNE){
   changeWheelAngle(wheelOffset);
 }
 
-//TODO looping crawler code, setTrim
+// TODO looping crawler code, setTrim
 void crawler() {
   while(true) {
-    //TODO getUltraSoundDistance();
-    getSensorData(frontLidar);
-    delay(300);
-    //setTrim();
+    if(autopilot) {
+      // TODO getUltraSoundDistance();
+      getSensorData(frontLidar);
+      delay(300);
+      //setTrim();
 
-    //printLog();
+      //printLog();
 
-    /*bool val = stopCorrect();
-    if(!val)
-      val = errorCorrect(sensorNW,sensorNE);
-    if(!val)
-      centerCorrect(sensorNW,sensorNE);*/
+      /*bool val = stopCorrect();
+      if(!val)
+        val = errorCorrect(sensorNW,sensorNE);
+      if(!val)
+        centerCorrect(sensorNW,sensorNE);*/
+    }
   }
 }
 /****************************/
-
-
-void moveServo(){
-    //MAYBE REMOVE ME
-}
 
 void scanWifi() {
     while(true) {
@@ -532,16 +564,6 @@ void scanWifi() {
         //Serial.println(wifiData);
         delay(1500);
     }
-}
-
-/* Convert degree value to radians */
-double degToRad(double degrees){
-  return (degrees * 71) / 4068;
-}
-
-/* Convert radian value to degrees */
-double radToDeg(double radians){
-  return (radians * 4068) / 71;
 }
 
 /***************Car Control****************/
@@ -609,7 +631,5 @@ int corner(String turn){
   }
 }
 /***********************************/
-
-
 void loop() {
 }
