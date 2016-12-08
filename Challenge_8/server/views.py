@@ -2,8 +2,12 @@
 from flask import Flask, send_file, request, Response, render_template
 from flask_socketio import SocketIO, send, emit
 #from camera import Camera
+<<<<<<< HEAD:Challenge_8/server/views.py
 from pyKnn import *
 from reqRSS import sendPrediction
+=======
+#from pyKnn import *
+>>>>>>> origin/website_control:Challenge_8/server/app/views.py
 
 app = Flask(__name__)
 
