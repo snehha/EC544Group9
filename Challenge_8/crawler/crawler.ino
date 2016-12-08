@@ -9,6 +9,7 @@ String BSSID = "";
 
 Thread* wifiThread;
 Thread* crawlerThread;
+Thread* serialThread;
 
 Servo lidarServo;
 
@@ -72,8 +73,11 @@ int medGapOffset = 30;
 int centerBuffer;
 
 //Knn variables
-int cornerDir;
-String recentPred;
+String knnCommand; //Left or Right
+bool cornerSoon = false;
+int inTurnRadius = 30;
+int prevLidar, lidarCalc;
+const double turnRatio = 2.0;
 
 LIDARLite myLidarLite;
 
@@ -100,7 +104,7 @@ void setupCrawler() {
 //TODO Uncomment wifiThread
 void setup() {
     Particle.variable("wifiData", &wifiData, STRING);
-    Particle.function("corner", corner);
+    //Particle.function("corner", corner);
     // Website controls
     Particle.function("moveCar", moveCar);
 
@@ -115,6 +119,7 @@ void setup() {
     #endif
 
     crawlerThread = new Thread("sample", crawler);
+    serialThread = new Thread("sample",serialComm);
 }
 
 void printLog(){
@@ -292,7 +297,7 @@ void getSensorData(int sensorID){
       }
 
   }
-  Serial.println("E: " + String(e) + " NE: " + String(ne) + " N: " + String(n) + " NW: " + String(nw) + " w: " + String(w));
+  //Serial.println("E: " + String(e) + " NE: " + String(ne) + " N: " + String(n) + " NW: " + String(nw) + " w: " + String(w));
   if(!leftObjectDetected) sensorNW = sensorNW / nw;
   if(!rightObjectDetected) sensorNE = sensorNE / ne;
   if(!northObjectDetected) sensorNorth = sensorNorth / n;
@@ -528,19 +533,44 @@ void crawler() {
   while(true) {
     if(autopilot) {
       // TODO getUltraSoundDistance();
-      getSensorData(frontLidar);
-      delay(300);
+      if(!cornerSoon)
+        getSensorData(frontLidar);
+      else
+        checkCorner();
       //setTrim();
 
       //printLog();
 
       /*bool val = stopCorrect();
       if(!val)
+        val = adjustCourse();
+      if(!val)
         val = errorCorrect(sensorNW,sensorNE);
       if(!val)
         centerCorrect(sensorNW,sensorNE);*/
     }
   }
+}
+
+void adjustCourse(){
+  if(knnCommand == "left")
+    changeWheelAngle(-5);
+  else if(knnCommand == "right")
+    changeWheelAngle(5);
+}
+
+void checkCorner(){
+    int lidarCalc = myLidarLite.distanceContinuous();
+    if(knnCommand == "right" && (lidarCalc/prevLidar > turnRatio)){
+      changeWheelAngle(inTurnRadius);
+      cornerSoon = false;
+      knnCommand = "";
+    }
+    else if(knnCommand == "left" && (lidarCalc/prevLidar > turnRatio)){
+      changeWheelAngle(inTurnRadius*-1);
+      cornerSoon = false;
+      knnCommand = "";
+    }
 }
 /****************************/
 
@@ -621,9 +651,33 @@ void rBackward(){
   changeReverseSpeed(moveDir);
 }
 /************************************/
-
+void serialComm(){
+  while(true){
+    knnCommand = "";
+    while(Serial.available() > 0 ){
+      knnCommand += Serial.read();
+    }
+    if(knnCommand != "")
+      Serial.print(knnCommand);
+    updatePref();
+  }
+}
+void updatePref(){
+  if(knnCommand == "left"){
+    cornerSoon = true;
+    lidarServo.write(180);
+    delay(50);
+    prevLidar = myLidarLite.distanceContinuous();
+  }
+  else if(knnCommand == "right"){
+    cornerSoon = true;
+    lidarServo.write(0);
+    delay(50);
+    prevLidar = myLidarLite.distanceContinuous();
+  }
+}
 /*****************KNN***************/
-int corner(String knnPred){
+/*int corner(String knnCommand){
   recentPred = knnPred;
   if(knnPred == "left"){
     cornerDir = -1;
@@ -636,7 +690,7 @@ int corner(String knnPred){
   else{
     Serial.print(recentPred);
   }
-}
+}*/
 /***********************************/
 void loop() {
 }
