@@ -64,6 +64,7 @@ int sensorNE;
 int sensorWest;
 int sensorEast;
 int sensorNorth;
+int sensorSouth;
 long frontUltrasound;
 
 //Center distance on startup
@@ -93,9 +94,11 @@ void setupCrawler() {
 
     //Record the current center
     getSensorData(frontLidar);                  //Stored globally in sensorNW, sensorNE
+
     centerPoint = (sensorNW+sensorNE)/2;
     centerBuffer = centerPoint+medGapOffset;
 
+    getSensorData(backLidar);
     changeSpeed(fullSpeed);
 }
 /**************************************************/
@@ -132,6 +135,8 @@ void printLog(){
   Serial.println(centerPoint);
   Serial.print("Front Sensor: ");
   Serial.println(frontUltrasound);
+  Serial.print("Back Sensor: ");
+  Serial.println(sensorSouth);
   Serial.print("Current Speed: ");
   Serial.println(curSpeed);
   Serial.print("Wheel Angle: ");
@@ -221,97 +226,103 @@ int degreeE = 30;
 // TODO add halt threshold
 void getSensorData(int sensorID){
   int pos, incr;
-  sensorNW = 0;
-  sensorNE = 0;
-  sensorWest = 0;
-  sensorEast = 0;
-  sensorNorth = 0;
+  if(sensorID == 0){
+    sensorNW = 0;
+    sensorNE = 0;
+    sensorWest = 0;
+    sensorEast = 0;
+    sensorNorth = 0;
+    if(clockwise){
+        pos = 0;
+        incr = 5;
+    }
+    else{
+        pos = 180;
+        incr = -5;
+    }
+    bool leftObjectDetected = false;
+    bool rightObjectDetected = false;
+    bool northObjectDetected = false;
+    bool southObjectDetected = false;
+    int sensorValue = 0;
+    int ne = 1;
+    int nw = 1;
+    int w = 1;
+    int e = 1;
+    int n = 1;
+    for (; (pos >= 0 && pos <=180); pos += incr) { // goes from 0 degrees to 90 degrees (Read left side)
+        lidarServo.write(pos);                    // tell servo to go to position in variable 'pos'
+        delay(30);                                // waits 15ms for the servo to reach the position
+        sensorValue = myLidarLite.distanceContinuous();
 
-  if(clockwise){
-      pos = 0;
-      incr = 5;
-  }
-  else{
-      pos = 180;
-      incr = -5;
-  }
-
-  bool leftObjectDetected = false;
-  bool rightObjectDetected = false;
-  bool northObjectDetected = false;
-  int sensorValue = 0;
-  int ne = 1;
-  int nw = 1;
-  int w = 1;
-  int e = 1;
-  int n = 1;
-
-  for (; (pos >= 0 && pos <=180); pos += incr) { // goes from 0 degrees to 90 degrees (Read left side)
-      lidarServo.write(pos);                    // tell servo to go to position in variable 'pos'
-      delay(30);                                // waits 15ms for the servo to reach the position
-      sensorValue = myLidarLite.distanceContinuous();
-
-      if((pos >= degreeE) && (pos <= degreeNE)){  // North East
-        ne++;
-        if(!rightObjectDetected) {
-          if(sensorValue < haltDistance) {        // if object is detected, do not take average
-            sensorNE = sensorValue;
-            rightObjectDetected = true;
-            Serial.println("---Right object detected: ");
-          } else {
-            sensorNE += sensorValue;
+        if((pos >= degreeE) && (pos <= degreeNE)){  // North East
+          ne++;
+          if(!rightObjectDetected) {
+            if(sensorValue < haltDistance) {        // if object is detected, do not take average
+              sensorNE = sensorValue;
+              rightObjectDetected = true;
+              Serial.println("---Right object detected: ");
+            } else {
+              sensorNE += sensorValue;
+            }
           }
         }
-      }
-      else if(pos <= degreeE) { // East
-        sensorEast += sensorValue;
-        e++;
-      }
-      else if ((pos >= degreeNW) && (pos <= degreeW)){  // North West
-        nw++;
-        if(!leftObjectDetected) {
-          if(sensorValue < haltDistance) {    // if object is detected, do not take average
-            sensorNW = sensorValue;
-            leftObjectDetected = true;
-            Serial.println("---Left object detected: ");
-          } else {
-            sensorNW += sensorValue;
+        else if(pos <= degreeE) { // East
+          sensorEast += sensorValue;
+          e++;
+        }
+        else if ((pos >= degreeNW) && (pos <= degreeW)){  // North West
+          nw++;
+          if(!leftObjectDetected) {
+            if(sensorValue < haltDistance) {    // if object is detected, do not take average
+              sensorNW = sensorValue;
+              leftObjectDetected = true;
+              Serial.println("---Left object detected: ---");
+            } else {
+              sensorNW += sensorValue;
+            }
           }
         }
-      }
-      else if(pos >= degreeW) { // West
-        w++;
-        sensorWest += sensorValue;
-      }
-      else if((pos >= degreeNE) && (pos <= degreeNW)){  // North
-        n++;
-        if(!northObjectDetected) {
-          if(sensorValue < haltDistance) {  // if object is detected, do not take average
-            sensorNorth = sensorValue;
-            northObjectDetected = true;
-            Serial.println("---North object detected: ");
-          } else {
-            sensorNorth += sensorValue;
+        else if(pos >= degreeW) { // West
+          w++;
+          sensorWest += sensorValue;
+        }
+        else if((pos >= degreeNE) && (pos <= degreeNW)){  // North
+          n++;
+          if(!northObjectDetected) {
+            if(sensorValue < haltDistance) {  // if object is detected, do not take average
+              sensorNorth = sensorValue;
+              northObjectDetected = true;
+              Serial.println("---North object detected: ---");
+            } else {
+              sensorNorth += sensorValue;
+            }
           }
         }
-      }
+    }
+    //Serial.println("E: " + String(e) + " NE: " + String(ne) + " N: " + String(n) + " NW: " + String(nw) + " w: " + String(w));
+    if(!leftObjectDetected) sensorNW = sensorNW / nw;
+    if(!rightObjectDetected) sensorNE = sensorNE / ne;
+    if(!northObjectDetected) sensorNorth = sensorNorth / n;
+    sensorEast = sensorEast / e;
+    sensorWest = sensorWest / w;
+    /*Serial.println("West reading: " + String(sensorWest));
+    Serial.println("NW reading: " + String(sensorNW));
+    Serial.println("North reading: " + String(sensorNorth));
+    Serial.println("NE reading: " + String(sensorNE));
+    Serial.println("East reading: " + String(sensorEast));*/
+    delay(10);
 
+    clockwise = !clockwise;
   }
-  //Serial.println("E: " + String(e) + " NE: " + String(ne) + " N: " + String(n) + " NW: " + String(nw) + " w: " + String(w));
-  if(!leftObjectDetected) sensorNW = sensorNW / nw;
-  if(!rightObjectDetected) sensorNE = sensorNE / ne;
-  if(!northObjectDetected) sensorNorth = sensorNorth / n;
-  sensorEast = sensorEast / e;
-  sensorWest = sensorWest / w;
-  /*Serial.println("West reading: " + String(sensorWest));
-  Serial.println("NW reading: " + String(sensorNW));
-  Serial.println("North reading: " + String(sensorNorth));
-  Serial.println("NE reading: " + String(sensorNE));
-  Serial.println("East reading: " + String(sensorEast));*/
-
-  delay(10);
-
-  clockwise = !clockwise;
+  else if (sensorID == 1){
+    sensorSouth = 0;
+    bool southObjectDetected = false;
+    int sensorValue = true;
+    int s = 1;
+    sensorSouth = myLidarLite.distanceContinuous();
+    sensorSouth = sensorSouth/s;
+  }
 }
 
 //Change the speed of the rover up or down.
@@ -405,10 +416,8 @@ void getUltraSoundDistance() {
     sum += analogVolt;
     delay(10);
   }
-
   inches = sum / avgRange;
   frontUltrasound = inches * 2.54;
-
 }
 
 // TODO Add reverse Sensor LIDAR readings here
@@ -436,11 +445,11 @@ void reverseCar(){
       changeWheelAngle(wheelChange);
       changeReverseSpeed(-15);
     }
-    int backTimers = 33*fullSpeed+600;
-    while(backTimers != 0 || backLidar <= haltDistance + 20){
+    int backTimers = 33 * fullSpeed+600;
+    while(backTimers != 0 || sensorSouth <= haltDistance + 20){
       backTimers--;
     }
-    changeWheelAngle(-1*wheelChange);
+    changeWheelAngle(-1 * wheelChange);
   }
 
   //changeReverseSpeed(stopped);
@@ -509,7 +518,6 @@ bool centerCorrect(int sensorNW, int sensorNE){
     Serial.println("Entered Center Correct - Gap Right");
     wheelOffset = maxWheelOffset * cos(pi/2*(sensorNW/centerPoint))/turnStrength;
   }
-
   //Center
   else{
     //Move Right
@@ -524,7 +532,6 @@ bool centerCorrect(int sensorNW, int sensorNE){
     }
     wheelOffset = wheelOffsetRight + wheelOffsetLeft;
   }
-
   changeWheelAngle(wheelOffset);
 }
 
@@ -582,7 +589,7 @@ void scanWifi() {
         WiFiAccessPoint aps[20];
         int found = WiFi.scan(aps, 20);
 
-        for (int i=0; i<found; i++) {
+        for (int i = 0; i < found; i++) {
             BSSID = "";
             WiFiAccessPoint& ap = aps[i];
 
@@ -648,6 +655,7 @@ void rBackward(){
   else{
     moveDir -= disSpeed;
   }
+  //reverseCar()
   changeReverseSpeed(moveDir);
 }
 /************************************/
