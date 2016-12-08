@@ -93,15 +93,12 @@ void setupCrawler() {
 /**************************************************/
 
 //#define WIFISTUFF
-//#define WEBSITECONTROL
-//TODO Uncomment wifiThread
+// TODO Uncomment wifiThread
 void setup() {
     Particle.variable("wifiData", &wifiData, STRING);
 
     // Website controls
-    #ifdef WEBSITECONTROL
     Particle.function("moveCar", moveCar);
-    #endif
 
     lidarServo.attach(A4);
     delay(50);
@@ -153,7 +150,7 @@ int moveCar(String direction) {
       // turns crawler right
     }
     else if (direction == "start") {
-      changeSpeed(fullSpeed);
+      //changeSpeed(fullSpeed);
     }
     else if (direction == "stop") {
       changeSpeed(stopped);
@@ -209,7 +206,7 @@ int degreeW = 150;
 int degreeNE = 60;
 int degreeE = 30;
 
-//TODO add halt threshold
+// TODO add halt threshold
 void getSensorData(int sensorID){
   int pos, incr;
   sensorNW = 0;
@@ -432,14 +429,14 @@ void changeWheelAngle(double newWheelAngle){
   wheels.write(curWheelAngle);
 }
 
-//TODO ADD TO THE BREADBOARD
+// TODO ADD TO THE BREADBOARD
 void setTrim() {
   trimValue = analogRead(potPin);
   trimValue = map(trimValue, 0, 1018, -100, 100);
   trimValue /= 10;
 }
 
-//TODO IMPLEMENT
+// TODO IMPLEMENT
 void getUltraSoundDistance() {
   //reset sample total
   sum = 0;
@@ -454,7 +451,7 @@ void getUltraSoundDistance() {
 
 }
 
-//TODO Add reverse Sensor LIDAR readings here
+// TODO Add reverse Sensor LIDAR readings here
 void reverseCar(){
 
   /***
@@ -488,7 +485,7 @@ void reverseCar(){
 
   //changeReverseSpeed(stopped);
 }
-//TODO reverseCar
+// TODO reverseCar
 bool stopCorrect() {
   if ( (frontUltrasound <= haltDistance+20) || ((sensorNW < haltDistance) && (sensorNE < haltDistance))) {
     Serial.println("Entered Stop Correct - SENSOR");
@@ -571,11 +568,11 @@ bool centerCorrect(int sensorNW, int sensorNE){
   changeWheelAngle(wheelOffset);
 }
 
-//TODO looping crawler code, setTrim
+// TODO looping crawler code, setTrim
 void crawler() {
   while(true) {
     if(autopilot) {
-      //TODO getUltraSoundDistance();
+      // TODO getUltraSoundDistance();
       getSensorData(frontLidar);
       delay(300);
       //setTrim();
