@@ -74,7 +74,10 @@ int centerBuffer;
 
 //Knn variables
 String knnCommand; //Left or Right
+String leftKey = "10810110211610";
+String rightKey = "11410510310411610";
 bool cornerSoon = false;
+bool initTurnLid = false;
 int inTurnRadius = 30;
 int prevLidar, lidarCalc;
 const double turnRatio = 2.0;
@@ -537,6 +540,7 @@ void crawler() {
         getSensorData(frontLidar);
       else
         checkCorner();
+      Serial.println("Autopilot");
       //setTrim();
 
       //printLog();
@@ -553,20 +557,35 @@ void crawler() {
 }
 
 void adjustCourse(){
-  if(knnCommand == "left")
+  if(knnCommand == leftKey)
     changeWheelAngle(-5);
-  else if(knnCommand == "right")
+  else if(knnCommand == rightKey)
     changeWheelAngle(5);
 }
 
 void checkCorner(){
+    if(initTurnLid){
+      if(knnCommand == leftKey){
+        lidarServo.write(170);
+        delay(50);
+        prevLidar = myLidarLite.distanceContinuous();
+        initTurnLid = false;
+      }
+      else if(knnCommand == rightKey){
+        lidarServo.write(20);
+        delay(50);
+        prevLidar = myLidarLite.distanceContinuous();
+        initTurnLid = false;
+      }
+    }
     int lidarCalc = myLidarLite.distanceContinuous();
-    if(knnCommand == "right" && (lidarCalc/prevLidar > turnRatio)){
+    Serial.println("Corner lidar Dist: "+lidarCalc);
+    if(knnCommand == rightKey && (lidarCalc/prevLidar > turnRatio)){
       changeWheelAngle(inTurnRadius);
       cornerSoon = false;
       knnCommand = "";
     }
-    else if(knnCommand == "left" && (lidarCalc/prevLidar > turnRatio)){
+    else if(knnCommand == leftKey && (lidarCalc/prevLidar > turnRatio)){
       changeWheelAngle(inTurnRadius*-1);
       cornerSoon = false;
       knnCommand = "";
@@ -658,22 +677,11 @@ void serialComm(){
       knnCommand += Serial.read();
     }
     if(knnCommand != "")
-      Serial.print(knnCommand);
-    updatePref();
-  }
-}
-void updatePref(){
-  if(knnCommand == "left"){
-    cornerSoon = true;
-    lidarServo.write(180);
-    delay(50);
-    prevLidar = myLidarLite.distanceContinuous();
-  }
-  else if(knnCommand == "right"){
-    cornerSoon = true;
-    lidarServo.write(0);
-    delay(50);
-    prevLidar = myLidarLite.distanceContinuous();
+      Serial.println("Command Received:" + knnCommand);
+    if(knnCommand == leftKey || knnCommand == rightKey){
+      cornerSoon = true;
+      initTurnLid = true;
+    }
   }
 }
 /*****************KNN***************/
