@@ -3,7 +3,7 @@ from flask import Flask, send_file, request, Response, render_template
 from flask_socketio import SocketIO, send, emit
 #from camera import Camera
 from pyKnn import *
-from reqRSS import sendPrediction
+from reqRSS import *
 
 app = Flask(__name__)
 
@@ -88,16 +88,19 @@ def sendMessage():
 def moveCar(command):
     print('moving car: ')
     print (command)
+    commandCar(command)
 
 @socketio.on('startCar')
 def moveCar(command):
     print ("start car: ")
     print(command)
+    commandCar(command)
 
 @socketio.on('autopilot')
 def autopilotToggle(command):
     print ("Autopilot: ")
     print(command)
+    commandCar(command)
 
 
 # testCoordinates()

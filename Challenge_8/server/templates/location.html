@@ -147,25 +147,25 @@
     var refreshTimer = setInterval(triggerRefresh, 1000);
 
     // Particle Functions
-    var http = require('http');
-    var request = require('request');
-    var deviceID = "42003c001447353236343033";
+//    var http = require('http');
+    //var request = require('request');
+    /*var deviceID = "42003c001447353236343033";
     var accessToken = "27b64a1d23d193f26679213a4db8872ba17904aa";
     var functionName = serverSendTest;
-    var functionParams = command;
+    var functionParams = command;*/
 
     function moveCar(command) {
         // moves car
         socket.emit('moveCar', command);
         console.log("Command: ");
         console.log(command);
-        functionParams = command;
+        //functionParams = command;
 
         // particle.function
         // var requestURL = "https://api.spark.io/v1/devices/" + deviceID + "/" + 'moveCar' + "/";
         //   $.post( requestURL, { params: command, access_token: accessToken });
 
-        request({
+        /*request({
                 uri: "https://api.spark.io/v1/devices/" + deviceID + "/" + functionName,
                 method: "POST",
                 form: {
@@ -179,7 +179,7 @@
             },
             function(error, response, body) {
                 console.log(error, response, body);
-            });
+            });*/
     }
 
     function startCar() {
@@ -192,11 +192,11 @@
 
         // toggles button for start and stop car
         if (start == "start") {
-            start == "stop";
+            start = "stop";
             document.getElementById('gobutton').src = '/static/gobutton.png';
         } 
         else if (start == "stop"){
-            start == "start";
+            start = "start";
             document.getElementById('gobutton').src = '/static/stopbutton.png';
         }/*
         // particle.function
@@ -258,6 +258,7 @@
     }
 
     $(document).keyup(function(e) {
+        console.log(e.which)
         switch (e.which) {
             case 32: // spacebar
                 startCar();

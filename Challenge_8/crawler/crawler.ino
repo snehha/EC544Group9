@@ -98,7 +98,7 @@ void setupCrawler() {
 //TODO Uncomment wifiThread
 void setup() {
     Particle.variable("wifiData", &wifiData, STRING);
-
+    Particle.function("corner", corner);
     // Website controls
     #ifdef WEBSITECONTROL
     Particle.function("moveCar", moveCar);
@@ -116,8 +116,6 @@ void setup() {
     #endif
 
     crawlerThread = new Thread("sample", crawler);
-
-
 }
 
 void printLog(){
@@ -269,58 +267,6 @@ void getSensorData(int sensorID){
   delay(10);
 
   clockwise = !clockwise;
-}
-
-void rLeft(){
-  //Not turned left so make straight
-  if(turnDir > 0){
-    turnDir = 0;
-  }
-  //Turn more left
-  else{
-    turnDir -= disTurn;
-  }
-  changeWheelAngle(turnDir);
-}
-
-void rRight(){
-  //Not turned right so make straight
-  if(turnDir < 0){
-    turnDir = 0;
-  }
-  //Turn more right
-  else{
-    turnDir += disTurn;
-  }
-  changeWheelAngle(turnDir);
-}
-
-void rForward(){
-  //Moving backwards so stop
-  if(moveDir < 0){
-    moveDir = 0;
-  }
-  //Move faster
-  else{
-    moveDir += disSpeed;
-  }
-  changeSpeed(moveDir);
-}
-
-void rBackwards(){
-  //Moving forwards so stop
-  if(moveDir > 0){
-    moveDir = 0;
-  }
-  //Move faster
-  else{
-    moveDir -= disSpeed;
-  }
-  changeReverseSpeed(moveDir);
-}
-
-void halt(){
-  changeSpeed(0);
 }
 
 //Change the speed of the rover up or down.
@@ -588,7 +534,6 @@ void scanWifi() {
     }
 }
 
-
 /* Convert degree value to radians */
 double degToRad(double degrees){
   return (degrees * 71) / 4068;
@@ -599,8 +544,57 @@ double radToDeg(double radians){
   return (radians * 4068) / 71;
 }
 
+/***************Car Control****************/
+void rLeft(){
+  //Not turned left so make straight
+  if(turnDir > 0){
+    turnDir = 0;
+  }
+  //Turn more left
+  else{
+    turnDir -= disTurn;
+  }
+  changeWheelAngle(turnDir);
+}
+
+void rRight(){
+  //Not turned right so make straight
+  if(turnDir < 0){
+    turnDir = 0;
+  }
+  //Turn more right
+  else{
+    turnDir += disTurn;
+  }
+  changeWheelAngle(turnDir);
+}
+
+void rForward(){
+  //Moving backwards so stop
+  if(moveDir < 0){
+    moveDir = 0;
+  }
+  //Move faster
+  else{
+    moveDir += disSpeed;
+  }
+  changeSpeed(moveDir);
+}
+
+void rBackward(){
+  //Moving forwards so stop
+  if(moveDir > 0){
+    moveDir = 0;
+  }
+  //Move faster
+  else{
+    moveDir -= disSpeed;
+  }
+  changeReverseSpeed(moveDir);
+}
+/************************************/
+
 /*****************KNN***************/
-bool regCorner = Particle.function("corner", corner);
 int corner(String turn){
   if(turn == "left"){
     cornerDir = -1;
