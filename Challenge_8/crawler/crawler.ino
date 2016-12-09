@@ -549,18 +549,19 @@ void crawler() {
 
       bool val = stopCorrect();
       if(!val){
-        val = adjustCourse();
+        val = hugWall();
       }
       if(!val){
         val = errorCorrect(sensorNW,sensorNE);
       }
-      if(!val)
+      if(!val){
         centerCorrect(sensorNW,sensorNE);
+      }
     }
   }
 }
 
-bool adjustCourse(){
+bool hugWall(){
   if(knnCommand == leftKey) {
     changeWheelAngle(-5);
     return true;
