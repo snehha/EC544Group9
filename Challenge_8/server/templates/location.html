@@ -40,7 +40,7 @@
         <input type="image" src="/static/downarrow.png" id="downArrow" onclick="return moveCar('down');" style="position: absolute; top: 500px; left: 875px" />
         <input type="image" src="/static/leftarrow.png" id="leftArrow" onclick="return moveCar('left');" style="position: absolute; top: 300px; left: 725px" />
         <input type="image" src="/static/rightarrow.png" id="rightArrow" onclick="return moveCar('right');" style="position: absolute; top: 300px; left: 1100px" />
-        <input type="image" src="/static/gobutton.png" id="gobutton" onclick="return startCar();" style="position: absolute; top: 340px; left: 915px" />
+        <input type="image" src="/static/stopbutton.png" id="gobutton" onclick="return startCar();" style="position: absolute; top: 340px; left: 915px" />
     </div>
     <footer style="text-align: center; padding-top: 620px;">
         <p>Designed and Made by Group 9</p>
@@ -138,6 +138,7 @@
 
     socket.on('location_event', function(msg) {
         updateCoordinate(msg);
+        console.log(msg);
     });
 
     /*function triggerRefresh() {
@@ -164,11 +165,11 @@
         // toggles button for start and stop car
         if (start == "start") {
             start = "stop";
-            document.getElementById('gobutton').src = '/static/stopbutton.png';
+            //document.getElementById('gobutton').src = '/static/stopbutton.png';
         } 
         else if (start == "stop"){
             start = "start";
-            document.getElementById('gobutton').src = '/static/gobutton.png';
+            //document.getElementById('gobutton').src = '/static/gobutton.png';
         }
     }
 
@@ -182,10 +183,10 @@
         // toggle autopilot button
         if (auto == "autopilotOn") {
             auto = "autopilotOff"
-            document.getElementById('autopilotButton').value = "Turn autopilot on";
+            document.getElementById('autopilotButton').value = "Turn autopilot off";
         } else  if (auto == "autopilotOff") {
             auto = "autopilotOn"
-            document.getElementById('autopilotButton').value = "Turn autopilot off";
+            document.getElementById('autopilotButton').value = "Turn autopilot on";
         }
     }
 
