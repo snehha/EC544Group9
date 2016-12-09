@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+  #!/usr/bin/env python
 
 import socket
 import json
@@ -24,20 +24,20 @@ def sendSSIDData(command):
 
     
     try:
-        print "INSIDE: ", payload
+        #print "INSIDE: ", payload
         r = requests.post('http://192.168.1.120:5000/ssid', data=payload, headers=headers)
     except:
         print("not ok")
-    print(r.status_code)
+    #print(r.status_code)
 
 
 while running:
     try:
-        print "Attempting to read from socket..."
+        #print "Attempting to read from socket..."
         while True:
             data = s.recv(BUFFER_SIZE)
             if len(data) == 0:      # remote end closed
-                print "Remote end closed"
+                #print "Remote end closed"
                 running = False
                 break
             try:
@@ -57,9 +57,9 @@ while running:
                                 tempList.append(','.join((scan[1], scan[2])))
                             except:
                                 pass
-                        print str(tempList)
+                        #print str(tempList)
                         sendSSIDData(tempList)
-                        print(" <---- sent to webserver ---- ")
+                        #print(" <---- sent to webserver ---- ")
                         
             except:
                 pass
@@ -69,7 +69,7 @@ while running:
             print e
 
     # perform other program tasks
-    print "Sleeping..."
+    #print "Sleeping..."
     time.sleep(1)
 
 
