@@ -7,7 +7,6 @@ from flask_socketio import send, emit
 import threading
 from pyKnn import *
 from reqRSS import *
-import os
 
 import serial
 
@@ -26,8 +25,7 @@ knnRefresh = 2.0
 hmc = HMC6352()
 hmc.userCalibration()
 
-#usbPort = os.system('ls /dev/ttyACM*')
-try :
+try: 
     photonSerial = serial.Serial(
         port='/dev/ttyACM0',
         baudrate=9600,
@@ -36,14 +34,17 @@ try :
         bytesize=serial.EIGHTBITS
     )
 except:
-    photonSerial = serial.Serial(
-        port='/dev/ttyACM1',
-        baudrate=9600,
-        parity=serial.PARITY_ODD,
-        stopbits=serial.STOPBITS_TWO,
-        bytesize=serial.EIGHTBITS
-    )
-    
+    try:
+        photonSerial = serial.Serial(
+            port='/dev/ttyACM0',
+            baudrate=9600,
+            parity=serial.PARITY_ODD,
+            stopbits=serial.STOPBITS_TWO,
+            bytesize=serial.EIGHTBITS
+        )
+    except:
+        exit(0)
+
 if photonSerial.isOpen():
     photonSerial.close()
 photonSerial.open()
