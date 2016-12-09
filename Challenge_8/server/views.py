@@ -26,7 +26,7 @@ hmc = HMC6352()
 hmc.userCalibration()
 
 photonSerial = serial.Serial(
-    port='/dev/ttyUSB1',
+    port='/dev/ttyACM0',
     baudrate=9600,
     parity=serial.PARITY_ODD,
     stopbits=serial.STOPBITS_TWO,
@@ -127,35 +127,35 @@ def predictTurn():
     photonSerial.write("Comp:" + str(heading))
 
     if ( current == 16 ) : 
-        if (heading >= east && heading <= (east + compassThreshold)) :
+        if (heading >= east and heading <= (east + compassThreshold)) :
             photonSerial.write("right")
             return
     if ( current == 23 ) : 
-        if (heading >= west && heading <= (west + compassThreshold)) :
+        if (heading >= west and heading <= (west + compassThreshold)) :
             photonSerial.write("left")
             return
     elif ( current == 25 ) :
-        if (heading >= north && heading <= (north + compassThreshold)) :
+        if (heading >= north and heading <= (north + compassThreshold)) :
             photonSerial.write("right")
             return
     elif ( current == 26 ) :
-        if (heading >= south && heading <= (south + compassThreshold)) :
+        if (heading >= south and heading <= (south + compassThreshold)) :
             photonSerial.write("left")
             return
     if ( current == 28 ) : 
-        if (heading >= west && heading <= (west + compassThreshold)) :
+        if (heading >= west and heading <= (west + compassThreshold)) :
             photonSerial.write("right")
             return
     elif ( current == 35 ) :
-        if (heading >= east && heading <= (east + compassThreshold)) :
+        if (heading >= east and heading <= (east + compassThreshold)) :
             photonSerial.write("left")
             return
     elif ( current == 53 ) :
-        if (heading >= south && heading <= (south + compassThreshold)) :
+        if (heading >= south and heading <= (south + compassThreshold)) :
             photonSerial.write("right")
             return
     elif ( current == 54 ) :
-        if (heading >= north && heading <= (north + compassThreshold)) :
+        if (heading >= north and heading <= (north + compassThreshold)) :
             photonSerial.write("left")
             return
 
