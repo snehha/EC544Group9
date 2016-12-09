@@ -7,6 +7,7 @@ from flask_socketio import send, emit
 import threading
 from pyKnn import *
 from reqRSS import *
+import os
 
 import serial
 
@@ -25,8 +26,10 @@ knnRefresh = 2.0
 hmc = HMC6352()
 hmc.userCalibration()
 
+usbPort = os.system('ls /dev/ttyACM*')
+
 photonSerial = serial.Serial(
-    port='/dev/ttyACM*',
+    port=usbPort,
     baudrate=9600,
     parity=serial.PARITY_ODD,
     stopbits=serial.STOPBITS_TWO,
