@@ -92,32 +92,34 @@ def getSSIDs():
     global currentLoc
     global previousLoc
     #Logic to get ssid from photon via webhook
-    dataReceivedFromUpdate = request.data
-    dataReceivedFromUpdate = tuple([tuple(group.split(',')) for group in ast.literal_eval(dataReceivedFromUpdate)])
-    print dataReceivedFromUpdate
-    
+    try:
+        dataReceivedFromUpdate = request.data
+        dataReceivedFromUpdate = tuple([tuple(group.split(',')) for group in ast.literal_eval(dataReceivedFromUpdate)])
+        print dataReceivedFromUpdate
 
-    # print("*****************: " + dataReceivedFromUpdate)
-    if dataReceivedFromUpdate:
-        # PHOTON --> LOCAL ClOUD -> WEBHOOK -> THIS FUNCTION
-        print("Got SSIDs from Photon")
-        if (dataReceivedFromUpdate):
-            newLoc = getPrediction(dataReceivedFromUpdate)
-            if (currentLoc is newLoc):
-                return 'acknowledge but same'
+
+        # print("*****************: " + dataReceivedFromUpdate)
+        if dataReceivedFromUpdate:
+            # PHOTON --> LOCAL ClOUD -> WEBHOOK -> THIS FUNCTION
+            print("Got SSIDs from Photon")
+            if (dataReceivedFromUpdate):
+                newLoc = getPrediction(dataReceivedFromUpdate)
+                if (currentLoc is newLoc):
+                    return 'acknowledge but same'
+                else:
+                    if (currentLoc != '') :         # set previous location if there is one
+                        previousLoc = int(currentLoc)
+                    currentLoc = newLoc
+                    sendMessage()   # sends predicted location to website
+                    predictTurn()   # calculates whether car needs to turn based on location
+                    #sendPrediction(currentLoc)
+                    return 'status 200'
             else:
-                if (currentLoc != '') :         # set previous location if there is one
-                    previousLoc = int(currentLoc)
-                currentLoc = newLoc
-                sendMessage()   # sends predicted location to website
-                predictTurn()   # calculates whether car needs to turn based on location
-                #sendPrediction(currentLoc)
-                return 'status 200'
+                return 'error 500'
         else:
             return 'error 500'
-    else:
+    except:
         return 'error 500'
-    return 'error 500'
 
 def getCompassReading():
     try:
