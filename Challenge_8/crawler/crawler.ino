@@ -74,14 +74,15 @@ int centerBuffer;
 
 //Knn variables
 String serialCommand; //Left or Right
+String turnCommand;
 String leftKey = "knnLeft";
 String rightKey = "knnRight";
 bool cornerSoon = false;
-bool initTurnLid = false;
+bool initTurnLid = true;
 int inTurnRadius = 30;
-int prevLidar, lidarCalc;
+int prevLidar;
+int lidarCalc;
 const double turnRatio = 2.0;
-float compassDirection;
 
 LIDARLite myLidarLite;
 
@@ -109,14 +110,11 @@ void setupCrawler() {
 //TODO Uncomment wifiThread
 void setup() {
     Particle.variable("wifiData", &wifiData, STRING);
-    //Particle.function("corner", corner);
-    // Website controls
-    Particle.function("moveCar", moveCar);
 
-    lidarServo.attach(A4);
+    lidarServo.attach(A7);
     delay(50);
-    setupCrawler();
     calibrateESC();
+    setupCrawler();
 
     #ifdef WIFISTUFF
     wifiThread = new Thread("sample", scanWifi);
@@ -148,36 +146,56 @@ void printLog(){
 
 }
 
-
 /***** website control *****/
 int moveCar(String direction) {
     // receives command from photon
-    Serial.println("Keyboard command received: "+direction);
     if(direction == "up") {
+      autopilot = false;
       rForward();
+      Serial.println("Pi Command received: " + direction);
     }
     else if (direction == "down") {
+      autopilot = false;
       rBackward();
-
+      Serial.println("Pi Command received: " + direction);
     }
     else if (direction == "left") {
+      autopilot = false;
       rLeft();
+      Serial.println("Pi Command received: " + direction);
     }
     else if (direction == "right") {
+      autopilot = false;
       rRight();
+      Serial.println("Pi Command received: " + direction);
     }
     else if (direction == "start") {
+      autopilot = false;
       //changeSpeed(fullSpeed);
+      Serial.println("Pi Command received: " + direction);
     }
     else if (direction == "stop") {
+      autopilot = false;
       changeSpeed(stopped);
+      turnDir = 0;
+      moveDir = 0;
+      Serial.println("Pi Command received: " + direction);
     }
     else if (direction == "autopilotOn") {
-      autopilot = true;
+      Serial.println("Pi Command received: "+ direction);
+      if(!autopilot) {
+        Serial.println("Starting autopilot");
+        autopilot = true;
+        cornerSoon = false;
+        crawlerThread = new Thread("sample", crawler);
+      }
     }
     else if (direction == "autopilotOff") {
+      Serial.println("Pi Command received: " + direction);
       autopilot = false;
     }
+
+
 }
 
 /************ Crawler Code ************/
@@ -207,17 +225,6 @@ void calibrateESC(){
     esc.write(90); // reset the ESC to neutral (non-moving) value
 }
 
-
-// TODO might get rid of
-int sampleLidar(int sensorID) {
-  int mySensor = 0;
-  //for(int i = 0; i < 10; i++){
-    //mySensor = myLidarLite.distance(false,false,addresses[sensorID]);
-    mySensor = myLidarLite.distanceContinuous();
-  //}
-  return mySensor; ///10;
-}
-
 int degreeNW = 120;
 int degreeW = 150;
 int degreeNE = 60;
@@ -233,11 +240,11 @@ void getSensorData(int sensorID){
   sensorNorth = 0;
 
   if(clockwise){
-      pos = 0;
+      pos = 20;
       incr = 5;
   }
   else{
-      pos = 180;
+      pos = 170;
       incr = -5;
   }
 
@@ -251,9 +258,11 @@ void getSensorData(int sensorID){
   int e = 1;
   int n = 1;
 
-  for (; (pos >= 0 && pos <=180); pos += incr) { // goes from 0 degrees to 90 degrees (Read left side)
-      lidarServo.write(pos);                    // tell servo to go to position in variable 'pos'
-      delay(30);                                // waits 15ms for the servo to reach the position
+  for (; (pos >= 20 && pos <=170); pos += incr) { // goes from 0 degrees to 90 degrees (Read left side)
+      if(cornerSoon) return;
+      setLidarPos(pos);                         // tell servo to go to position in variable 'pos'
+      /*lidarServo.write(pos);                    // tell servo to go to position in variable 'pos'
+      delay(30);                                // waits 15ms for the servo to reach the position*/
       sensorValue = myLidarLite.distanceContinuous();
 
       if((pos >= degreeE) && (pos <= degreeNE)){  // North East
@@ -314,14 +323,12 @@ void getSensorData(int sensorID){
   Serial.println("NE reading: " + String(sensorNE));
   Serial.println("East reading: " + String(sensorEast));*/
 
-  delay(10);
-
   clockwise = !clockwise;
 }
 
 //Change the speed of the rover up or down.
 void changeSpeed(int newSpeed){
-  Serial.println("Entering changeSpeed");
+  // Serial.println("Entering changeSpeed");
   //curSpeed = The actual speed of the rover at the moment
   //fullSpeed = The full speed of the rover
   // 90 - newSpeed >> get the real speed
@@ -413,6 +420,7 @@ void getUltraSoundDistance() {
 
   inches = sum / avgRange;
   frontUltrasound = inches * 2.54;
+  Serial.println("UltraSound Dist: "+String(frontUltrasound));
 
 }
 
@@ -456,7 +464,7 @@ bool stopCorrect() {
     //Serial.println("Entered Stop Correct - SENSOR");
     changeSpeed(stopped);
     //reverseCar();
-    //Serial.println("Front object detected. Stopping.");
+    Serial.println("Front object detected. Stopping.");
     return true;
   }
   else {
@@ -533,42 +541,12 @@ bool centerCorrect(int sensorNW, int sensorNE){
   changeWheelAngle(wheelOffset);
 }
 
-// TODO looping crawler code, setTrim
-void crawler() {
-  while(true) {
-    if(autopilot) {
-      // TODO getUltraSoundDistance();
-      if(!cornerSoon)
-        getSensorData(frontLidar);
-      else{
-        //checkCorner();
-        delay(1000);
-      }
-      //Serial.println("Autopilot");
-      //setTrim();
-
-      //printLog();
-
-      bool val = stopCorrect();
-      if(!val){
-        val = hugWall();
-      }
-      if(!val){
-        val = errorCorrect(sensorNW,sensorNE);
-      }
-      if(!val){
-        centerCorrect(sensorNW,sensorNE);
-      }
-    }
-  }
-}
-
 bool hugWall(){
-  if(serialCommand == leftKey) {
+  if(turnCommand == leftKey) {
     changeWheelAngle(-5);
     return true;
   }
-  else if(serialCommand == rightKey) {
+  else if(turnCommand == rightKey) {
     changeWheelAngle(5);
     return true;
   }
@@ -576,36 +554,86 @@ bool hugWall(){
   return false;
 }
 
-void checkCorner(){
-    if(initTurnLid){
-      if(serialCommand == leftKey){
-        lidarServo.write(170);
-        delay(50);
-        prevLidar = myLidarLite.distanceContinuous();
-        initTurnLid = false;
-      }
-      else if(serialCommand == rightKey){
-        lidarServo.write(20);
-        delay(50);
-        prevLidar = myLidarLite.distanceContinuous();
-        initTurnLid = false;
-      }
-    }
-    int lidarCalc = myLidarLite.distanceContinuous();
-    Serial.println("Corner lidar Dist: "+lidarCalc);
-    if(serialCommand == rightKey && (lidarCalc/prevLidar > turnRatio)){
-      changeWheelAngle(inTurnRadius);
-      cornerSoon = false;
-      serialCommand = "";
-    }
-    else if(serialCommand == leftKey && (lidarCalc/prevLidar > turnRatio)){
-      changeWheelAngle(inTurnRadius*-1);
-      cornerSoon = false;
-      serialCommand = "";
-    }
+void setLidarPos(int newPos){
+  int currentPosition = lidarServo.read();
+  lidarServo.write(newPos);
+  delay(abs(currentPosition-newPos)*5);
 }
-/****************************/
 
+void setLidarDir(){
+    if(turnCommand == leftKey){
+      setLidarPos(170);
+      lidarCalc = myLidarLite.distanceContinuous();
+      sensorNE = errDistance + (errDistance - lidarCalc);
+      sensorNW = lidarCalc;
+      initTurnLid = false;
+    }
+    else if(turnCommand == rightKey){
+      setLidarPos(20);
+      sensorNW = errDistance + (errDistance - lidarCalc);
+      sensorNE = lidarCalc;
+      initTurnLid = false;
+    }
+
+    if (initTurnLid) {
+      Serial.println("Forcing " + turnCommand);
+      prevLidar = myLidarLite.distanceContinuous();
+    }
+
+}
+
+void turnCorner(){
+  //int lidarCalc = myLidarLite.distanceContinuous();
+  //Serial.println("Corner lidar Dist: " + String(lidarCalc));
+  if(turnCommand == rightKey && (lidarCalc/prevLidar > turnRatio)){
+    changeWheelAngle(inTurnRadius);
+    //turnCommand = "";
+  }
+  else if(turnCommand == leftKey && (lidarCalc/prevLidar > turnRatio)){
+    changeWheelAngle(inTurnRadius*-1);
+    //turnCommand = "";
+  }
+}
+
+// TODO looping crawler code, setTrim
+void crawler() {
+  while(autopilot) {
+    //if(autopilot) {
+      Serial.println("Autopilot");
+      getUltraSoundDistance();
+      if(!cornerSoon){
+        getSensorData(frontLidar);
+        Serial.println("got sensor data");
+      }
+      else{
+        setLidarDir();
+      }
+      //setTrim();
+
+      //printLog();
+
+      bool val = stopCorrect();
+      if(!val) Serial.println("stopCorrect false");
+      /*if(!val){
+        val = hugWall();
+      }*/
+      if(!val){
+        val = errorCorrect(sensorNW,sensorNE);
+      }
+      /******MIGHT OVERWRITE OVER ERROR CORRECT********/
+      if(cornerSoon && !val){
+        turnCorner();
+        continue;
+      }
+      if(!val){
+        centerCorrect(sensorNW,sensorNE);
+      }
+    }
+  //}
+}
+
+/****************************/
+//Communicate using socket on python side
 void scanWifi() {
     while(true) {
         wifiData = "";
@@ -634,26 +662,26 @@ void scanWifi() {
     }
 }
 
-/***************Car Control****************/
-void rLeft(){
+/***************Manual Car Control****************/
+void rRight(){
   //Not turned left so make straight
   if(turnDir > 0){
     turnDir = 0;
   }
   //Turn more left
-  else{
+  else if(abs(turnDir) <= maxWheelOffset){
     turnDir -= disTurn;
   }
   changeWheelAngle(turnDir);
 }
 
-void rRight(){
+void rLeft(){
   //Not turned right so make straight
   if(turnDir < 0){
     turnDir = 0;
   }
   //Turn more right
-  else{
+  else if(abs(turnDir) <= maxWheelOffset){
     turnDir += disTurn;
   }
   changeWheelAngle(turnDir);
@@ -682,41 +710,30 @@ void rBackward(){
   }
   changeReverseSpeed(moveDir);
 }
-/************************************/
+/*********************************************/
 void serialComm(){
   while(true){
     serialCommand = "";
     while(Serial.available() > 0 ){
-      serialCommand.concat(char(Serial.read()));
+      char byteRead = Serial.read();
+      if(byteRead != '\n')
+        serialCommand.concat(char(byteRead));
     }
     if(serialCommand != "")
       Serial.println("Command Received:" + serialCommand);
     if(serialCommand == leftKey || serialCommand == rightKey){
+      turnCommand = serialCommand;
+      Serial.println("Have to turn soon");
       cornerSoon = true;
       initTurnLid = true;
-    } else if(serialCommand.substring(0,5) == "Comp:") { // Compass direction "Comp:___"
-      compassDirection = serialCommand.substring(5).toFloat();
+    } else if(serialCommand == "stopTurn") { // Compass direction "Comp:___"
+      cornerSoon = false;
     }
     else{
       moveCar(serialCommand);
     }
   }
 }
-/*****************KNN***************/
-/*int corner(String serialCommand){
-  recentPred = knnPred;
-  if(knnPred == "left"){
-    cornerDir = -1;
-    Serial.print("Received command left");
-  }
-  else if(knnPred == "right"){
-    cornerDir = 1;
-    Serial.print("Received command right");
-  }
-  else{
-    Serial.print(recentPred);
-  }
-}*/
-/***********************************/
+
 void loop() {
 }
