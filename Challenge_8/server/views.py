@@ -26,16 +26,24 @@ knnRefresh = 2.0
 hmc = HMC6352()
 hmc.userCalibration()
 
-usbPort = os.system('ls /dev/ttyACM*')
-
-photonSerial = serial.Serial(
-    port=usbPort,
-    baudrate=9600,
-    parity=serial.PARITY_ODD,
-    stopbits=serial.STOPBITS_TWO,
-    bytesize=serial.EIGHTBITS
-)
-
+#usbPort = os.system('ls /dev/ttyACM*')
+try :
+    photonSerial = serial.Serial(
+        port='/dev/ttyACM0',
+        baudrate=9600,
+        parity=serial.PARITY_ODD,
+        stopbits=serial.STOPBITS_TWO,
+        bytesize=serial.EIGHTBITS
+    )
+except:
+    photonSerial = serial.Serial(
+        port='/dev/ttyACM1',
+        baudrate=9600,
+        parity=serial.PARITY_ODD,
+        stopbits=serial.STOPBITS_TWO,
+        bytesize=serial.EIGHTBITS
+    )
+    
 if photonSerial.isOpen():
     photonSerial.close()
 photonSerial.open()
