@@ -132,7 +132,7 @@ def predictTurn():
 
     # check if turn has been completed
     if (turn) :
-        if ( abs(heading - previousHeading) >  70) :    # turn has been completed
+        if ( abs(heading - previousHeading) >  turnThreshold) :    # turn has been completed
             photonSerial.write("stopTurn")
             turn = False
 
