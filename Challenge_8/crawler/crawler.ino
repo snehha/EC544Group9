@@ -43,6 +43,7 @@ const int errDistance = 110;
 const int stopped = 0;
 const int fullSpeed = 20;
 const int haltDistance = fullSpeed + 20;
+const int ultraHalt = haltDistance + 240;
 
 //Spinning Servo values
 bool clockwise = true;
@@ -84,6 +85,8 @@ int prevLidar;
 int lidarCalc;
 const double turnRatio = 2.0;
 
+int stopCorrectMax = 0;
+
 LIDARLite myLidarLite;
 
 void setupCrawler() {
@@ -97,7 +100,7 @@ void setupCrawler() {
     myLidarLite.beginContinuous();
 
     //Record the current center
-    getSensorData(frontLidar);                  //Stored globally in sensorNW, sensorNE
+    getSensorData();                  //Stored globally in sensorNW, sensorNE
     centerPoint = (sensorNW+sensorNE)/2;
     centerBuffer = centerPoint+medGapOffset;
 
@@ -187,6 +190,7 @@ int moveCar(String direction) {
         Serial.println("Starting autopilot");
         autopilot = true;
         cornerSoon = false;
+        stopCorrectMax = 0;
         crawlerThread = new Thread("sample", crawler);
       }
     }
@@ -231,7 +235,7 @@ int degreeNE = 60;
 int degreeE = 30;
 
 // TODO add halt threshold
-void getSensorData(int sensorID){
+void getSensorData(){
   int pos, incr;
   sensorNW = 0;
   sensorNE = 0;
@@ -435,6 +439,10 @@ void reverseCar(){
   * set wheels back to oppsite direction ard and return to main
   ***/
 
+  stopCorrectMax++;
+
+  getSensorData();
+
   if( ((sensorNW/sensorNE) > 2) || ((sensorNW/sensorNE) < 0.5)){
     int wheelChange;
     Serial.println("Front object detected. Reversing.");
@@ -450,7 +458,7 @@ void reverseCar(){
       changeReverseSpeed(-15);
     }
     int backTimers = 33*fullSpeed+600;
-    while(backTimers != 0 || backLidar <= haltDistance + 20){
+    while(backTimers != 0 || frontUltrasound < ultraHalt + 20){
       backTimers--;
     }
     changeWheelAngle(-1*wheelChange);
@@ -460,15 +468,20 @@ void reverseCar(){
 }
 // TODO reverseCar
 bool stopCorrect() {
-  if ( (frontUltrasound <= haltDistance+20) || ((sensorNW < haltDistance) && (sensorNE < haltDistance))) {
+  getUltraSoundDistance();
+  if ( (frontUltrasound <= ultraHalt + 20) || ((sensorNW < haltDistance) && (sensorNE < haltDistance))) {
     //Serial.println("Entered Stop Correct - SENSOR");
     changeSpeed(stopped);
-    //reverseCar();
+    if(stopCorrectMax <= 3)
+    {
+      reverseCar();
+    }
     Serial.println("Front object detected. Stopping.");
     return true;
   }
   else {
     changeSpeed(fullSpeed);
+    stopCorrectMax = 0;
     return false;
   }
 }
@@ -602,7 +615,7 @@ void crawler() {
       Serial.println("Autopilot");
       getUltraSoundDistance();
       if(!cornerSoon){
-        getSensorData(frontLidar);
+        getSensorData();
         Serial.println("got sensor data");
       }
       else{
@@ -613,6 +626,9 @@ void crawler() {
       //printLog();
 
       bool val = stopCorrect();
+      while(val) {
+        val = stopCorrect();
+      }
       if(!val) Serial.println("stopCorrect false");
       /*if(!val){
         val = hugWall();
@@ -628,6 +644,7 @@ void crawler() {
       if(!val){
         centerCorrect(sensorNW,sensorNE);
       }
+      Serial.println("------------------------");
     }
   //}
 }
