@@ -49,7 +49,7 @@ bool clockwise = true;
 
 //Wheel values
 float trimValue = 0;
-double curWheelAngle;
+double curWheelAngle = 0;
 
 //Ultrasonic
 const int ultraPin = 0;
@@ -81,6 +81,7 @@ bool initTurnLid = false;
 int inTurnRadius = 30;
 int prevLidar, lidarCalc;
 const double turnRatio = 2.0;
+float compassDirection;
 
 LIDARLite myLidarLite;
 
@@ -100,6 +101,7 @@ void setupCrawler() {
     centerBuffer = centerPoint+medGapOffset;
 
     changeSpeed(fullSpeed);
+    changeWheelAngle(0);
 }
 /**************************************************/
 
@@ -545,22 +547,30 @@ void crawler() {
 
       //printLog();
 
-      /*bool val = stopCorrect();
-      if(!val)
+      bool val = stopCorrect();
+      if(!val){
         val = adjustCourse();
-      if(!val)
+      }
+      if(!val){
         val = errorCorrect(sensorNW,sensorNE);
+      }
       if(!val)
-        centerCorrect(sensorNW,sensorNE);*/
+        centerCorrect(sensorNW,sensorNE);
     }
   }
 }
 
-void adjustCourse(){
-  if(knnCommand == leftKey)
+bool adjustCourse(){
+  if(knnCommand == leftKey) {
     changeWheelAngle(-5);
-  else if(knnCommand == rightKey)
+    return true;
+  }
+  else if(knnCommand == rightKey) {
     changeWheelAngle(5);
+    return true;
+  }
+
+  return false;
 }
 
 void checkCorner(){
@@ -681,6 +691,8 @@ void serialComm(){
     if(knnCommand == leftKey || knnCommand == rightKey){
       cornerSoon = true;
       initTurnLid = true;
+    } else if(knnCommand.substring(0,4) == "Comp:") { // Compass direction "Comp:___"
+      compassDirection = knnCommand.substring(5).toFloat();
     }
   }
 }
