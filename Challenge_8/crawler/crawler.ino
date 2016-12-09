@@ -21,7 +21,7 @@ Servo esc; // not actually a servo, but controlled like one!
 bool startup = true; // used to ensure startup only happens once
 int startupDelay = 1000; // time to pause at each calibration step
 double maxSpeedOffset = 45; // maximum speed magnitude, in servo 'degrees'
-double maxWheelOffset = 35; // maximum wheel turn magnitude, in servo 'degrees'
+double maxWheelOffset = 40; // maximum wheel turn magnitude, in servo 'degrees'
 
 int sensorPins[] = {4,5}; // Array of pins connected to the sensor Power Enable lines
 unsigned char addresses[] = {0x66,0x64};
@@ -43,6 +43,7 @@ const int errDistance = 110;
 const int stopped = 0;
 const int fullSpeed = 20;
 const int haltDistance = fullSpeed + 20;
+const int ultraHalt = haltDistance + 300;
 
 //Spinning Servo values
 bool clockwise = true;
@@ -260,8 +261,8 @@ void getSensorData(int sensorID){
 
   for (; (pos >= 20 && pos <=170); pos += incr) { // goes from 0 degrees to 90 degrees (Read left side)
       if(cornerSoon) return;
-      setLidarPos(pos);                         // tell servo to go to position in variable 'pos'
-      /*lidarServo.write(pos);                    // tell servo to go to position in variable 'pos'
+      //setLidarPos(pos);                         // tell servo to go to position in variable 'pos'
+      lidarServo.write(pos);                    // tell servo to go to position in variable 'pos'
       delay(30);                                // waits 15ms for the servo to reach the position*/
       sensorValue = myLidarLite.distanceContinuous();
 
@@ -317,11 +318,11 @@ void getSensorData(int sensorID){
   if(!northObjectDetected) sensorNorth = sensorNorth / n;
   sensorEast = sensorEast / e;
   sensorWest = sensorWest / w;
-  /*Serial.println("West reading: " + String(sensorWest));
+  Serial.println("West reading: " + String(sensorWest));
   Serial.println("NW reading: " + String(sensorNW));
   Serial.println("North reading: " + String(sensorNorth));
   Serial.println("NE reading: " + String(sensorNE));
-  Serial.println("East reading: " + String(sensorEast));*/
+  Serial.println("East reading: " + String(sensorEast));
 
   clockwise = !clockwise;
 }
@@ -403,7 +404,8 @@ void changeWheelAngle(double newWheelAngle){
 
 // TODO ADD TO THE BREADBOARD
 void setTrim() {
-  trimValue = analogRead(potPin);
+  //trimValue = analogRead(potPin);
+  trimValue = 0;
   trimValue = map(trimValue, 0, 1018, -100, 100);
   trimValue /= 10;
 }
@@ -460,7 +462,7 @@ void reverseCar(){
 }
 // TODO reverseCar
 bool stopCorrect() {
-  if ( (frontUltrasound <= haltDistance+20) || ((sensorNW < haltDistance) && (sensorNE < haltDistance))) {
+  if ( (frontUltrasound <= ultraHalt+20) || ((sensorNW < haltDistance) && (sensorNE < haltDistance))) {
     //Serial.println("Entered Stop Correct - SENSOR");
     changeSpeed(stopped);
     //reverseCar();
@@ -608,7 +610,7 @@ void crawler() {
       else{
         setLidarDir();
       }
-      //setTrim();
+      setTrim();
 
       //printLog();
 
