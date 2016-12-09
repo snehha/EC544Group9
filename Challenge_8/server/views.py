@@ -123,7 +123,7 @@ def getCompassReading():
     try:
         heading = hmc.readData()
         print "Compass Heading: %.1f" % heading
-        time.sleep(0.6)
+        #time.sleep(0.6)
         return heading
     except:
         getCompassReading()
@@ -144,7 +144,7 @@ def predictTurn():
     current = int(currentLoc)
 
     # get compass reading to determine if turn is needed in starting region
-    heading = getCompassReading
+    heading = getCompassReading()
 
     # check if turn has been completed
     if (turn) :
