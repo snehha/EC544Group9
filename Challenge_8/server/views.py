@@ -196,7 +196,10 @@ def predictTurn():
 #@socketio.on('refresh')
 def sendMessage():
     # global region
-    emit('location_event', currentLoc)
+    print('Sending region ')
+    print(currentLoc)
+    #emit('location_event', currentLoc)
+    socketio.emit('location_event', currentLoc)
     # emit('location_event', region);
 
 @socketio.on('moveCar')
