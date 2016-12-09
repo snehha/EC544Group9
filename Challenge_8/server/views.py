@@ -26,7 +26,7 @@ hmc = HMC6352()
 hmc.userCalibration()
 
 photonSerial = serial.Serial(
-    port='/dev/ttyACM0',
+    port='/dev/ttyACM*',
     baudrate=9600,
     parity=serial.PARITY_ODD,
     stopbits=serial.STOPBITS_TWO,
