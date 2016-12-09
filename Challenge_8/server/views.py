@@ -97,7 +97,8 @@ def getSSIDs():
                 if (currentLoc != '') :         # set previous location if there is one
                     previousLoc = int(currentLoc)
                 currentLoc = newLoc
-                predictTurn()
+                sendMessage()   # sends predicted location to website
+                predictTurn()   # calculates whether car needs to turn based on location
                 #sendPrediction(currentLoc)
                 return 'status 200'
         else:
@@ -181,11 +182,11 @@ def predictTurn():
     #         photonSerial.write("left")      
     #         return
 
-def send_location(location):
-    socketio.emit('location_event', location)
-    index()
+# def send_location(location):
+#     socketio.emit('location_event', location)
+#     index()
 
-@socketio.on('refresh')
+#@socketio.on('refresh')
 def sendMessage():
     # global region
     emit('location_event', currentLoc)

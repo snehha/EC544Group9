@@ -140,46 +140,17 @@
         updateCoordinate(msg);
     });
 
-    function triggerRefresh() {
+    /*function triggerRefresh() {
         socket.emit('refresh');
     }
 
     var refreshTimer = setInterval(triggerRefresh, 1000);
-
-    // Particle Functions
-//    var http = require('http');
-    //var request = require('request');
-    /*var deviceID = "42003c001447353236343033";
-    var accessToken = "27b64a1d23d193f26679213a4db8872ba17904aa";
-    var functionName = serverSendTest;
-    var functionParams = command;*/
-
+*/
     function moveCar(command) {
         // moves car
         socket.emit('moveCar', command);
         console.log("Command: ");
         console.log(command);
-        //functionParams = command;
-
-        // particle.function
-        // var requestURL = "https://api.spark.io/v1/devices/" + deviceID + "/" + 'moveCar' + "/";
-        //   $.post( requestURL, { params: command, access_token: accessToken });
-
-        /*request({
-                uri: "https://api.spark.io/v1/devices/" + deviceID + "/" + functionName,
-                method: "POST",
-                form: {
-                    arg: functionParams,
-                    access_token: accessToken
-                },
-                json: true
-            },
-            function(data) {
-                console.log('Function called succesfully:', data);
-            },
-            function(error, response, body) {
-                console.log(error, response, body);
-            });*/
     }
 
     function startCar() {
@@ -198,25 +169,7 @@
         else if (start == "stop"){
             start = "start";
             document.getElementById('gobutton').src = '/static/stopbutton.png';
-        }/*
-        // particle.function
-        // var requestURL = "https://api.spark.io/v1/devices/" + deviceID + "/" + 'moveCar' + "/";
-        //   $.post( requestURL, { params: command, access_token: accessToken });
-        request({
-	        uri: "https://api.spark.io/v1/devices/" + deviceID + "/" + functionName,
-	        method: "POST",
-	        form: {
-	            arg: functionParams,
-	            access_token: accessToken
-	        },
-	        json: true
-        },
-        function(data) {
-            console.log('Function called succesfully:', data);
-        },
-        function(error, response, body) {
-            console.log(error, response, body);
-        });*/
+        }
     }
 
     function autopilot() {
@@ -233,28 +186,7 @@
         } else  if (auto == "autopilotOff") {
             auto = "autopilotOn"
             document.getElementById('autopilotButton').value = "Turn autopilot off";
-        }/*
-        // particle.function
-        // var requestURL = "https://api.spark.io/v1/devices/" + deviceID + "/" + 'moveCar' + "/";
-        // $.post(requestURL, {
-        //     params: command,
-        //     access_token: accessToken
-        // });
-        request({
-            uri: "https://api.spark.io/v1/devices/" + deviceID + "/" + functionName,
-            method: "POST",
-            form: {
-                arg: functionParams,
-                access_token: accessToken
-            },
-            json: true
-        },
-        function(data) {
-            console.log('Function called succesfully:', data);
-        },
-        function(error, response, body) {
-            console.log(error, response, body);
-        });*/
+        }
     }
 
     $(document).keyup(function(e) {
