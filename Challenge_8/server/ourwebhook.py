@@ -19,16 +19,17 @@ running = True
 
 # TODO chnge ip addfess 
 def sendSSIDData(command):
-    headers = {'content-type': 'text/html'}
-    payload = str(command)
 
-    
-    try:
-        print "INSIDE: ", payload
-        r = requests.post('http://192.168.1.120:5000/ssid', data=payload)
-    except:
-        print("not ok")
-    print(r.status_code)
+    #print "INSIDE: ", payload
+    url = "http://192.168.1.150:5000/ssid"
+
+    payload = str(command)
+    headers = {
+        'cache-control': "no-cache"
+    }
+
+    response = requests.request("POST", url, data=payload, headers=headers)
+    print(response.text)
 
 
 while running:
@@ -58,11 +59,15 @@ while running:
                             except:
                                 pass
                         #print str(tempList)
-                        sendSSIDData(tempList)
+                        if(tempList):
+                            sendSSIDData(tempList)
+                            time.sleep(1)
                         #print(" <---- sent to webserver ---- ")
                         
             except:
                 pass
+
+        time.sleep(1)
             
     except socket.error, e:
         if e[0] != 11:      # Resource temporarily unavailable
