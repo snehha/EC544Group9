@@ -140,37 +140,42 @@ def predictTurn():
         if (heading >= east and heading <= (east + compassThreshold)) :
             photonSerial.write("knnRight")
             turn = True
+            previousHeading = heading
     elif ( current == 23 ) : 
         if (heading >= west and heading <= (west + compassThreshold)) :
             photonSerial.write("knnLeft")
             turn = True
+            previousHeading = heading
     elif ( current == 25 ) :
         if (heading >= north and heading <= (north + compassThreshold)) :
             photonSerial.write("knnRight")
             turn = True
+            previousHeading = heading
     elif ( current == 26 ) :
         if (heading >= south and heading <= (south + compassThreshold)) :
             photonSerial.write("knnLeft")
             turn = True
+            previousHeading = heading
     elif ( current == 28 ) : 
         if (heading >= west and heading <= (west + compassThreshold)) :
             photonSerial.write("knnRight")
             turn = True
+            previousHeading = heading
     elif ( current == 35 ) :
         if (heading >= east and heading <= (east + compassThreshold)) :
             photonSerial.write("knnLeft")
             turn = True
+            previousHeading = heading
     elif ( current == 53 ) :
         if (heading >= south and heading <= (south + compassThreshold)) :
             photonSerial.write("knnRight")
             turn = True
+            previousHeading = heading
     elif ( current == 54 ) :
         if (heading >= north and heading <= (north + compassThreshold)) :
             photonSerial.write("knnLeft")
             turn = True
-
-    if (turn) :
-        previousHeading = heading
+            previousHeading = heading
 
 
     # global previousLoc 
