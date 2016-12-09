@@ -195,7 +195,8 @@ def sendMessage():
 def moveCar(command):
     print('Sending Command: ')
     print (command)
-    sendCommand(command)
+    photonSerial.write(command)
+    # sendCommand(command)
 
 # region = 27
 # bottomRightRegion = 15;
