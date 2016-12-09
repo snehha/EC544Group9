@@ -266,7 +266,7 @@ void getSensorData(){
       if(cornerSoon) return;
       //setLidarPos(pos);                         // tell servo to go to position in variable 'pos'
       lidarServo.write(pos);                    // tell servo to go to position in variable 'pos'
-      delay(20);                                // waits 15ms for the servo to reach the position
+      delay(7);                                // waits 15ms for the servo to reach the position
       sensorValue = myLidarLite.distanceContinuous();
 
       if((pos >= degreeE) && (pos <= degreeNE)){  // North East
