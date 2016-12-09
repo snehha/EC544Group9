@@ -264,9 +264,9 @@ void getSensorData(){
 
   for (; (pos >= 20 && pos <=170); pos += incr) { // goes from 0 degrees to 90 degrees (Read left side)
       if(cornerSoon) return;
-      setLidarPos(pos);                         // tell servo to go to position in variable 'pos'
-      /*lidarServo.write(pos);                    // tell servo to go to position in variable 'pos'
-      delay(30);                                // waits 15ms for the servo to reach the position*/
+      //setLidarPos(pos);                         // tell servo to go to position in variable 'pos'
+      lidarServo.write(pos);                    // tell servo to go to position in variable 'pos'
+      delay(20);                                // waits 15ms for the servo to reach the position
       sensorValue = myLidarLite.distanceContinuous();
 
       if((pos >= degreeE) && (pos <= degreeNE)){  // North East
@@ -321,11 +321,11 @@ void getSensorData(){
   if(!northObjectDetected) sensorNorth = sensorNorth / n;
   sensorEast = sensorEast / e;
   sensorWest = sensorWest / w;
-  /*Serial.println("West reading: " + String(sensorWest));
+  Serial.println("West reading: " + String(sensorWest));
   Serial.println("NW reading: " + String(sensorNW));
   Serial.println("North reading: " + String(sensorNorth));
   Serial.println("NE reading: " + String(sensorNE));
-  Serial.println("East reading: " + String(sensorEast));*/
+  Serial.println("East reading: " + String(sensorEast));
 
   clockwise = !clockwise;
 }
