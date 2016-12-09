@@ -108,9 +108,13 @@ def getSSIDs():
     return 'error 500'
 
 def getCompassReading():
-    heading = hmc.readData()
-    print "Compass Heading: %.1f" % heading
-    return heading
+    try:
+        heading = hmc.readData()
+        print "Compass Heading: %.1f" % heading
+        time.sleep(0.6)
+        return heading
+    except:
+        getCompassReading()
 
 north = 45
 east = 135
@@ -176,33 +180,6 @@ def predictTurn():
             photonSerial.write("knnLeft")
             turn = True
             previousHeading = heading
-
-
-    # global previousLoc 
-
-    # if (previousLoc == 0) :                 # no previous location yet
-    #     previousLoc = current
-
-    # if (current in elevatorRegions):        # turn if elevator region
-    #     if(current < previousLoc) :  
-    #         photonSerial.write("right")
-    #         return
-    #     else:
-    #         photonSerial.write("left")
-    #         return
-
-    # if (current < previousLoc):             # (clockwise) regions decrease
-    #     if ( (current - 1) in corners):     # if region is before a corner
-    #         photonSerial.write("right")     
-    #         return
-    # elif (current > previousLoc):           # (counterclockwise) regions increase
-    #     if ( (current + 1) in corners):     # if region is before a corner
-    #         photonSerial.write("left")      
-    #         return
-
-# def send_location(location):
-#     socketio.emit('location_event', location)
-#     index()
 
 #@socketio.on('refresh')
 def sendMessage():
