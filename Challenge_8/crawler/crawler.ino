@@ -73,9 +73,9 @@ int medGapOffset = 30;
 int centerBuffer;
 
 //Knn variables
-String knnCommand; //Left or Right
-String leftKey = "10810110211610";
-String rightKey = "11410510310411610";
+String serialCommand; //Left or Right
+String leftKey = "knnLeft";
+String rightKey = "knnRight";
 bool cornerSoon = false;
 bool initTurnLid = false;
 int inTurnRadius = 30;
@@ -453,10 +453,10 @@ void reverseCar(){
 // TODO reverseCar
 bool stopCorrect() {
   if ( (frontUltrasound <= haltDistance+20) || ((sensorNW < haltDistance) && (sensorNE < haltDistance))) {
-    Serial.println("Entered Stop Correct - SENSOR");
+    //Serial.println("Entered Stop Correct - SENSOR");
     changeSpeed(stopped);
     //reverseCar();
-    Serial.println("Front object detected. Stopping.");
+    //Serial.println("Front object detected. Stopping.");
     return true;
   }
   else {
@@ -540,9 +540,11 @@ void crawler() {
       // TODO getUltraSoundDistance();
       if(!cornerSoon)
         getSensorData(frontLidar);
-      else
-        checkCorner();
-      Serial.println("Autopilot");
+      else{
+        //checkCorner();
+        delay(1000);
+      }
+      //Serial.println("Autopilot");
       //setTrim();
 
       //printLog();
@@ -562,11 +564,11 @@ void crawler() {
 }
 
 bool hugWall(){
-  if(knnCommand == leftKey) {
+  if(serialCommand == leftKey) {
     changeWheelAngle(-5);
     return true;
   }
-  else if(knnCommand == rightKey) {
+  else if(serialCommand == rightKey) {
     changeWheelAngle(5);
     return true;
   }
@@ -576,13 +578,13 @@ bool hugWall(){
 
 void checkCorner(){
     if(initTurnLid){
-      if(knnCommand == leftKey){
+      if(serialCommand == leftKey){
         lidarServo.write(170);
         delay(50);
         prevLidar = myLidarLite.distanceContinuous();
         initTurnLid = false;
       }
-      else if(knnCommand == rightKey){
+      else if(serialCommand == rightKey){
         lidarServo.write(20);
         delay(50);
         prevLidar = myLidarLite.distanceContinuous();
@@ -591,15 +593,15 @@ void checkCorner(){
     }
     int lidarCalc = myLidarLite.distanceContinuous();
     Serial.println("Corner lidar Dist: "+lidarCalc);
-    if(knnCommand == rightKey && (lidarCalc/prevLidar > turnRatio)){
+    if(serialCommand == rightKey && (lidarCalc/prevLidar > turnRatio)){
       changeWheelAngle(inTurnRadius);
       cornerSoon = false;
-      knnCommand = "";
+      serialCommand = "";
     }
-    else if(knnCommand == leftKey && (lidarCalc/prevLidar > turnRatio)){
+    else if(serialCommand == leftKey && (lidarCalc/prevLidar > turnRatio)){
       changeWheelAngle(inTurnRadius*-1);
       cornerSoon = false;
-      knnCommand = "";
+      serialCommand = "";
     }
 }
 /****************************/
@@ -683,22 +685,25 @@ void rBackward(){
 /************************************/
 void serialComm(){
   while(true){
-    knnCommand = "";
+    serialCommand = "";
     while(Serial.available() > 0 ){
-      knnCommand += Serial.read();
+      serialCommand.concat(char(Serial.read()));
     }
-    if(knnCommand != "")
-      Serial.println("Command Received:" + knnCommand);
-    if(knnCommand == leftKey || knnCommand == rightKey){
+    if(serialCommand != "")
+      Serial.println("Command Received:" + serialCommand);
+    if(serialCommand == leftKey || serialCommand == rightKey){
       cornerSoon = true;
       initTurnLid = true;
-    } else if(knnCommand.substring(0,4) == "Comp:") { // Compass direction "Comp:___"
-      compassDirection = knnCommand.substring(5).toFloat();
+    } else if(serialCommand.substring(0,5) == "Comp:") { // Compass direction "Comp:___"
+      compassDirection = serialCommand.substring(5).toFloat();
+    }
+    else{
+      moveCar(serialCommand);
     }
   }
 }
 /*****************KNN***************/
-/*int corner(String knnCommand){
+/*int corner(String serialCommand){
   recentPred = knnPred;
   if(knnPred == "left"){
     cornerDir = -1;
