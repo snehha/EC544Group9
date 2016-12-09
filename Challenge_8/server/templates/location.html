@@ -62,7 +62,7 @@
     var gridSizeY = 68; // y size of each region
 
     var auto = "autopilotOff";
-    var start = "start";
+    var start = "stop";
 
     // calculates difference in x of tracker from the origin
     function calculateXCoordinate(regionID) {
@@ -163,14 +163,14 @@
         moveCar(start); // particle.function
 
         // toggles button for start and stop car
-        if (start == "start") {
+        /*if (start == "start") {
             start = "stop";
             //document.getElementById('gobutton').src = '/static/stopbutton.png';
         } 
         else if (start == "stop"){
             start = "start";
             //document.getElementById('gobutton').src = '/static/gobutton.png';
-        }
+        }*/
     }
 
     function autopilot() {
