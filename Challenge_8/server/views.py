@@ -117,48 +117,61 @@ east = 135
 south = 225
 west = 315
 compassThreshold = 10
+turn = False
+turnThreshold = 70
 
 previousHeading = getCompassReading()
 
 def predictTurn():
+    global turn
+    global previousHeading
     current = int(currentLoc)
 
     # get compass reading to determine if turn is needed in starting region
     heading = getCompassReading
-    photonSerial.write("Comp:" + str(heading))
+
+    # check if turn has been completed
+    if (turn) :
+        if ( abs(heading - previousHeading) >  70) :    # turn has been completed
+            photonSerial.write("stopTurn")
+            turn = False
 
     if ( current == 16 ) : 
         if (heading >= east and heading <= (east + compassThreshold)) :
             photonSerial.write("knnRight")
-            return
-    if ( current == 23 ) : 
+            turn = True
+    elif ( current == 23 ) : 
         if (heading >= west and heading <= (west + compassThreshold)) :
             photonSerial.write("knnLeft")
-            return
+            turn = True
     elif ( current == 25 ) :
         if (heading >= north and heading <= (north + compassThreshold)) :
             photonSerial.write("knnRight")
-            return
+            turn = True
     elif ( current == 26 ) :
         if (heading >= south and heading <= (south + compassThreshold)) :
             photonSerial.write("knnLeft")
-            return
-    if ( current == 28 ) : 
+            turn = True
+    elif ( current == 28 ) : 
         if (heading >= west and heading <= (west + compassThreshold)) :
             photonSerial.write("knnRight")
-            return
+            turn = True
     elif ( current == 35 ) :
         if (heading >= east and heading <= (east + compassThreshold)) :
             photonSerial.write("knnLeft")
-            return
+            turn = True
     elif ( current == 53 ) :
         if (heading >= south and heading <= (south + compassThreshold)) :
             photonSerial.write("knnRight")
-            return
+            turn = True
     elif ( current == 54 ) :
         if (heading >= north and heading <= (north + compassThreshold)) :
             photonSerial.write("knnLeft")
-            return
+            turn = True
+
+    if (turn) :
+        previousHeading = heading
+
 
     # global previousLoc 
 
