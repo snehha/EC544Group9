@@ -19,21 +19,21 @@ running = True
 
 # TODO chnge ip addfess 
 def sendSSIDData(command):
-    headers = {'content-type': 'application/json'}
+    headers = {'content-type': 'text/html'}
     payload = str(command)
 
     
     try:
-        #print "INSIDE: ", payload
-        r = requests.post('http://192.168.1.120:5000/ssid', data=payload, headers=headers)
+        print "INSIDE: ", payload
+        r = requests.post('http://192.168.1.120:5000/ssid', data=payload)
     except:
         print("not ok")
-    #print(r.status_code)
+    print(r.status_code)
 
 
 while running:
     try:
-        #print "Attempting to read from socket..."
+        print "Attempting to read from socket..."
         while True:
             data = s.recv(BUFFER_SIZE)
             if len(data) == 0:      # remote end closed

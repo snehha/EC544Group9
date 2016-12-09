@@ -105,6 +105,7 @@ def getSSIDs():
             if (dataReceivedFromUpdate):
                 newLoc = getPrediction(dataReceivedFromUpdate)
                 if (currentLoc is newLoc):
+                    sendMessage()
                     return 'acknowledge but same'
                 else:
                     if (currentLoc != '') :         # set previous location if there is one
